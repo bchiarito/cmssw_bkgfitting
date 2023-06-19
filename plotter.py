@@ -500,9 +500,17 @@ for item in plots:
                                 
                                 func_rising, fitresult_rising = util.fit_hist(h_egamma_loose, 'landau', first, left, N=nLandau, initial_guesses=landau_guess)
                                 rising_fit_as_hist = util.TemplateToHistogram(func_rising, 1000, 0, 50)
-                                
+                                h_egamma_loose.Draw()
+                                c1.Update()
+                                stats1 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats1")
+                                stats1.SetY1NDC(.5)
+                                stats1.SetY2NDC(.7)
+
                                 func_falling, fitresult_falling = util.fit_hist(h_egamma_loose, 'exp', right, last, N=nExp, initial_guesses=exp_guess)
                                 falling_fit_as_hist = util.TemplateToHistogram(func_falling, 1000, 0, 50)
+                                h_egamma_loose.Draw()
+                                c1.Update()
+                                stats2 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats2")
 
                                 # create overall fitted histogram as: rising - bulk - falling
                                 loose_fit_as_hist = h_egamma_loose.Clone()
@@ -573,6 +581,8 @@ for item in plots:
                                 loose_fit_as_hist.SetLineColor(ROOT.kRed+1)
                                 loose_fit_as_hist.Draw("same")
                                 # f2.Draw("same")
+                                stats1.Draw()
+                                stats2.Draw()
                                 ROOT.gPad.SetLogy()
                                 if bins[i] < 80: h_egamma_loose.GetXaxis().SetRangeUser(0, 5)
                                 elif bins[i] < 120: h_egamma_loose.GetXaxis().SetRangeUser(0, 10)
