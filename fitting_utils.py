@@ -140,6 +140,31 @@ def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, i
     tf1.SetParNames("Constant", "MPV", "Sigma")
     tf1.SetParameters(*initial_guesses)
 
+  if function == 'landau' and N == 2:
+    def python_func(x, p):
+      norm = p[0]
+      mpv1 = p[1]
+      sigma1 = p[2]
+      bound = p[3]
+      mpv2 = p[4]
+      sigma2 = p[5]
+      land1 = norm * ROOT.TMath.Landau(x[0], mpv1, sigma1)
+      y1 = norm * ROOT.TMath.Landau(bound, mpv1, sigma1)
+      y2 = ROOT.TMath.Landau(bound, mpv2, sigma2)
+      land2 = (y1/y2) * ROOT.TMath.Landau(x[0], mpv2, sigma2)
+      if x[0] < bound: return land1
+      else: return land2
+    NPAR = 6
+    if not initial_guesses: initial_guesses = [
+      hist.GetEntries(), hist.GetMean(), 0.25, (range_low+range_high)/2.0, hist.GetMean(), 0.25]
+    if not len(initial_guesses) == NPAR: raise AssertionError('Length of initial guesses list must be '+str(NPAR)+"!")
+    tf1 = ROOT.TF1(getname('func'), python_func, range_low, range_high, NPAR)
+    tf1.SetParNames("Constant", "MPV1", "Sigma1", "bound", "MPV2", "Sigma2")
+    tf1.SetParameters(*initial_guesses)
+    tf1.SetParLimits(3, 0, range_high+1)
+    tf1.SetParLimits(4, 0, hist.GetMean()*5)
+    tf1.SetParLimits(5, 0, 1e5)
+
   if function == 'exp' and N == 1:
     def python_func(x, p):
       norm = p[0]
@@ -166,13 +191,46 @@ def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, i
       if x[0] < bound: return exp1
       else: return exp2
     NPAR = 4
-    if not initial_guesses: initial_guesses = [hist.Integral(hist.FindBin(range_low), hist.FindBin(range_high)), -1, (range_low+range_high)/2.0, -1]
+    if not initial_guesses: initial_guesses = [
+      hist.Integral(hist.FindBin(range_low), hist.FindBin(range_high)), -1, (range_low+range_high)/2.0, -1]
     if not len(initial_guesses) == NPAR: raise AssertionError('Length of initial guesses list must be '+str(NPAR)+"!")
     tf1 = ROOT.TF1(getname('func'), python_func, range_low, range_high, NPAR)
     tf1.SetParNames("Constant", "C1", "bound", "C2")
     tf1.SetParameters(*initial_guesses)
-    tf1.SetParLimits(2, range_low, range_high)
+    tf1.SetParLimits(2, 0, hist.GetBinLowEdge(hist.GetNbinsX()))
     tf1.SetParLimits(3, -10, 0)
+
+  if function == 'exp' and N == 3:
+    def python_func(x, p):
+      norm = p[0]
+      C1 = p[1]
+      bound1 = p[2]
+      C2 = p[3]
+      bound12 = p[4]
+      C3 = p[5]
+      bound2 = bound1 + bound12
+      exp1 = norm * ROOT.TMath.Exp(C1*x[0])
+      y1 = norm * ROOT.TMath.Exp(C1*bound1)
+      y2 = ROOT.TMath.Exp(C2*bound1)
+      exp2 = ROOT.TMath.Exp(C2*x[0]) * (y1/y2)
+      y3 = ROOT.TMath.Exp(C2*bound2)
+      y4 = ROOT.TMath.Exp(C3*bound2)
+      exp3 = ROOT.TMath.Exp(C3*x[0]) * (y3/y4) * (y1/y2)
+      if x[0] < bound1: return exp1
+      elif x[0] < bound2: return exp2
+      else: return exp3
+    NPAR = 6
+    if not initial_guesses: initial_guesses = [
+      hist.Integral(hist.FindBin(range_low), hist.FindBin(range_high)), -1, (range_low+range_high)/2.0,
+      -1, (range_low+range_high)/2.0, -1]
+    if not len(initial_guesses) == NPAR: raise AssertionError('Length of initial guesses list must be '+str(NPAR)+"!")
+    tf1 = ROOT.TF1(getname('func'), python_func, range_low, range_high, NPAR)
+    tf1.SetParNames("Constant", "C1", "bound1", "C2", "bound12", "C3")
+    tf1.SetParameters(*initial_guesses)
+    tf1.SetParLimits(2, 0, hist.GetBinLowEdge(hist.GetNbinsX()))
+    tf1.SetParLimits(3, -10, 0)
+    tf1.SetParLimits(4, 0, hist.GetBinLowEdge(hist.GetNbinsX()))
+    tf1.SetParLimits(5, -10, 0)
 
   globals()[getname('func')] = python_func
   fit_string = '0SL'
