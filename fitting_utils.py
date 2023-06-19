@@ -2,20 +2,18 @@ import ROOT
 import sys
 import math
 
-RANGE_LOW = 0 
-RANGE_HIGH = 20
-BINS = 20
-
+# global counters
 NAME_COUNT = 0
-def getname():
+
+def getname(prefix='obj'):
   '''
-  helper to return unique names for ROOT objects
+  helper to return unique names for ROOT objects or global variables
   '''
   global NAME_COUNT
   NAME_COUNT += 1
-  return 'obj'+str(NAME_COUNT)
+  return prefix+str(NAME_COUNT)
 
-def TemplateToHistogram(func, bins, low, high, integral=False, debug=False):
+def TemplateToHistogram(func, bins, low, high, integral=False):
   '''
   Takes ROOT TF1 function template, and a binning
 
@@ -42,7 +40,7 @@ def HistogramToFunction(hist):
     return hist.GetBinContent(hist.FindBin(x[0])) 
   return histfunc
 
-def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=10, cheb=0, parameters=None):
+def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=15, cheb=0, parameters=None):
   '''
   Takes a python function
 
@@ -106,20 +104,87 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=10, cheb=0, para
       X = x[0]
       return func(x) * (p[0] + p[1]*(2*X) + p[2]*(4*X**2 - 1) + p[3]*(8*X**3 - 4*X) + p[4]*(16*X**4 - 12*X**2 + 1))
 
+  globals()[getname('func')] = func_after_mult
   tf1 = ROOT.TF1(getname(), func_after_mult, range_low, range_high, degree+1)
-  if degree>=0: tf1.SetParNames('Constant') if cheb==0 else tf1.SetParNames('Zero')
-  if degree>=1: tf1.SetParNames('Linear') if cheb==0 else tf1.SetParNames('One')
-  if degree>=2: tf1.SetParNames('Quadratic') if cheb==0 else tf1.SetParNames('Two')
-  if degree>=3: tf1.SetParNames('Cubic') if cheb==0 else tf1.SetParNames('Three')
-  if degree>=4: tf1.SetParNames('Quartic') if cheb==0 else tf1.SetParNames('Four')
+
+  if degree>=0: tf1.SetParName(0, 'Constant') if cheb==0 else tf1.SetParName(0, 'Zero')
+  if degree>=1: tf1.SetParName(1, 'Linear') if cheb==0 else tf1.SetParName(1, 'One')
+  if degree>=2: tf1.SetParName(2, 'Quadratic') if cheb==0 else tf1.SetParName(2, 'Two')
+  if degree>=3: tf1.SetParName(3, 'Cubic') if cheb==0 else tf1.SetParName(3, 'Three')
+  if degree>=4: tf1.SetParName(4, 'Quartic') if cheb==0 else tf1.SetParName(4, 'Four')
+
   if not parameters:
     for i in range(degree+1): tf1.SetParameter(i, 1.0)
   else:
     tf1.SetParameters(*parameters)
   return tf1, func_after_mult
 
+def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, integral=False):
+  '''
+  Takes a historgram, fits a function and returns a TF1 and the fit result
+
+  function: can be set to 'exp' or 'landau'
+  N: controls how many exponentials or landaus to use
+  '''
+  if function == 'landau' and N == 1:
+    def python_func(x, p):
+      norm = p[0]
+      mpv = p[1]
+      sigma = p[2]
+      land = norm * ROOT.TMath.Landau(x[0], mpv, sigma)
+      return land
+    NPAR = 3
+    if not initial_guesses: initial_guesses = [hist.GetEntries(), hist.GetMean(), 0.25]
+    if not len(initial_guesses) == NPAR: raise AssertionError('Length of initial guesses list must be '+str(NPAR)+"!")
+    tf1 = ROOT.TF1(getname('func'), python_func, range_low, range_high, NPAR)
+    tf1.SetParNames("Constant", "MPV", "Sigma")
+    tf1.SetParameters(*initial_guesses)
+
+  if function == 'exp' and N == 1:
+    def python_func(x, p):
+      norm = p[0]
+      C1 = p[1]
+      exp1 = norm * ROOT.TMath.Exp(C1*x[0])
+      return exp1
+    NPAR = 2
+    if not initial_guesses: initial_guesses = [hist.GetEntries(), -1]
+    if not len(initial_guesses) == NPAR: raise AssertionError('Length of initial guesses list must be '+str(NPAR)+"!")
+    tf1 = ROOT.TF1(getname('func'), python_func, range_low, range_high, NPAR)
+    tf1.SetParNames("Constant", "C1")
+    tf1.SetParameters(*initial_guesses)
+
+  if function == 'exp' and N == 2:
+    def python_func(x, p):
+      norm = p[0]
+      C1 = p[1]
+      bound = p[2]
+      C2 = p[3]
+      y1 = norm * ROOT.TMath.Exp(C1*bound)
+      y2 = ROOT.TMath.Exp(C2*bound)
+      exp1 = norm * ROOT.TMath.Exp(C1*x[0])
+      exp2 = ROOT.TMath.Exp(C2*x[0]) * (y1/y2)
+      if x[0] < bound: return exp1
+      else: return exp2
+    NPAR = 4
+    if not initial_guesses: initial_guesses = [hist.Integral(hist.FindBin(range_low), hist.FindBin(range_high)), -1, (range_low+range_high)/2.0, -1]
+    if not len(initial_guesses) == NPAR: raise AssertionError('Length of initial guesses list must be '+str(NPAR)+"!")
+    tf1 = ROOT.TF1(getname('func'), python_func, range_low, range_high, NPAR)
+    tf1.SetParNames("Constant", "C1", "bound", "C2")
+    tf1.SetParameters(*initial_guesses)
+    tf1.SetParLimits(2, range_low, range_high)
+    tf1.SetParLimits(3, -10, 0)
+
+  globals()[getname('func')] = python_func
+  fit_string = '0SL'
+  if integral: fit_string += 'I'
+  fit_result = hist.Fit(tf1, fit_string, "", range_low, range_high)
+  return tf1, fit_result
 
 if __name__ == '__main__':
+  RANGE_LOW = 0 
+  RANGE_HIGH = 20
+  BINS = 20
+
   print('define a function')
   f1 = ROOT.TF1('f1', 'gaus(0)', RANGE_LOW, RANGE_HIGH)
   f1.SetParNames('first', 'second', 'third')
