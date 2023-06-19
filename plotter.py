@@ -475,8 +475,8 @@ for item in plots:
                             break
                         # convert to x-ranges
                         first = h_egamma_loose.GetBinLowEdge(first_bin)
-                        left = h_egamma_loose.GetBinLowEdge(left_bin)
-                        right = h_egamma_loose.GetBinLowEdge(right_bin+1)
+                        left = h_egamma_loose.GetBinLowEdge(left_bin+1)
+                        right = h_egamma_loose.GetBinLowEdge(right_bin)
                         last = h_egamma_loose.GetBinLowEdge(last_bin+1)
                         
                         landau_range = 2
@@ -503,6 +503,7 @@ for item in plots:
                                 h_egamma_loose.Draw()
                                 c1.Update()
                                 stats1 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats1")
+                                c1.Clear()
                                 stats1.SetY1NDC(.5)
                                 stats1.SetY2NDC(.7)
 
@@ -511,14 +512,22 @@ for item in plots:
                                 h_egamma_loose.Draw()
                                 c1.Update()
                                 stats2 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats2")
+                                c1.Clear()
 
                                 # create overall fitted histogram as: rising - bulk - falling
                                 loose_fit_as_hist = h_egamma_loose.Clone()
                                 loose_fit_as_hist.Reset()
                                 for b in range(h_egamma_loose.GetNbinsX()):
-                                    if b < left: loose_fit_as_hist.SetBinContent(b+1, rising_fit_as_hist.GetBinContent(b+1))
-                                    elif b < right: loose_fit_as_hist.SetBinContent(b+1, h_egamma_loose.GetBinContent(b+1))
-                                    else: loose_fit_as_hist.SetBinContent(b+1, falling_fit_as_hist.GetBinContent(b+1))
+                                    if b < first_bin:
+                                        loose_fit_as_hist.SetBinContent(b+1, 0)
+                                    elif b < left_bin:
+                                        loose_fit_as_hist.SetBinContent(b+1, rising_fit_as_hist.GetBinContent(b+1))
+                                    elif b <= right_bin:
+                                        loose_fit_as_hist.SetBinContent(b+1, h_egamma_loose.GetBinContent(b+1))
+                                    elif b <= last_bin:
+                                        loose_fit_as_hist.SetBinContent(b+1, falling_fit_as_hist.GetBinContent(b+1))
+                                    else:
+                                        loose_fit_as_hist.SetBinContent(b+1, 0)
                         
                                 fitted_func = util.HistogramToFunction(loose_fit_as_hist)
                                 func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, 2, cheb=2)
@@ -650,6 +659,8 @@ for item in plots:
                                         elif bins[i] < 380: h_tight_pull.GetXaxis().SetRangeUser(0, 20)
                                         else: h_tight_pull.GetXaxis().SetRangeUser(0, 26)
                                 
+                                ROOT.gPad.Update()
+                                if args.testBin is not None: raw_input()
                                 c1.Print(args.name + ".pdf")    
                         # after loop on fits, do f-test
                         """
