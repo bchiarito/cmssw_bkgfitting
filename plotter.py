@@ -447,6 +447,54 @@ for item in plots:
                         num_param = []
                         by_bins = []
                         bound1s = []
+
+                        ### new idea, fit only rising and falling ###
+
+                        # determine left and right bounds
+                        # fit landaus from first_bin to left_bin
+                        # fit exps from right_bin to last_bin
+                        ENTRIES_CUTOFF = 1000
+                        first_bin = 4
+                        left_bin = 0
+                        for b in range(h_egamma_loose.GetNbinsX()):
+                          if h_egamma_loose.GetBinContent(b+1)<ENTRIES_CUTOFF: continue
+                          else:
+                            left_bin = b + 1
+                            break
+                        right_bin = h_egamma_loose.GetNbinsX()+1
+                        for b in reversed(range(h_egamma_loose.GetNbinsX())):
+                          if h_egamma_loose.GetBinContent(b+1)<ENTRIES_CUTOFF: continue
+                          else:
+                            right_bin = b + 1
+                            break
+                        last_bin = h_egamma_loose.GetNbinsX() + 1
+                        for b in reversed(range(h_egamma_loose.GetNbinsX())):
+                          if h_egamma_loose.GetBinContent(b+1)==0: continue
+                          else:
+                            last_bin = b + 1
+                            break
+                        # convert to x-ranges
+                        first = h_egamma_loose.GetBinLowEdge(first_bin)
+                        left = h_egamma_loose.GetBinLowEdge(left_bin)
+                        right = h_egamma_loose.GetBinLowEdge(right_bin+1)
+                        last = h_egamma_loose.GetBinLowEdge(last_bin+1)
+
+                        # fit: example for 1 landau and 1 exp
+                        func_rising, fitresult_rising = util.fit_hist(h_egamma_loose, 'landau', first, left, N=1)
+                        rising_fit_as_hist = util.TemplateToHistogram(func_rising, 1000, 0, 50)
+
+                        func_falling, fitresult_falling = util.fit_hist(h_egamma_loose, 'exp', right, last, N=1)
+                        falling_fit_as_hist = util.TemplateToHistogram(func_falling, 1000, 0, 50)
+
+                        # create overall fitted histogram as: rising - bulk - falling
+                        loose_fit_as_hist = h_egamma_loose.Clone()
+                        loose_fit_as_hist.Reset()
+                        for b in range(h_egamma_loose.GetNbinsX()):
+                          if b < left: loose_fit_as_hist.SetBinContent(b+1, rising_fit_as_hist.GetBinContent(b+1))
+                          elif b < right: loose_fit_as_hist.SetBinContent(b+1, h_egamma_loose.GetBinContent(b+1))
+                          else: loose_fit_as_hist.SetBinContent(b+1, falling_fit_as_hist.GetBinContent(b+1))
+    
+                        ### old idea, fit entire curve ###
                         for k in range(4):
                             nEntries = h_egamma_loose.GetEntries()
                             mean = h_egamma_loose.GetMean()
