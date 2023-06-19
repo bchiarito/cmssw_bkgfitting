@@ -1,3 +1,4 @@
+from __future__ import print_function
 import math
 import ROOT
 import sys
@@ -518,31 +519,6 @@ for item in plots:
                             
                             chi2 = loose_fit.Chi2()
                             ndf = loose_fit.Ndf()
-                            """
-                            cov = loose_fit.GetCovarianceMatrix()
-                            cov.Print()
-                            """
-                            """ 
-                            if k == 0:
-                              import numpy as np
-                              rng = np.random.default_rng(1)
-                              matrix = np.zeros(7,7)
-                              params = [loose_fit.Parameter(i) for i in range(7)]
-                              for i in range(7):
-                                for j in range(7):
-                                  matrix[i,j] = cov[i][j]
-                              par_b = rng.multivariate_normal(params, matrix, size=10)
-                            """
-                            """               
-                            # save fit info for f-test  
-                            saved_loose_histo = h_egamma_loose.Clone()
-                            fits.append(f2.Clone())
-                            if k == 0: bound1s.append(loose_fit.Parameter(5-1))
-                            if k == 1: bound1s.append(loose_fit.Parameter(6-1))
-                            if k == 2: bound1s.append(loose_fit.Parameter(7-1))
-                            if k == 3: bound1s.append(loose_fit.Parameter(8-1))
-                            num_param.append(f2.GetNpar())
-                            """
                             
                             loose_fit_as_hist = util.TemplateToHistogram(f2, 1000, 0, 50)
                             fitted_func = util.HistogramToFunction(loose_fit_as_hist)
