@@ -5,6 +5,35 @@ import math
 # global counters
 NAME_COUNT = 0
 
+def cheb_fn(x, degree, kind):
+  if kind == 1:
+    if degree == 0:
+        return 1
+    elif degree == 1:
+        return x
+    else:
+        t_minus_2 = 1
+        t_minus_1 = x
+        for n in range(2, degree + 1):
+            current_term = 2 * x * t_minus_1 - t_minus_2
+            t_minus_2 = t_minus_1
+            t_minus_1 = current_term
+        return current_term
+  elif kind == 2:
+    if degree == 0:
+        return 1
+    elif degree == 1:
+        return 2 * x
+    else:
+        u_minus_2 = 1
+        u_minus_1 = 2 * x
+        for n in range(2, degree + 1):
+            current_term = 2 * x * u_minus_1 - u_minus_2
+            u_minus_2 = u_minus_1
+            u_minus_1 = current_term
+        return current_term
+  else: raise ValueError('"kind" argument must be 1 or 2.')
+
 def getname(prefix='obj'):
   '''
   helper to return unique names for ROOT objects or global variables
@@ -50,59 +79,87 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=15, cheb=0, para
   when cheb=1 use Chebyshev polynomials of the first kind
   when cheb=2 use Chebyshev polynomials of the second kind
   '''
-  if degree == 0 and cheb==0:
+  if degree == 0 and cheb == 0:
     def func_after_mult(x, p):
       return func(x) * (p[0])
-  if degree == 1 and cheb==0:
+  if degree == 1 and cheb == 0:
     def func_after_mult(x, p):
       return func(x) * (p[0] + p[1]*x[0])
-  if degree == 2 and cheb==0:
+  if degree == 2 and cheb == 0:
     def func_after_mult(x, p):
       return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2))
-  if degree == 3 and cheb==0:
+  if degree == 3 and cheb == 0:
     def func_after_mult(x, p):
       return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3))
-  if degree == 4 and cheb==0:
+  if degree == 4 and cheb == 0:
     def func_after_mult(x, p):
-      return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3) + p[4]*(x[0]**4))
+      return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
+                        + p[4]*(x[0]**4))
+  if degree == 5 and cheb == 0:
+    def func_after_mult(x, p):
+      return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
+                        + p[4]*(x[0]**4) + p[5]*x[0]**5)
+  if degree == 6 and cheb == 0:
+    def func_after_mult(x, p):
+      return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
+                        + p[4]*(x[0]**4) + p[5]*x[0]**5 + p[6]*x[0]**6)
+  if degree == 7 and cheb == 0:
+    def func_after_mult(x, p):
+      return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
+                        + p[4]*(x[0]**4) + p[5]*x[0]**5 + p[6]*x[0]**6 + p[7]*x[0]**7)
+  if degree == 8 and cheb == 0:
+    def func_after_mult(x, p):
+      return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3) 
+                        + p[4]*(x[0]**4) + p[5]*x[0]**5 + p[6]*x[0]**6 + p[7]*x[0]**7
+                        + p[8]*x[0]**8)
 
   if degree == 0 and cheb == 1:
     def func_after_mult(x, p):
       return func(x) * (p[0])
   if degree == 1 and cheb == 1:
     def func_after_mult(x, p):
-      return func(x) * (p[0] + p[1]*(x[0]))
+      X = x[0]
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1))
   if degree == 2 and cheb == 1:
     def func_after_mult(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*(X) + p[2]*(2*X**2 - 1))
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1))
   if degree == 3 and cheb == 1:
     def func_after_mult(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*(X) + p[2]*(2*X**2 - 1) + p[3]*(4*X**3 - 3*X))
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
+                        + p[3]*cheb_fn(X, 3, 1))
   if degree == 4 and cheb == 1:
     def func_after_mult(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*(X) + p[2]*(2*X**2 - 1) + p[3]*(4*X**3 - 3*X) + p[4]*(8*X**4 - 8*X**2 + 1))
-
-  if degree == 0 and cheb == 2:
-    def func_after_mult(x, p):
-      return func(x) * (p[0])
-  if degree == 1 and cheb == 2:
-    def func_after_mult(x, p):
-      return func(x) * (p[0] + p[1]*(2*x[0]))
-  if degree == 2 and cheb == 2:
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*chb_fn(X, 2, 1)
+                        + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1))
+  if degree == 5 and cheb == 1:
     def func_after_mult(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*(2*X) + p[2]*(4*X**2 - 1))
-  if degree == 3 and cheb == 2:
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
+                        + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
+                        + p[5]*cheb_fn(X, 5, 1))
+  if degree == 6 and cheb == 1:
     def func_after_mult(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*(2*X) + p[2]*(4*X**2 - 1) + p[3]*(8*X**3 - 4*X))
-  if degree == 4 and cheb == 3:
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
+                        + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
+                        + p[5]*cheb_fn(X, 5, 1) + p[6]*cheb_fn(X, 6, 1))
+  if degree == 7 and cheb == 1:
     def func_after_mult(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*(2*X) + p[2]*(4*X**2 - 1) + p[3]*(8*X**3 - 4*X) + p[4]*(16*X**4 - 12*X**2 + 1))
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
+                        + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
+                        + p[5]*cheb_fn(X, 5, 1) + p[6]*cheb_fn(X, 6, 1)
+                        + p[7]*cheb_fn(X, 7, 1))
+  if degree == 7 and cheb == 1:
+    def func_after_mult(x, p):
+      X = x[0]
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
+                        + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
+                        + p[5]*cheb_fn(X, 5, 1) + p[6]*cheb_fn(X, 6, 1)
+                        + p[7]*cheb_fn(X, 7, 1) + p[6]*cheb_fn(X, 8, 1))
 
   globals()[getname('func')] = func_after_mult
   tf1 = ROOT.TF1(getname(), func_after_mult, range_low, range_high, degree+1)
@@ -112,6 +169,10 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=15, cheb=0, para
   if degree>=2: tf1.SetParName(2, 'Quadratic') if cheb==0 else tf1.SetParName(2, 'Two')
   if degree>=3: tf1.SetParName(3, 'Cubic') if cheb==0 else tf1.SetParName(3, 'Three')
   if degree>=4: tf1.SetParName(4, 'Quartic') if cheb==0 else tf1.SetParName(4, 'Four')
+  if degree>=5: tf1.SetParName(5, 'Quintic') if cheb==0 else tf1.SetParName(5, 'Five')
+  if degree>=6: tf1.SetParName(6, 'Sextic') if cheb==0 else tf1.SetParName(6, 'Six')
+  if degree>=7: tf1.SetParName(7, 'Septic') if cheb==0 else tf1.SetParName(7, 'Seven')
+  if degree>=8: tf1.SetParName(8, 'Octic') if cheb==0 else tf1.SetParName(8, 'Eight')
 
   if not parameters:
     for i in range(degree+1): tf1.SetParameter(i, 1.0)
