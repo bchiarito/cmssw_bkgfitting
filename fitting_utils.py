@@ -161,6 +161,54 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=15, cheb=0, para
                         + p[5]*cheb_fn(X, 5, 1) + p[6]*cheb_fn(X, 6, 1)
                         + p[7]*cheb_fn(X, 7, 1) + p[6]*cheb_fn(X, 8, 1))
 
+  if degree == 0 and cheb == 2:
+    def func_after_mult(x, p):
+      return func(x) * (p[0])
+  if degree == 1 and cheb == 2:
+    def func_after_mult(x, p):
+      X = x[0]
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2))
+  if degree == 2 and cheb == 2:
+    def func_after_mult(x, p):
+      X = x[0]
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2))
+  if degree == 3 and cheb == 2:
+    def func_after_mult(x, p):
+      X = x[0]
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
+                        + p[3]*cheb_fn(X, 3, 2))
+  if degree == 4 and cheb == 2:
+    def func_after_mult(x, p):
+      X = x[0]
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*chb_fn(X, 2, 2)
+                        + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2))
+  if degree == 5 and cheb == 2:
+    def func_after_mult(x, p):
+      X = x[0]
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
+                        + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
+                        + p[5]*cheb_fn(X, 5, 2))
+  if degree == 6 and cheb == 2:
+    def func_after_mult(x, p):
+      X = x[0]
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
+                        + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
+                        + p[5]*cheb_fn(X, 5, 2) + p[6]*cheb_fn(X, 6, 2))
+  if degree == 7 and cheb == 2:
+    def func_after_mult(x, p):
+      X = x[0]
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
+                        + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
+                        + p[5]*cheb_fn(X, 5, 2) + p[6]*cheb_fn(X, 6, 2)
+                        + p[7]*cheb_fn(X, 7, 2))
+  if degree == 7 and cheb == 2:
+    def func_after_mult(x, p):
+      X = x[0]
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
+                        + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
+                        + p[5]*cheb_fn(X, 5, 2) + p[6]*cheb_fn(X, 6, 2)
+                        + p[7]*cheb_fn(X, 7, 2) + p[6]*cheb_fn(X, 8, 2))
+
   globals()[getname('func')] = func_after_mult
   tf1 = ROOT.TF1(getname(), func_after_mult, range_low, range_high, degree+1)
 
