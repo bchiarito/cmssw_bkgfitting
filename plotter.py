@@ -452,14 +452,16 @@ for item in plots:
                             if k == 0: 
                                 f2 = ROOT.TF1('f2', fitfunc1, 0, 50, 9)
                                 f2.SetParNames("Constant1","MPV1","Sigma1","Constant2","MPV2","Sigma2","C1","Boundary1", "BoundDiff12")
-                                f2.SetParameters(nEntries, mean, 0.5, nEntries, mean, 0.5, -3, mean*2, mean/2)
+                                f2.SetParameters(nEntries, mean, 0.5, -nEntries, mean, 0.5, -3, mean, mean/2)
+                                f2.SetParLimits(5, 0, 1)
                                 f2.SetParLimits(6, -10, 0)
                                 f2.SetParLimits(7, 0, 25)
                                 f2.SetParLimits(8, 0.2, 7)
                             elif k == 1: 
                                 f2 = ROOT.TF1('f2', fitfunc2, 0, 50, 11)
                                 f2.SetParNames("Constant1","MPV1","Sigma1","Constant2","MPV2","Sigma2","C1","C2","Boundary1","BoundDiff12","BoundaryDiff23")
-                                f2.SetParameters(nEntries, mean, 0.5, nEntries, mean, 0.5, -3, -1, mean, mean/2, mean/2)
+                                f2.SetParameters(nEntries, mean, 0.5, -nEntries, mean, 0.5, -3, -1, mean, mean/2, mean/2)
+                                f2.SetParLimits(5, 0, 1)
                                 f2.SetParLimits(6, -10, 0)
                                 f2.SetParLimits(7, -10, 0)
                                 f2.SetParLimits(8, 0, 25)
@@ -470,9 +472,10 @@ for item in plots:
                                 f2.SetParNames("Constant1","MPV1","Sigma1","Constant2","MPV2","Sigma2","C1","C2","C3","Boundary1","BoundDiff12")
                                 f2.SetParName(11, "BoundDiff23")
                                 f2.SetParName(12, "BoundDiff34")
-                                f2.SetParameters(nEntries, mean, 0.5, nEntries, mean, 0.5, -3, -1, -0.5, mean, mean/2)
+                                f2.SetParameters(nEntries, mean, 0.5, -nEntries, mean, 0.5, -3, -1, -0.5, mean, mean/2)
                                 f2.SetParameter(11, mean/2)
                                 f2.SetParameter(12, mean/2)
+                                f2.SetParLimits(5, 0, 1)
                                 f2.SetParLimits(6, -10, 0)
                                 f2.SetParLimits(7, -10, 0)
                                 f2.SetParLimits(8, -10, 0)
@@ -487,8 +490,8 @@ for item in plots:
                                 f2.SetParName(12, "BoundDiff23")
                                 f2.SetParName(13, "BoundDiff34")
                                 f2.SetParName(14, "BoundDiff45")
-                                f2.SetParameters(nEntries, mean, 0.5, nEntries, mean, 0.5, -3, -1, -0.5, -0.25, mean)
-                                f2.SetParLimits(5, 0, 100)
+                                f2.SetParameters(nEntries, mean, 0.5, -nEntries, mean, 0.5, -3, -1, -0.5, -0.25, mean)
+                                f2.SetParLimits(5, 0, 1)
                                 f2.SetParLimits(6, -10, 0)
                                 f2.SetParLimits(7, -10, 0)
                                 f2.SetParLimits(8, -10, 0)
@@ -514,6 +517,7 @@ for item in plots:
                                             f2.SetParameter(12, 1.5)
                                             f2.SetParameter(13, 2)
                                             f2.SetParameter(14, 0.4)
+                                
                                 loose_fit = h_egamma_loose.Fit(f2, '0SL', "", 0.35, 25)
                             
                             chi2 = loose_fit.Chi2()
@@ -546,7 +550,7 @@ for item in plots:
                             
                             loose_fit_as_hist = util.TemplateToHistogram(f2, 1000, 0, 50)
                             fitted_func = util.HistogramToFunction(loose_fit_as_hist)
-                            func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, 2, cheb=1)
+                            func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, 2, cheb=2)
                             h_egamma_tight.Fit(func_with_poly, '0L') 
                             tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
 
@@ -953,4 +957,4 @@ for item in plots:
 
 c1.Print(args.name + ".pdf]")
 infile1.Close()
-#if args.testBin is not None: raw_input()
+if args.testBin is not None: raw_input()
