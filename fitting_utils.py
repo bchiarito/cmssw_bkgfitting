@@ -69,11 +69,11 @@ def HistogramToFunction(hist):
     return hist.GetBinContent(hist.FindBin(x[0])) 
   return histfunc
 
-def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=15, cheb=0, parameters=None):
+def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, cheb=0, parameters=None):
   '''
   Takes a python function
 
-  Returns a TF1 object representing the input function times a polynomial, and the returns resulting function as well
+  Returns a TF1 object representing the input function times a polynomial, and the returns associated python function as well
 
   when cheb=0 (default) use regular polynomials (1, x^2, x^3, etc)
   when cheb=1 use Chebyshev polynomials of the first kind
@@ -160,6 +160,14 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=15, cheb=0, para
                         + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
                         + p[5]*cheb_fn(X, 5, 1) + p[6]*cheb_fn(X, 6, 1)
                         + p[7]*cheb_fn(X, 7, 1) + p[6]*cheb_fn(X, 8, 1))
+  if degree == 8 and cheb == 1:
+    def func_after_mult(x, p):
+      X = x[0]
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
+                        + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
+                        + p[5]*cheb_fn(X, 5, 1) + p[6]*cheb_fn(X, 6, 1)
+                        + p[7]*cheb_fn(X, 7, 1) + p[6]*cheb_fn(X, 8, 1)
+                        + p[8]*cheb_fn(X, 8, 1))
 
   if degree == 0 and cheb == 2:
     def func_after_mult(x, p):
@@ -208,6 +216,14 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=15, cheb=0, para
                         + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
                         + p[5]*cheb_fn(X, 5, 2) + p[6]*cheb_fn(X, 6, 2)
                         + p[7]*cheb_fn(X, 7, 2) + p[6]*cheb_fn(X, 8, 2))
+  if degree == 8 and cheb == 2:
+    def func_after_mult(x, p):
+      X = x[0]
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
+                        + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
+                        + p[5]*cheb_fn(X, 5, 2) + p[6]*cheb_fn(X, 6, 2)
+                        + p[7]*cheb_fn(X, 7, 2) + p[6]*cheb_fn(X, 8, 2)
+                        + p[8]*cheb_fn(X, 8, 2))
 
   globals()[getname('func')] = func_after_mult
   tf1 = ROOT.TF1(getname(), func_after_mult, range_low, range_high, degree+1)
@@ -223,7 +239,7 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=15, cheb=0, para
   if degree>=8: tf1.SetParName(8, 'Octic') if cheb==0 else tf1.SetParName(8, 'Eight')
 
   if not parameters:
-    for i in range(degree+1): tf1.SetParameter(i, 1.0)
+    for i in range(degree+1): tf1.SetParameter(i, 0.1**i)
   else:
     tf1.SetParameters(*parameters)
   return tf1, func_after_mult
@@ -347,6 +363,85 @@ def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, i
     tf1.SetParLimits(3, -10, 0)
     tf1.SetParLimits(4, 0, hist.GetBinLowEdge(hist.GetNbinsX()))
     tf1.SetParLimits(5, -10, 0)
+
+  if function == 'full' and N == 24:
+    def python_func(x, p):
+        norm1 = p[0]
+        mpv1 = p[1]
+        sigma1 = p[2]
+        norm2 = p[3]
+        mpv2 = p[4]
+        sigma2 = p[5]
+        C1 = p[6]
+        C2 = p[7]
+        C3 = p[8]
+        C4 = p[9]
+        bound1 = p[10]
+        b12 = p[11]
+        b23 = p[12]
+        b34 = p[13]
+        b45 = p[14]
+
+        if bound1 < 0: bound1 = 0
+        bound2 = bound1 + b12
+        bound3 = bound2 + b23
+        bound4 = bound3 + b34
+        bound5 = bound4 + b45
+
+        land1 = norm1 * ROOT.TMath.Landau(x[0], mpv1, sigma1)
+      
+        y11=norm1*ROOT.TMath.Landau(bound1, mpv1, sigma1)
+        y12=norm2*ROOT.TMath.Landau(bound1, mpv2, sigma2)
+        land2 = norm2*ROOT.TMath.Landau(x[0], mpv2, sigma2)*y11/y12
+         
+        y21=norm2*ROOT.TMath.Landau(bound2, mpv2, sigma2)*y11/y12
+        y22=ROOT.TMath.Exp(C1*bound2)
+        exp1=ROOT.TMath.Exp(C1*x[0])*y21/y22
+
+        y31=ROOT.TMath.Exp(C1*bound3)*y21/y22
+        y32=ROOT.TMath.Exp(C2*bound3)
+        exp2=ROOT.TMath.Exp(C2*x[0])*y31/y32
+         
+        y41=ROOT.TMath.Exp(C2*bound4)*y31/y32
+        y42=ROOT.TMath.Exp(C3*bound4)
+        exp3=ROOT.TMath.Exp(C3*x[0])*y41/y42
+
+        y51=ROOT.TMath.Exp(C3*bound5)*y41/y42
+        y52=ROOT.TMath.Exp(C4*bound5)
+        exp4=ROOT.TMath.Exp(C4*x[0])*y51/y52
+        
+        if x[0] < bound1: return land1
+        elif x[0] < bound2: return land2
+        elif x[0] < bound3: return exp1
+        elif x[0] < bound4: return exp2
+        elif x[0] < bound5: return exp3
+        else: return exp4
+    NPAR = 15
+    if not initial_guesses:
+        nEntries = hist.GetEntries()
+        mean = hist.GetMean()
+        initial_guesses = [
+            nEntries, mean, 0.5, nEntries, mean, 0.5, -3, -1, -0.5, -0.25,
+            mean, mean/2, mean/2, mean/2, mean/2]
+    if not len(initial_guesses) == NPAR:
+        raise AssertionError('Length of initial guesses list must be '+str(NPAR)+"!")
+    tf1 = ROOT.TF1(getname('func'), python_func, range_low, range_high, NPAR)
+    tf1.SetParNames("Constant1","MPV1","Sigma1","Constant2","MPV2","Sigma2","C1","C2","C3","C4","Boundary1")
+    tf1.SetParName(11, "BoundDiff12")
+    tf1.SetParName(12, "BoundDiff23")
+    tf1.SetParName(13, "BoundDiff34")
+    tf1.SetParName(14, "BoundDiff45")
+    for i, guess in enumerate(initial_guesses): tf1.SetParameter(i, guess)
+    tf1.SetParLimits(5, 0, 100)
+    tf1.SetParLimits(6, -10, 0)
+    tf1.SetParLimits(7, -10, 0)
+    tf1.SetParLimits(8, -10, 0)
+    tf1.SetParLimits(9, -10, 0)
+    tf1.SetParLimits(10, 0, 25)
+    tf1.SetParLimits(11, 0.2, 7)
+    tf1.SetParLimits(12, 0.2, 7)
+    tf1.SetParLimits(13, 0.2, 7)
+    tf1.SetParLimits(14, 0.2, 7)
 
   if function == 'full' and N == 24:
     def python_func(x, p):
