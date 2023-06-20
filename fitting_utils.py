@@ -279,7 +279,8 @@ def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, i
       land1 = norm * ROOT.TMath.Landau(x[0], mpv1, sigma1)
       y1 = norm * ROOT.TMath.Landau(bound, mpv1, sigma1)
       y2 = ROOT.TMath.Landau(bound, mpv2, sigma2)
-      land2 = (y1/y2) * ROOT.TMath.Landau(x[0], mpv2, sigma2)
+      if y2 == 0: land2 = (y1) * ROOT.TMath.Landau(x[0], mpv2, sigma2)
+      else: land2 = (y1/y2) * ROOT.TMath.Landau(x[0], mpv2, sigma2)
       if x[0] < bound: return land1
       else: return land2
     NPAR = 6
@@ -290,7 +291,7 @@ def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, i
     tf1 = ROOT.TF1(getname('func'), python_func, range_low, range_high, NPAR)
     tf1.SetParNames("Constant", "MPV1", "Sigma1", "bound", "MPV2", "Sigma2")
     tf1.SetParameters(*initial_guesses)
-    tf1.SetParLimits(3, 0, range_high+1)
+    tf1.SetParLimits(3, range_low, range_high*2)
     tf1.SetParLimits(4, 0, hist.GetMean()*5)
     tf1.SetParLimits(5, 0, 1e5)
 
@@ -359,9 +360,9 @@ def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, i
     tf1 = ROOT.TF1(getname('func'), python_func, range_low, range_high, NPAR)
     tf1.SetParNames("Constant", "C1", "bound1", "C2", "bound12", "C3")
     tf1.SetParameters(*initial_guesses)
-    tf1.SetParLimits(2, 0, hist.GetBinLowEdge(hist.GetNbinsX()))
+    tf1.SetParLimits(2, 0, range_high)
     tf1.SetParLimits(3, -10, 0)
-    tf1.SetParLimits(4, 0, hist.GetBinLowEdge(hist.GetNbinsX()))
+    tf1.SetParLimits(4, 0, range_high/2.0)
     tf1.SetParLimits(5, -10, 0)
 
   elif function == 'full' and N == 24:
