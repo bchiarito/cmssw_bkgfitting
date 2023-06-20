@@ -220,7 +220,7 @@ for item in plots:
                     
                     # Configure display options
                     h_egamma_tight.SetLineColor(ROOT.kBlack)
-                    h_egamma_loose.SetLineColor(ROOT.kBlue+1)
+                    h_egamma_loose.SetLineColor(ROOT.kBlack)
 
                     if args.ratio:  # create unfitted ratio plots between tight and loose photons
                         if not h_egamma_tight.Integral() == 0: h_egamma_tight.Scale(1.0/h_egamma_tight.Integral())
@@ -368,7 +368,7 @@ for item in plots:
                                 h_egamma_tight.Fit(fitted_func_times_constant, '0L') 
                                 tight_fit_w_constant = util.TemplateToHistogram(fitted_func_times_constant, 1000, 0, 50)
 
-                                func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, 8, cheb=2)
+                                func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, 3, cheb=0)
                                 h_egamma_tight.Fit(func_with_poly, '0L') 
                                 tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
 
@@ -423,7 +423,7 @@ for item in plots:
                                 legend1 = ROOT.TLegend(0.65, 0.35, 0.9, 0.45)
                                 legend1.AddEntry(h_egamma_loose, "Loose Photon, " + str(h_egamma_loose.GetEntries()), "l")
                                 #if not args.ratio: legend1.AddEntry(0, "Chi2/NDF: " + str(chi2 / ndf), "")
-                                legend2 = ROOT.TLegend(0.65, 0.55, 0.9, 0.7)
+                                legend2 = ROOT.TLegend(0.65, 0.35, 0.9, 0.45)
                                 legend2.AddEntry(h_egamma_tight, "Tight Photon, " + str(h_egamma_tight.GetEntries()), "l")
                                 legend2.AddEntry(tight_fit_as_hist, "Fitted Tight", "f")
                                 
