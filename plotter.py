@@ -504,6 +504,7 @@ for item in plots:
                                 c1.Update()
                                 stats1 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats1")
                                 c1.Clear()
+                                c1.Update()
                                 stats1.SetY1NDC(.5)
                                 stats1.SetY2NDC(.7)
 
@@ -513,6 +514,7 @@ for item in plots:
                                 c1.Update()
                                 stats2 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats2")
                                 c1.Clear()
+                                c1.Update()
 
                                 # create overall fitted histogram as: rising - bulk - falling
                                 loose_fit_as_hist = h_egamma_loose.Clone()
@@ -530,7 +532,11 @@ for item in plots:
                                         loose_fit_as_hist.SetBinContent(b+1, 0)
                         
                                 fitted_func = util.HistogramToFunction(loose_fit_as_hist)
-                                func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, 2, cheb=2)
+                                fitted_func_times_constant, _ = util.MultiplyWithPolyToTF1(fitted_func, 0, cheb=0)
+                                h_egamma_tight.Fit(fitted_func_times_constant, '0L') 
+                                tight_fit_w_constant = util.TemplateToHistogram(fitted_func_times_constant, 1000, 0, 50)
+
+                                func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, 8, cheb=2)
                                 h_egamma_tight.Fit(func_with_poly, '0L') 
                                 tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
 
@@ -557,6 +563,19 @@ for item in plots:
                                     else: sqrt_err = h_egamma_tight.GetBinError(j+1)
                                     h_tight_pull.SetBinContent(j+1, h_tight_pull_num.GetBinContent(j+1)/sqrt_err)
                                     h_tight_pull.SetBinError(j+1, 1)
+
+                                # pull for tight fit with constant
+                                h_tight_pullc_num = h_egamma_tight.Clone()
+                                h_tight_pullc_num.Reset()
+                                h_tight_pullc = h_egamma_tight.Clone()
+                                h_tight_pullc.Reset()
+                                h_tight_pullc_num.Add(h_egamma_tight, tight_fit_w_constant, 1, -1)  # Numerator of pull hist is data - fit
+                                
+                                for j in range(h_tight_pullc_num.GetNbinsX()): 
+                                    if h_egamma_tight.GetBinContent(j+1) == 0: sqrt_err = 1.8
+                                    else: sqrt_err = h_egamma_tight.GetBinError(j+1)
+                                    h_tight_pullc.SetBinContent(j+1, h_tight_pullc_num.GetBinContent(j+1)/sqrt_err)
+                                    h_tight_pullc.SetBinError(j+1, 0) # no error bar
                                 
                                 # Create title for plot 
                                 title = region + " Twoprong"
@@ -608,12 +627,14 @@ for item in plots:
                                         pad2.Draw()
                                         pad2.cd()
                                         h_egamma_tight.Draw("e")
+                                        tight_fit_w_constant.SetLineColor(ROOT.kBlue)
                                         tight_fit_as_hist.SetLineColor(ROOT.kRed)
-                                        tight_fit_as_hist.SetLineWidth(2)
+                                        tight_fit_as_hist.SetLineWidth(1)
                                         tight_fit_as_hist_errorbars = tight_fit_as_hist.Clone()
                                         tight_fit_as_hist_errorbars.SetFillColor(ROOT.kRed+2)
                                         tight_fit_as_hist_errorbars.Draw("same e2")
                                         tight_fit_as_hist.Draw("same hist")
+                                        tight_fit_w_constant.Draw('same')
                                         h_egamma_tight.Draw("e same")
                                         ROOT.gPad.SetLogy()
                                         if bins[i] < 80: h_egamma_tight.GetXaxis().SetRangeUser(0, 5)
@@ -658,10 +679,14 @@ for item in plots:
                                         elif bins[i] < 200: h_tight_pull.GetXaxis().SetRangeUser(0, 15)
                                         elif bins[i] < 380: h_tight_pull.GetXaxis().SetRangeUser(0, 20)
                                         else: h_tight_pull.GetXaxis().SetRangeUser(0, 26)
+                                        h_tight_pullc.SetMarkerColor(ROOT.kBlue)
+                                        h_tight_pullc.SetMarkerStyle(8)
+                                        h_tight_pullc.SetMarkerSize(0.25)
+                                        h_tight_pullc.Draw('pe same')
                                 
                                 ROOT.gPad.Update()
                                 if args.testBin is not None: raw_input()
-                                c1.Print(args.name + ".pdf")    
+                                c1.Print(args.name + ".pdf")
                         # after loop on fits, do f-test
                         """
                         lower_bound = min(*bound1s)
