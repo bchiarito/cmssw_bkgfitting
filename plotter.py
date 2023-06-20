@@ -315,21 +315,23 @@ for item in plots:
                         exp_range = 3
                         
                         # loop through combinations of 1,2 landaus and 1,2,3 exponentials
-                        for j in range(landau_range):
-                            for k in range(exp_range):
-                                nLandau = j+1
-                                nExp = k+1
-                                if not nLandau == 1 or not nExp == 2: continue 
+                        for k in range(landau_range):
+                            for l in range(exp_range):
+                                nLandau = k+1
+                                nExp = l+1
+                                if not nLandau == 1 or not nExp == 3: continue
                                 
                                 landau_guess = None
                                 exp_guess = None
-                                
+
+                                """
                                 if nLandau == 1 and nExp == 2:
                                     pass
                                 if nLandau == 2 and nExp == 3:
                                     landau_guess = [37840, 0.7493, 0.1121, 0.555, 1.371, 0.3455]
                                     exp_guess = [2e+05, -2.082, 1.555, -1.551, 1.5,  -1]
-                                
+                                """
+
                                 func_rising, fitresult_rising = util.fit_hist(h_egamma_loose, 'landau', first, left, N=nLandau, initial_guesses=landau_guess)
                                 rising_fit_as_hist = util.TemplateToHistogram(func_rising, 1000, 0, 50)
                                 h_egamma_loose.Draw()
@@ -566,4 +568,3 @@ for item in plots:
                             
 c1.Print(args.name + ".pdf]")
 infile1.Close()
-if args.testBin is not None: raw_input()
