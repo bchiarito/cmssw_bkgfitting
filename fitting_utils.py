@@ -47,21 +47,48 @@ def getname(prefix='obj'):
   return prefix+str(NAME_COUNT)
 
 def TemplateToHistogram(func, bins, low, high, integral=False):
-  '''
-  Takes ROOT TF1 function template, and a binning
+    '''
+    Convert a ROOT TF1 function template into a ROOT TH1D histogram.
 
-  Returns a ROOT TH1D histogram vesion
-  '''
-  name = getname()  
-  hist = ROOT.TH1D(name, name, bins, low, high)
-  for i in range(hist.GetNbinsX()):
-    if not integral:
-      val = func.Eval(hist.GetBinCenter(i+1))
-      hist.SetBinContent(i+1, val) if not math.isnan(val) else hist.SetBinContent(i+1, 0)
-    else:
-      val = (func.Integral(hist.GetBinLowEdge(i+1), hist.GetBinLowEdge(i+1) + hist.GetBinWidth(i+1))) / hist.GetBinWidth(i+1)
-      hist.SetBinContent(i+1, val) if not math.isnan(val) else hist.SetBinContent(i+1, 0)
-  return hist
+    Args:
+        func (ROOT.TF1): The ROOT TF1 function template to convert.
+        bins (int): The number of bins for the histogram.
+        low (float): The lower edge of the histogram.
+        high (float): The upper edge of the histogram.
+        integral (bool, optional): If True, compute the integral values instead
+            of evaluating the function at bin centers.
+
+    Returns:
+        ROOT.TH1D: The converted histogram.
+
+    Raises:
+        None.
+
+    Example:
+        # Create a TF1 template
+        template_func = ROOT.TF1("template", "x^2", 0, 10)
+
+        # Convert the template to a histogram
+        histogram = TemplateToHistogram(template_func, 100, 0, 10)
+
+    Notes:
+        - The function template is evaluated at each bin center and assigned to
+          the corresponding bin in the histogram.
+        - If the `integral` flag is True, the integral value within each bin is
+          computed and assigned to the bin content instead.
+        - If the function evaluation or integral computation results in NaN
+          (Not a Number), the bin content is set to 0.
+    '''
+    name = getname()  
+    hist = ROOT.TH1D(name, name, bins, low, high)
+    for i in range(hist.GetNbinsX()):
+        if not integral:
+            val = func.Eval(hist.GetBinCenter(i+1))
+            hist.SetBinContent(i+1, val) if not math.isnan(val) else hist.SetBinContent(i+1, 0)
+        else:
+            val = (func.Integral(hist.GetBinLowEdge(i+1), hist.GetBinLowEdge(i+1) + hist.GetBinWidth(i+1))) / hist.GetBinWidth(i+1)
+            hist.SetBinContent(i+1, val) if not math.isnan(val) else hist.SetBinContent(i+1, 0)
+    return hist
 
 def HistogramToFunction(hist):
   '''
