@@ -7,30 +7,6 @@ import argparse
 import array
 import fitting_utils as util
 
-
-def count_nonzero_bins(hist, bound):
-  count = 0
-  for i in range(hist.GetNbinsX()):
-    if hist.GetBinLowEdge(i+1) < bound: continue
-    if not hist.GetBinContent(i+1) == 0: count += 1
-  return count
-
-
-def RSS(func, hist, bound, integral=False):
-  rss = 0
-  by_bin = []
-  for i in range(hist.GetNbinsX()):
-    if hist.GetBinContent(i+1) == 0: continue
-    if hist.GetBinLowEdge(i+1) < bound: continue
-    if not integral:
-      val = (hist.GetBinContent(i+1) - func.Eval(hist.GetBinCenter(i+1)))**2
-    else:
-      val = ( hist.GetBinContent(i+1) - (func.Integral(hist.GetBinLowEdge(i+1), hist.GetBinLowEdge(i+1) + hist.GetBinWidth(i+1)))/hist.GetBinWidth(i+1) )**2
-    by_bin.append(val)
-    rss += val
-  return rss, by_bin
-
-
 def binConverter(test_bin):
     bin_list = test_bin.split(" ")
     return bin_list
