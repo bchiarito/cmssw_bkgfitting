@@ -383,8 +383,8 @@ for item in plots:
                                     stats1 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats1")
                                     c1.Clear()
                                     c1.Update()
-                                    stats1.SetY1NDC(.5)
-                                    stats1.SetY2NDC(.7)
+                                    stats1.SetY1NDC(.4)
+                                    stats1.SetY2NDC(.6)
 
                                     func_falling, fitresult_falling = util.fit_hist(h_egamma_loose, 'exp', right, last, N=nExp, initial_guesses=exp_guess)
                                     falling_fit_as_hist = util.TemplateToHistogram(func_falling, 1000, 0, 50)
@@ -394,20 +394,20 @@ for item in plots:
                                     c1.Clear()
                                     c1.Update()
 
-                                # create overall fitted histogram as: rising - bulk - falling
-                                loose_fit_as_hist = h_egamma_loose.Clone()
-                                loose_fit_as_hist.Reset()
-                                for b in range(h_egamma_loose.GetNbinsX()):
-                                    if b < first_bin:
-                                        loose_fit_as_hist.SetBinContent(b+1, 0)
-                                    elif b < left_bin:
-                                        loose_fit_as_hist.SetBinContent(b+1, rising_fit_as_hist.GetBinContent(b+1))
-                                    elif b <= right_bin:
-                                        loose_fit_as_hist.SetBinContent(b+1, h_egamma_loose.GetBinContent(b+1))
-                                    elif b <= last_bin:
-                                        loose_fit_as_hist.SetBinContent(b+1, falling_fit_as_hist.GetBinContent(b+1))
-                                    else:
-                                        loose_fit_as_hist.SetBinContent(b+1, 0)
+                                    # create overall fitted histogram as: rising - bulk - falling
+                                    loose_fit_as_hist = h_egamma_loose.Clone()
+                                    loose_fit_as_hist.Reset()
+                                    for b in range(h_egamma_loose.GetNbinsX()):
+                                        if b < first_bin:
+                                            loose_fit_as_hist.SetBinContent(b+1, 0)
+                                        elif b < left_bin:
+                                            loose_fit_as_hist.SetBinContent(b+1, rising_fit_as_hist.GetBinContent(b+1))
+                                        elif b <= right_bin:
+                                            loose_fit_as_hist.SetBinContent(b+1, h_egamma_loose.GetBinContent(b+1))
+                                        elif b <= last_bin:
+                                            loose_fit_as_hist.SetBinContent(b+1, falling_fit_as_hist.GetBinContent(b+1))
+                                        else:
+                                            loose_fit_as_hist.SetBinContent(b+1, 0)
                         
                                 fitted_func = util.HistogramToFunction(loose_fit_as_hist)
                                 fitted_func_times_constant, _ = util.MultiplyWithPolyToTF1(fitted_func, 0, cheb=0)
@@ -514,8 +514,11 @@ for item in plots:
                                 loose_fit_as_hist.SetLineColor(ROOT.kRed+1)
                                 loose_fit_as_hist.Draw("same")
                                 # f2.Draw("same")
-                                stats1.Draw()
-                                stats2.Draw()
+                                try:
+                                    stats1.Draw()
+                                    stats2.Draw()
+                                except NameError:
+                                    pass
                                 ROOT.gPad.SetLogy()
                                 if bins[i] < 70: h_egamma_loose.GetXaxis().SetRangeUser(0, 5)
                                 elif bins[i] < 120: h_egamma_loose.GetXaxis().SetRangeUser(0, 10)
