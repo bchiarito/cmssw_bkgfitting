@@ -319,18 +319,18 @@ for item in plots:
                             for l in range(exp_range):
                                 nLandau = k+1
                                 nExp = l+1
-                                if not nLandau == 1 or not nExp == 3: continue
+                                if not nLandau == 2 or not nExp == 3: continue
                                 
                                 landau_guess = None
                                 exp_guess = None
-
-                                """
-                                if nLandau == 1 and nExp == 2:
-                                    pass
-                                if nLandau == 2 and nExp == 3:
-                                    landau_guess = [37840, 0.7493, 0.1121, 0.555, 1.371, 0.3455]
-                                    exp_guess = [2e+05, -2.082, 1.555, -1.551, 1.5,  -1]
-                                """
+                                
+                                if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 100:
+                                    if nLandau == 1 and nExp == 3:
+                                        landau_guess = [1.705e+04, 0.6496, 0.0804]
+                                        exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [1.705e+04, 0.6496, 0.0804, 0.5, 0.6496, 0.0804] 
+                                        exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
 
                                 func_rising, fitresult_rising = util.fit_hist(h_egamma_loose, 'landau', first, left, N=nLandau, initial_guesses=landau_guess)
                                 rising_fit_as_hist = util.TemplateToHistogram(func_rising, 1000, 0, 50)
@@ -417,6 +417,8 @@ for item in plots:
                                 elif eta_reg == "endcap": title += ", Endcap"
                                 if i == len(bins) - 1: title += ", pt > " + str(bins[i])
                                 else: title += ", " + str(bins[i]) + " < pt < " + str(bins[i+1]) 
+                                if nLandau == 1: title += ", 1 land"
+                                elif nLandau == 2: title += ", 2 land"
                                 if nExp == 1: title += ", 1 exp"
                                 elif nExp == 2: title += ", 2 exp"
                                 elif nExp == 3: title += ", 3 exp"
