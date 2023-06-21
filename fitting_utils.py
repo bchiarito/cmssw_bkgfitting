@@ -1,6 +1,10 @@
 import ROOT
 import sys
 import math
+try:
+    from scipy.stats import f
+except ImportError:
+    pass
 
 # global counters
 NAME_COUNT = 0
@@ -132,7 +136,7 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, cheb=0, para
   if degree == 4 and cheb == 1:
     def func_after_mult(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*chb_fn(X, 2, 1)
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
                         + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1))
   if degree == 5 and cheb == 1:
     def func_after_mult(x, p):
@@ -188,7 +192,7 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, cheb=0, para
   if degree == 4 and cheb == 2:
     def func_after_mult(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*chb_fn(X, 2, 2)
+      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
                         + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2))
   if degree == 5 and cheb == 2:
     def func_after_mult(x, p):
@@ -452,6 +456,57 @@ def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, i
   if integral: fit_string += 'I'
   fit_result = hist.Fit(tf1, fit_string, "", range_low, range_high)
   return tf1, fit_result
+
+def RSS(func, hist, bound=-1, integral=False):
+  '''
+  helper for ftest()
+  '''
+  rss = 0
+  by_bin = []
+  for i in range(hist.GetNbinsX()):
+    if hist.GetBinContent(i+1) == 0: continue
+    if hist.GetBinLowEdge(i+1) < bound: continue
+    if not integral:
+      val = (hist.GetBinContent(i+1) - func.Eval(hist.GetBinCenter(i+1)))**2
+    else:
+      val = ( hist.GetBinContent(i+1) - (func.Integral(hist.GetBinLowEdge(i+1), hist.GetBinLowEdge(i+1) + hist.GetBinWidth(i+1)))/hist.GetBinWidth(i+1) )**2
+    by_bin.append(val)
+    rss += val
+  return rss, by_bin
+
+def count_nonzero_bins(hist, bound=-1):
+  '''
+  helper for ftest()
+  '''
+  count = 0
+  for i in range(hist.GetNbinsX()):
+    if hist.GetBinLowEdge(i+1) < bound: continue
+    if not hist.GetBinContent(i+1) == 0: count += 1
+  return count
+
+def lookup_ftest_target(dof1, dof2, sig):
+    '''
+    helper for ftest()
+    '''
+    if 'scipy' in sys.modules:
+        return f.ppf(1-sig, dof1, dof2)
+    else:
+        return 2
+
+def ftest(hist, func2, fit2, func1, fit1, sig=0.1, integral=False):
+    '''
+    F-test comparing fit2 (more parameters) vs fit1 (less parameters)
+    '''
+    rss1, _ = RSS(func1, hist, integral=integral)
+    rss2, _ = RSS(func2, hist, integral=integral)
+    p1 = func1.GetNpar()
+    p2 = func2.GetNpar()
+    n = count_nonzero_bins(hist)
+    F = ((rss1 - rss2)/(p2 - p1)) / (rss2/(n - p2))
+    dof1, dof2 = p2 - p1, n - p2
+    target = lookup_ftest_target(dof1, dof2, sig)
+    decision = F > target
+    return decision, F, target, dof1, dof2
 
 if __name__ == '__main__':
   RANGE_LOW = 0 

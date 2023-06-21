@@ -273,13 +273,6 @@ for item in plots:
                         if i == len(bins) - 1: print("############### PT BIN: " + str(bins[i]) + "+, " + eta_reg.upper() + " ###############")
                         else: print("############### PT BIN: " + str(bins[i]) + "-" + str(bins[i+1]) + ", " + eta_reg.upper() + " ###############")
                         
-                        # varibles for f-test
-                        fits = []
-                        histo = ''
-                        num_param = []
-                        by_bins = []
-                        bound1s = []
-
                         ### new idea, fit only rising and falling ###
 
                         # determine left and right bounds
@@ -373,6 +366,31 @@ for item in plots:
                                 func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, 3, cheb=0)
                                 h_egamma_tight.Fit(func_with_poly, '0L') 
                                 tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
+
+                                FTEST = False
+                                if FTEST:
+                                    NUM_DEGREES = 8
+                                    fitfuncs = []
+                                    fitresults = []
+                                    for degree in range(NUM_DEGREES+1):
+                                        func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, degree, cheb=0)
+                                        fitresult = h_egamma_tight.Fit(func_with_poly, '0SL')
+                                        tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
+
+                                        fitfuncs.append(func_with_poly)
+                                        fitresults.append(fitresult)
+
+                                    best_d = 0
+                                    for d2 in range(NUM_DEGREES+1):
+                                        for d1 in range(d2):
+                                            if not d1 == best_d: continue
+                                            decision, ftest, target, dof1, dof2 = util.ftest(
+                                                h_egamma_tight, fitfuncs[d2], fitresults[d2], fitfuncs[d1], fitresults[d1])
+                                            print(d2, '>', d1, decision)
+                                            print('  F={} target={}'.format(ftest, target), '({}, {}) dof'.format(dof1, dof2))
+                                            print('')
+                                            if decision: best_d = d2
+                                    print('Best: ', best_d)
 
                                 h_loose_pull_num = h_egamma_loose.Clone()
                                 h_loose_pull_num.Reset()
@@ -523,50 +541,6 @@ for item in plots:
                                 ROOT.gPad.Update()
                                 if args.testBin is not None: raw_input()
                                 c1.Print(args.name + ".pdf")
-                        # after loop on fits, do f-test
-                        """
-                        lower_bound = min(*bound1s)
-                        print(bound1s)
-                        rss1, by_bin = RSS(fits[0], saved_loose_histo, lower_bound); by_bins.append(by_bin)
-                        rss2, by_bin = RSS(fits[1], saved_loose_histo, lower_bound); by_bins.append(by_bin)
-                        rss3, by_bin = RSS(fits[2], saved_loose_histo, lower_bound); by_bins.append(by_bin)
-                        rss4, by_bin = RSS(fits[3], saved_loose_histo, lower_bound); by_bins.append(by_bin)
-                        p1 = num_param[0]
-                        p2 = num_param[1]
-                        p3 = num_param[2]
-                        p4 = num_param[3]
-                        n = count_nonzero_bins(h_egamma_loose, lower_bound)
-                        F21 = ((rss1 - rss2)/(p2 - p1)) / (rss2/(n - p2))
-                        F31 = ((rss1 - rss3)/(p3 - p1)) / (rss3/(n - p3))
-                        F32 = ((rss2 - rss3)/(p3 - p2)) / (rss3/(n - p3))
-                        F41 = ((rss1 - rss4)/(p4 - p1)) / (rss4/(n - p4))
-                        F42 = ((rss2 - rss4)/(p4 - p2)) / (rss4/(n - p4))
-                        F43 = ((rss3 - rss4)/(p4 - p3)) / (rss4/(n - p4))
-                        print str(p1)+" "+str(p2)+" "+str(p3)+" "+str(p4)
-                        print str(rss1)+" "+str(rss2)+" "+str(rss3)+" "+str(rss4)
-                        print str(n)
-                        print str(lower_bound)
-                        print ""
-                        for b in range(len(by_bins[0])):
-                          s = str(b)+": "
-                          for array in by_bins:
-                            s = s+" "+"{:.3}".format(array[b])
-                          print s
-                        print ""
-                        print "F21: "+ str(F21)
-                        print "  ({}, {}) degrees of freedom".format(p2-p1, n-p2)
-                        print "F31: "+ str(F21)
-                        print "  ({}, {}) degrees of freedom".format(p3-p1, n-p3)
-                        print "F32: "+ str(F32)
-                        print "  ({}, {}) degrees of freedom".format(p3-p2, n-p3)
-                        print "F41: "+ str(F41)
-                        print "  ({}, {}) degrees of freedom".format(p4-p1, n-p4)
-                        print "F42: "+ str(F42)
-                        print "  ({}, {}) degrees of freedom".format(p4-p2, n-p4)
-                        print "F43: "+ str(F43)
-                        print "  ({}, {}) degrees of freedom".format(p4-p3, n-p4)
-                        raw_input()
-                        """
                             
 c1.Print(args.name + ".pdf]")
 infile1.Close()
