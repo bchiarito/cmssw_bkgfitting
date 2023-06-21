@@ -424,9 +424,11 @@ def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, i
       
         y11=norm1*ROOT.TMath.Landau(bound1, mpv1, sigma1)
         y12=norm2*ROOT.TMath.Landau(bound1, mpv2, sigma2)
-        land2 = norm2*ROOT.TMath.Landau(x[0], mpv2, sigma2)*y11/y12
+        if y12 == 0: land2 = norm2*ROOT.TMath.Landau(x[0], mpv2, sigma2)*y11
+        else: land2 = norm2*ROOT.TMath.Landau(x[0], mpv2, sigma2)*y11/y12
          
-        y21=norm2*ROOT.TMath.Landau(bound2, mpv2, sigma2)*y11/y12
+        if y12 == 0: y21=norm2*ROOT.TMath.Landau(bound2, mpv2, sigma2)*y11
+        else: y21=norm2*ROOT.TMath.Landau(bound2, mpv2, sigma2)*y11/y12
         y22=ROOT.TMath.Exp(C1*bound2)
         exp1=ROOT.TMath.Exp(C1*x[0])*y21/y22
 
