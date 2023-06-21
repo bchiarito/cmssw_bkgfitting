@@ -390,26 +390,33 @@ for item in plots:
                                         landau_guess = [1.204e+04, 0.7742, 0.1196, 0.4986, 1.483, 0.3501]
                                         exp_guess = [4.491e+04, -1.059, 5.5, -3.574, 4.5, -2.234]
                                 
-                                if h_egamma_loose.Integral() < 1000: print("######### " + str(bins[i]) + ", " + eta_reg + " < 1000 entries!!!!! #########")
+                                if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 300:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [8442, 1.149, 0.2453, 0.1586, 1.115, 0.2326]
+                                        exp_guess = [3.14e+04, -1.023, 6.75, -0.5922, 1.25, -1]
+                               
+                                # CODE THAT GIVES ERROR
+                                if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 300:
+                                    func_full, fitresult_full = util.fit_hist(h_egamma_loose, 'full', 0, 50, 24, initial_guesses=None)
+                                    loose_fit_as_hist = util.TemplateToHistogram(func_full, 1000, 0, 50) 
+                                else:
+                                    func_rising, fitresult_rising = util.fit_hist(h_egamma_loose, 'landau', first, left, N=nLandau, initial_guesses=landau_guess)
+                                    rising_fit_as_hist = util.TemplateToHistogram(func_rising, 1000, 0, 50)
+                                    h_egamma_loose.Draw()
+                                    c1.Update()
+                                    stats1 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats1")
+                                    c1.Clear()
+                                    c1.Update()
+                                    stats1.SetY1NDC(.5)
+                                    stats1.SetY2NDC(.7)
 
-
-                                func_rising, fitresult_rising = util.fit_hist(h_egamma_loose, 'landau', first, left, N=nLandau, initial_guesses=landau_guess)
-                                rising_fit_as_hist = util.TemplateToHistogram(func_rising, 1000, 0, 50)
-                                h_egamma_loose.Draw()
-                                c1.Update()
-                                stats1 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats1")
-                                c1.Clear()
-                                c1.Update()
-                                stats1.SetY1NDC(.5)
-                                stats1.SetY2NDC(.7)
-
-                                func_falling, fitresult_falling = util.fit_hist(h_egamma_loose, 'exp', right, last, N=nExp, initial_guesses=exp_guess)
-                                falling_fit_as_hist = util.TemplateToHistogram(func_falling, 1000, 0, 50)
-                                h_egamma_loose.Draw()
-                                c1.Update()
-                                stats2 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats2")
-                                c1.Clear()
-                                c1.Update()
+                                    func_falling, fitresult_falling = util.fit_hist(h_egamma_loose, 'exp', right, last, N=nExp, initial_guesses=exp_guess)
+                                    falling_fit_as_hist = util.TemplateToHistogram(func_falling, 1000, 0, 50)
+                                    h_egamma_loose.Draw()
+                                    c1.Update()
+                                    stats2 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats2")
+                                    c1.Clear()
+                                    c1.Update()
 
                                 # create overall fitted histogram as: rising - bulk - falling
                                 loose_fit_as_hist = h_egamma_loose.Clone()
