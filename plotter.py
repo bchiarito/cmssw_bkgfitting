@@ -306,7 +306,7 @@ for item in plots:
                         
                         landau_range = 2
                         exp_range = 3
-                        
+
                         # loop through combinations of 1,2 landaus and 1,2,3 exponentials
                         for k in range(landau_range):
                             for l in range(exp_range):
@@ -317,6 +317,46 @@ for item in plots:
                                 landau_guess = None
                                 exp_guess = None
                                 
+                                if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 20:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [3.491e+06, 0.8838, 0.145, 0.2689, 1.171, 0.2137] 
+                                        exp_guess = [8.593e+05, -4.278, 1.595, -7.263, 0.2, -9.997]
+                                
+                                if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 20:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [1.705e+04, 1.108, 0.1949, 0.1949, 1.108, 0.1949] 
+                                        exp_guess = [4182, -0.9553, 1.4, -5.89, 0.4, -1]
+                                
+                                if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 40:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [1.705e+04, 1.33, 0.205, 0.3737, 1.085, 0.1943]
+                                        exp_guess = [3.636e+05, -2.809, 2.176, -4.8, 0.6, -1.807]
+                                
+                                if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 40:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [1.123e+05, 0.875, 0.1524, 0.5311, 0.4702, 0.4837]
+                                        exp_guess = [4.549e+04, -2.09, 1.915, -3.572, 0.6484, -6.328]
+                                
+                                if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 60:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [1.021e+04, 0.7237, 0.107, 0.2622, 1.169, 0.2502]
+                                        exp_guess = [5970, -0.9294, 1.702, -2.435, 1.262, -5.012]
+                                
+                                if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 70:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [1.857e+04, 0.682, 0.09099, 0.5348, 1.346, 0.2239]
+                                        exp_guess = [1.349e+04, -1.075, 2.269, -2.444, 1.235, -5.598]
+                                
+                                if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 70:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [1.163e+04, 0.7851, 0.1258, 0.1535, 1.196, 0.2558]
+                                        exp_guess = [1.045e+04, -1.111, 1.645, -2.263, 1.974, -6.166]
+                                
+                                if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 80:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [1.826e+04, 0.6239, 0.07162, 0.22, 1.336, 0.2698]
+                                        exp_guess = [1.506e+04, -0.9609, 2.4, -2.24, 2.2, -0.4279]
+                                
                                 if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 100:
                                     if nLandau == 1 and nExp == 3:
                                         landau_guess = [1.705e+04, 0.6496, 0.0804]
@@ -324,6 +364,34 @@ for item in plots:
                                     if nLandau == 2 and nExp == 3:
                                         landau_guess = [1.705e+04, 0.6496, 0.0804, 0.5, 0.6496, 0.0804] 
                                         exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
+                                
+                                if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 140:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [8972, 0.8638, 0.1507, 0.3139, 1.079, 0.2261]
+                                        exp_guess = [9448, -1.041, 3.2, -1.423, 1, -1.201]
+                                
+                                if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 160:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [9535, 0.6861, 0.08948, 0.1568, 1.522, 0.3291]
+                                        exp_guess = [5.971e+04, -1.224, 4, -3.118, 4, -4.477]
+                                
+                                if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 160:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [7468, 0.9087, 0.1663, 0.1634, 1.12, 0.2401]
+                                        exp_guess = [1.107e+04, -1.035, 3, -1.572, 2, -7.523]
+                                
+                                if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 180:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [1.183e+04, 0.7977, 0.1293, 0.1502, 1.249, 0.27]
+                                        exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
+                                
+                                if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 200:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [1.204e+04, 0.7742, 0.1196, 0.4986, 1.483, 0.3501]
+                                        exp_guess = [4.491e+04, -1.059, 5.5, -3.574, 4.5, -2.234]
+                                
+                                if h_egamma_loose.Integral() < 1000: print("######### " + str(bins[i]) + ", " + eta_reg + " < 1000 entries!!!!! #########")
+
 
                                 func_rising, fitresult_rising = util.fit_hist(h_egamma_loose, 'landau', first, left, N=nLandau, initial_guesses=landau_guess)
                                 rising_fit_as_hist = util.TemplateToHistogram(func_rising, 1000, 0, 50)
@@ -466,7 +534,7 @@ for item in plots:
                                 stats1.Draw()
                                 stats2.Draw()
                                 ROOT.gPad.SetLogy()
-                                if bins[i] < 80: h_egamma_loose.GetXaxis().SetRangeUser(0, 5)
+                                if bins[i] < 70: h_egamma_loose.GetXaxis().SetRangeUser(0, 5)
                                 elif bins[i] < 120: h_egamma_loose.GetXaxis().SetRangeUser(0, 10)
                                 elif bins[i] < 200: h_egamma_loose.GetXaxis().SetRangeUser(0, 15)
                                 elif bins[i] < 380: h_egamma_loose.GetXaxis().SetRangeUser(0, 20)
@@ -491,7 +559,7 @@ for item in plots:
                                         tight_fit_w_constant.Draw('same')
                                         h_egamma_tight.Draw("e same")
                                         ROOT.gPad.SetLogy()
-                                        if bins[i] < 80: h_egamma_tight.GetXaxis().SetRangeUser(0, 5)
+                                        if bins[i] < 70: h_egamma_tight.GetXaxis().SetRangeUser(0, 5)
                                         elif bins[i] < 120: h_egamma_tight.GetXaxis().SetRangeUser(0, 10)
                                         elif bins[i] < 200: h_egamma_tight.GetXaxis().SetRangeUser(0, 15)
                                         elif bins[i] < 380: h_egamma_tight.GetXaxis().SetRangeUser(0, 20)
@@ -510,7 +578,7 @@ for item in plots:
                                     h_loose_pull.SetMarkerSize(0.25)
                                     h_loose_pull.GetYaxis().SetRangeUser(-15, 15)
                                     h_loose_pull.SetStats(0)
-                                    if bins[i] < 80: h_loose_pull.GetXaxis().SetRangeUser(0, 5)
+                                    if bins[i] < 70: h_loose_pull.GetXaxis().SetRangeUser(0, 5)
                                     elif bins[i] < 120: h_loose_pull.GetXaxis().SetRangeUser(0, 10)
                                     elif bins[i] < 200: h_loose_pull.GetXaxis().SetRangeUser(0, 15)
                                     elif bins[i] < 380: h_loose_pull.GetXaxis().SetRangeUser(0, 20)
@@ -528,7 +596,7 @@ for item in plots:
                                         h_tight_pull.SetMarkerSize(0.25)
                                         h_tight_pull.GetYaxis().SetRangeUser(-15, 15)
                                         h_tight_pull.SetStats(0)
-                                        if bins[i] < 80: h_tight_pull.GetXaxis().SetRangeUser(0, 5)
+                                        if bins[i] < 70: h_tight_pull.GetXaxis().SetRangeUser(0, 5)
                                         elif bins[i] < 120: h_tight_pull.GetXaxis().SetRangeUser(0, 10)
                                         elif bins[i] < 200: h_tight_pull.GetXaxis().SetRangeUser(0, 15)
                                         elif bins[i] < 380: h_tight_pull.GetXaxis().SetRangeUser(0, 20)
