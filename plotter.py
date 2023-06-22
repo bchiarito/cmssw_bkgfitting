@@ -23,6 +23,7 @@ parser.add_argument("--testBin", default=None, help="specify bin to test")
 parser.add_argument("--ratio", default=False, action="store_true", help="create ratio plots instead of fit plots")
 parser.add_argument("--fit", default=False, action="store_true", help="create fit plots only")
 parser.add_argument("--name", default="plots", help="create name for plots pdf")
+parser.add_argument("--ftest", default=None, help="format: '<CHEB_TYPE> <MAXDEGREE>', default is no f-test")
 
 # parse args
 args = parser.parse_args()
@@ -451,22 +452,32 @@ for item in plots:
                                 h_egamma_tight.Fit(fitted_func_times_constant, '0L') 
                                 tight_fit_w_constant = util.TemplateToHistogram(fitted_func_times_constant, 1000, 0, 50)
 
-                                func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, 3, cheb=0)
-                                h_egamma_tight.Fit(func_with_poly, '0L') 
-                                tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
+                                FTEST = True if args.ftest else False
+                                if not FTEST:
+                                    func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, 2, cheb=1)
+                                    h_egamma_tight.Fit(func_with_poly, '0L') 
+                                    tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
 
-                                FTEST = False
                                 if FTEST:
-                                    NUM_DEGREES = 8
+                                    parse = args.ftest.split()
+                                    NUM_DEGREES = int(parse[1])
+                                    CHEB_TYPE = int(parse[0])
                                     fitfuncs = []
                                     fitresults = []
+                                    statboxes = []
                                     for degree in range(NUM_DEGREES+1):
-                                        func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, degree, cheb=0)
+                                        func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, degree, cheb=CHEB_TYPE)
                                         fitresult = h_egamma_tight.Fit(func_with_poly, '0SL')
                                         tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
 
                                         fitfuncs.append(func_with_poly)
                                         fitresults.append(fitresult)
+                                        h_egamma_tight.Draw()
+                                        c1.Update()
+                                        statboxes.append(h_egamma_tight.GetListOfFunctions().FindObject("stats").Clone("stat"+str(degree)))
+                                        c1.Clear()
+                                        c1.Update()
+                                    h_egamma_tight.SetStats(0)
 
                                     best_d = 0
                                     for d2 in range(NUM_DEGREES+1):
@@ -479,6 +490,9 @@ for item in plots:
                                             print('')
                                             if decision: best_d = d2
                                     print('Best: ', best_d)
+                                    func_with_poly = fitfuncs[best_d]
+                                    tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
+                                    tight_stat = statboxes[best_d]
 
                                 h_loose_pull_num = h_egamma_loose.Clone()
                                 h_loose_pull_num.Reset()
@@ -523,21 +537,25 @@ for item in plots:
                                 elif eta_reg == "endcap": title += ", Endcap"
                                 if i == len(bins) - 1: title += ", pt > " + str(bins[i])
                                 else: title += ", " + str(bins[i]) + " < pt < " + str(bins[i+1]) 
-                                if nLandau == 1: title += ", 1 land"
-                                elif nLandau == 2: title += ", 2 land"
-                                if nExp == 1: title += ", 1 exp"
-                                elif nExp == 2: title += ", 2 exp"
-                                elif nExp == 3: title += ", 3 exp"
-                                elif nExp == 4: title += ", 4 exp"
+                                if not old_method:
+                                    if nLandau == 1: title += ", 1 land"
+                                    elif nLandau == 2: title += ", 2 land"
+                                    if nExp == 1: title += ", 1 exp"
+                                    elif nExp == 2: title += ", 2 exp"
+                                    elif nExp == 3: title += ", 3 exp"
+                                    elif nExp == 4: title += ", 4 exp"
+                                if old_method:
+                                    title += ", full fit (2 land 4 exp)"
 
                                 # Legend creation
                                 if old_method: legend1 = ROOT.TLegend(0.35, 0.78, 0.6, 0.88)
                                 else: legend1 = ROOT.TLegend(0.62, 0.27, 0.9, 0.37)
                                 legend1.AddEntry(h_egamma_loose, "Loose Photon, " + str(h_egamma_loose.GetEntries()), "l")
                                 #if not args.ratio: legend1.AddEntry(0, "Chi2/NDF: " + str(chi2 / ndf), "")
-                                legend2 = ROOT.TLegend(0.65, 0.35, 0.9, 0.45)
+                                legend2 = ROOT.TLegend(0.65, 0.25, 0.9, 0.35)
                                 legend2.AddEntry(h_egamma_tight, "Tight Photon, " + str(h_egamma_tight.GetEntries()), "l")
-                                legend2.AddEntry(tight_fit_as_hist, "Fitted Tight", "f")
+                                legend2.AddEntry(tight_fit_as_hist, "Fitted Tight (degree "+str(func_with_poly.GetNpar()-1)+")", "l")
+                                legend2.AddEntry(tight_fit_w_constant, "Constant fit, C = {:.5}".format(fitted_func_times_constant.GetParameter(0)), "l")
                                 
                                 # Draw plots
                                 if args.fit: c1.cd(1)
@@ -553,11 +571,12 @@ for item in plots:
                                 loose_fit_as_hist.SetLineColor(ROOT.kRed+1)
                                 loose_fit_as_hist.Draw("same")
                                 # f2.Draw("same")
-                                try:
-                                    stats1.Draw()
-                                    stats2.Draw()
-                                except NameError:
-                                    pass
+                                if not(left == 0 and right == 50):
+                                    try:
+                                        stats1.Draw()
+                                        stats2.Draw()
+                                    except NameError:
+                                        pass
                                 ROOT.gPad.SetLogy()
                                 if bins[i] < 70: h_egamma_loose.GetXaxis().SetRangeUser(0, 5)
                                 elif bins[i] < 120: h_egamma_loose.GetXaxis().SetRangeUser(0, 10)
@@ -574,6 +593,7 @@ for item in plots:
                                         pad2.Draw()
                                         pad2.cd()
                                         h_egamma_tight.Draw("e")
+                                        tight_stat.Draw()
                                         tight_fit_w_constant.SetLineColor(ROOT.kBlue)
                                         tight_fit_as_hist.SetLineColor(ROOT.kRed)
                                         tight_fit_as_hist.SetLineWidth(1)
@@ -601,7 +621,7 @@ for item in plots:
                                     h_loose_pull.Draw('pe')
                                     h_loose_pull.SetMarkerStyle(8)
                                     h_loose_pull.SetMarkerSize(0.25)
-                                    h_loose_pull.GetYaxis().SetRangeUser(-15, 15)
+                                    h_loose_pull.GetYaxis().SetRangeUser(-10, 10)
                                     h_loose_pull.SetStats(0)
                                     if bins[i] < 70: h_loose_pull.GetXaxis().SetRangeUser(0, 5)
                                     elif bins[i] < 120: h_loose_pull.GetXaxis().SetRangeUser(0, 10)
@@ -619,7 +639,7 @@ for item in plots:
                                         h_tight_pull.Draw('pe')
                                         h_tight_pull.SetMarkerStyle(8)
                                         h_tight_pull.SetMarkerSize(0.25)
-                                        h_tight_pull.GetYaxis().SetRangeUser(-15, 15)
+                                        h_tight_pull.GetYaxis().SetRangeUser(-10, 10)
                                         h_tight_pull.SetStats(0)
                                         if bins[i] < 70: h_tight_pull.GetXaxis().SetRangeUser(0, 5)
                                         elif bins[i] < 120: h_tight_pull.GetXaxis().SetRangeUser(0, 10)
