@@ -373,7 +373,7 @@ for item in plots:
                                
                                 # CODE THAT GIVES ERROR
                                 if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 300:
-                                    guesses = [1.706e+04, 1.529, 0,3766, 1.706e+04, 1.529, 0,3766, -0.01528, -0.7213, -1.017, -0.5931, 0.5, 0.8, 0.5, 1.27, 3.6]  
+                                    guesses = [1.706e+04, 1.529, 0.3766, 1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, -0.5931, 0.5, 0.8, 0.5, 1.27, 3.6]  
                                     func_full, fitresult_full = util.fit_hist(h_egamma_loose, 'full', 0, 50, 24, initial_guesses=guesses)
                                     loose_fit_as_hist = util.TemplateToHistogram(func_full, 1000, 0, 50) 
                                 else:
