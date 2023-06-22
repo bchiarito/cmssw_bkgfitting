@@ -290,6 +290,7 @@ for item in plots:
                                 nExp = l+1
                                 if not nLandau == 2 or not nExp == 3: continue
                                 
+                                old_method = False
                                 landau_guess = None
                                 exp_guess = None
                                 
@@ -361,6 +362,11 @@ for item in plots:
                                         landau_guess = [1.183e+04, 0.7977, 0.1293, 0.1502, 1.249, 0.27]
                                         exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
                                 
+                                if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 180:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [7031, 1.004, 0.1965, 0.2383, 1.071, 0.2191]
+                                        exp_guess = [1.742e+04, -1.198, 3.5, -3.296, 2.5, -1.366]
+                                
                                 if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 200:
                                     if nLandau == 2 and nExp == 3:
                                         landau_guess = [1.204e+04, 0.7742, 0.1196, 0.4986, 1.483, 0.3501]
@@ -371,11 +377,41 @@ for item in plots:
                                         landau_guess = [8442, 1.149, 0.2453, 0.1586, 1.115, 0.2326]
                                         exp_guess = [3.14e+04, -1.023, 6.75, -0.5922, 1.25, -1]
                                
-                                # CODE THAT GIVES ERROR
                                 if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 300:
+                                    old_method = True
+                                    nExp = 4
+                                    nLandau = 2
                                     guesses = [1.706e+04, 1.529, 0.3766, 1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, -0.5931, 0.5, 0.8, 0.5, 1.27, 3.6]  
                                     func_full, fitresult_full = util.fit_hist(h_egamma_loose, 'full', 0, 50, 24, initial_guesses=guesses)
-                                    loose_fit_as_hist = util.TemplateToHistogram(func_full, 1000, 0, 50) 
+                                    loose_fit_as_hist = util.TemplateToHistogram(func_full, 1000, 0, 50)
+                                elif region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 380:
+                                    old_method = True
+                                    nExp = 4
+                                    nLandau = 2
+                                    guesses = [4848, 1.63, 0.4089, 4848, 1.63, 0.4089, -3.553e-13, -0.6753, -0.8161, -0.5092, 0.5, 1.404, 0.5423, 1.478, 4.575]
+                                    func_full, fitresult_full = util.fit_hist(h_egamma_loose, 'full', 0, 50, 24, initial_guesses=guesses)
+                                    loose_fit_as_hist = util.TemplateToHistogram(func_full, 1000, 0, 50)
+                                elif region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 380:
+                                    old_method = True
+                                    nExp = 4
+                                    nLandau = 2
+                                    guesses = [890.4, 1.723, 0.4403, 890.4, 1.723, 0.4403, -1.441, -0.9773, -0.5518, -0.2026, 0.5, 4.1, 0.5, 2.8, 7]
+                                    func_full, fitresult_full = util.fit_hist(h_egamma_loose, 'full', 0, 50, 24, initial_guesses=guesses)
+                                    loose_fit_as_hist = util.TemplateToHistogram(func_full, 1000, 0, 50)
+                                elif region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 460:
+                                    old_method = True
+                                    nExp = 4
+                                    nLandau = 2
+                                    guesses = [2487, 1.731, 0.4342, 2487, 1.731, 0.4342, -0.08184, -0.6556, -0.6027, -0.3448, 0.5, 1.187, 0.5, 3.168, 5.617]
+                                    func_full, fitresult_full = util.fit_hist(h_egamma_loose, 'full', 0, 50, 24, initial_guesses=guesses)
+                                    loose_fit_as_hist = util.TemplateToHistogram(func_full, 1000, 0, 50)
+                                elif region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 460:
+                                    old_method = True
+                                    nExp = 4
+                                    nLandau = 2
+                                    guesses = [301.3, 1.842, 0.482, 301.3, 1.842, 0.482, -1.031, -0.5918, -1.591, -0.2211, 0.5, 3.275, 0.8257, 6, 4]
+                                    func_full, fitresult_full = util.fit_hist(h_egamma_loose, 'full', 0, 50, 24, initial_guesses=guesses)
+                                    loose_fit_as_hist = util.TemplateToHistogram(func_full, 1000, 0, 50)
                                 else:
                                     func_rising, fitresult_rising = util.fit_hist(h_egamma_loose, 'landau', first, left, N=nLandau, initial_guesses=landau_guess)
                                     rising_fit_as_hist = util.TemplateToHistogram(func_rising, 1000, 0, 50)
@@ -492,9 +528,11 @@ for item in plots:
                                 if nExp == 1: title += ", 1 exp"
                                 elif nExp == 2: title += ", 2 exp"
                                 elif nExp == 3: title += ", 3 exp"
+                                elif nExp == 4: title += ", 4 exp"
 
                                 # Legend creation
-                                legend1 = ROOT.TLegend(0.65, 0.35, 0.9, 0.45)
+                                if old_method: legend1 = ROOT.TLegend(0.35, 0.78, 0.6, 0.88)
+                                else: legend1 = ROOT.TLegend(0.62, 0.27, 0.9, 0.37)
                                 legend1.AddEntry(h_egamma_loose, "Loose Photon, " + str(h_egamma_loose.GetEntries()), "l")
                                 #if not args.ratio: legend1.AddEntry(0, "Chi2/NDF: " + str(chi2 / ndf), "")
                                 legend2 = ROOT.TLegend(0.65, 0.35, 0.9, 0.45)
