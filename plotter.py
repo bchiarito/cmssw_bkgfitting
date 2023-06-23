@@ -293,7 +293,9 @@ for item in plots:
                                 old_method = False
                                 landau_guess = None
                                 exp_guess = None
-                                
+
+                                if not nExp == 3 or not nLandau == 2: continue
+
                                 # NonIso-Sym Guesses
                                 if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 20:
                                     if nLandau == 2 and nExp == 3:
@@ -406,26 +408,31 @@ for item in plots:
                                         exp_guess = [3.14e+04, -1.023, 6.75, -0.5922, 1.25, -1]
                                     else: continue
                                 if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 300:
+                                    nExp += 1
                                     if nLandau == 2 and nExp == 4:
                                         old_method = True
                                         guesses = [1.706e+04, 1.529, 0.3766, 1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, -0.5931, 0.5, 0.8, 0.5, 1.27, 3.6]  
                                     else: continue
                                 if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 380:
+                                    nExp += 1
                                     if nLandau == 2 and nExp == 4:
                                         old_method = True
                                         guesses = [4848, 1.63, 0.4089, 4848, 1.63, 0.4089, -3.553e-13, -0.6753, -0.8161, -0.5092, 0.5, 1.404, 0.5423, 1.478, 4.575]
                                     else: continue
                                 if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 380:
+                                    nExp += 1
                                     if nLandau == 2 and nExp == 4:
                                         old_method = True
                                         guesses = [890.4, 1.723, 0.4403, 890.4, 1.723, 0.4403, -1.441, -0.9773, -0.5518, -0.2026, 0.5, 4.1, 0.5, 2.8, 7]
                                     else: continue
                                 if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 460:
+                                    nExp += 1
                                     if nLandau == 2 and nExp == 4:
                                         old_method = True
                                         guesses = [2487, 1.731, 0.4342, 2487, 1.731, 0.4342, -0.08184, -0.6556, -0.6027, -0.3448, 0.5, 1.187, 0.5, 3.168, 5.617]
                                     else: continue
                                 if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 460:
+                                    nExp += 1
                                     if nLandau == 2 and nExp == 4:
                                         old_method = True
                                         guesses = [301.3, 1.842, 0.482, 301.3, 1.842, 0.482, -1.031, -0.5918, -1.591, -0.2211, 0.5, 3.275, 0.8257, 6, 4]
