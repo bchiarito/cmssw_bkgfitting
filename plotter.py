@@ -50,7 +50,7 @@ else: plots = main_plots
 
 eta_regions = ["all", "barrel", "endcap"]
 regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
-test_regions = ["noniso_sym"]
+test_regions = ["iso_asym"]
 if args.test: regions = test_regions
 photon_regions = ["tight", "loose"]
 bins = [20,40,60,70,80,100,120,140,160,180,200,240,300,380,460]
@@ -293,8 +293,15 @@ for item in plots:
                                 old_method = False
                                 landau_guess = None
                                 exp_guess = None
+                                
+                                if region == "noniso_sym":
+                                    if not nExp == 3 or not nLandau == 2: continue
+                                if region == "iso_asym":
+                                    if not nExp == 3 or not nLandau == 1: continue
 
-                                if not nExp == 3 or not nLandau == 2: continue
+                                if region == "iso_sym" or region == "iso_asym": 
+                                    old_method = True
+                                    guesses = None
 
                                 # NonIso-Sym Guesses
                                 if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 20:
@@ -439,7 +446,8 @@ for item in plots:
                                     else: continue
                                 
                                 if old_method:
-                                    func_full, fitresult_full = util.fit_hist(h_egamma_loose, 'full', 0, 50, 24, initial_guesses=guesses)
+                                    N = str(nLandau) + str(nExp)
+                                    func_full, fitresult_full = util.fit_hist(h_egamma_loose, 'full', 0, 50, int(N), initial_guesses=guesses)
                                     loose_fit_as_hist = util.TemplateToHistogram(func_full, 1000, 0, 50)
                                 else:
                                     func_rising, fitresult_rising = util.fit_hist(h_egamma_loose, 'landau', first, left, N=nLandau, initial_guesses=landau_guess)
@@ -573,7 +581,7 @@ for item in plots:
                                     elif nExp == 3: title += ", 3 exp"
                                     elif nExp == 4: title += ", 4 exp"
                                 if old_method:
-                                    title += ", full fit (2 land 4 exp)"
+                                    title += ", full fit (" + str(nLandau) + " land " + str(nExp) + " exp)"
 
                                 # Legend creation
                                 if old_method: legend1 = ROOT.TLegend(0.35, 0.78, 0.6, 0.88)
@@ -606,7 +614,7 @@ for item in plots:
                                     except NameError:
                                         pass
                                 ROOT.gPad.SetLogy()
-                                if bins[i] < 70: h_egamma_loose.GetXaxis().SetRangeUser(0, 5)
+                                if bins[i] < 60: h_egamma_loose.GetXaxis().SetRangeUser(0, 5)
                                 elif bins[i] < 120: h_egamma_loose.GetXaxis().SetRangeUser(0, 10)
                                 elif bins[i] < 200: h_egamma_loose.GetXaxis().SetRangeUser(0, 15)
                                 elif bins[i] < 380: h_egamma_loose.GetXaxis().SetRangeUser(0, 20)
@@ -632,7 +640,7 @@ for item in plots:
                                         tight_fit_w_constant.Draw('same')
                                         h_egamma_tight.Draw("e same")
                                         ROOT.gPad.SetLogy()
-                                        if bins[i] < 70: h_egamma_tight.GetXaxis().SetRangeUser(0, 5)
+                                        if bins[i] < 60: h_egamma_tight.GetXaxis().SetRangeUser(0, 5)
                                         elif bins[i] < 120: h_egamma_tight.GetXaxis().SetRangeUser(0, 10)
                                         elif bins[i] < 200: h_egamma_tight.GetXaxis().SetRangeUser(0, 15)
                                         elif bins[i] < 380: h_egamma_tight.GetXaxis().SetRangeUser(0, 20)
@@ -651,7 +659,7 @@ for item in plots:
                                     h_loose_pull.SetMarkerSize(0.25)
                                     h_loose_pull.GetYaxis().SetRangeUser(-10, 10)
                                     h_loose_pull.SetStats(0)
-                                    if bins[i] < 70: h_loose_pull.GetXaxis().SetRangeUser(0, 5)
+                                    if bins[i] < 60: h_loose_pull.GetXaxis().SetRangeUser(0, 5)
                                     elif bins[i] < 120: h_loose_pull.GetXaxis().SetRangeUser(0, 10)
                                     elif bins[i] < 200: h_loose_pull.GetXaxis().SetRangeUser(0, 15)
                                     elif bins[i] < 380: h_loose_pull.GetXaxis().SetRangeUser(0, 20)
@@ -669,7 +677,7 @@ for item in plots:
                                         h_tight_pull.SetMarkerSize(0.25)
                                         h_tight_pull.GetYaxis().SetRangeUser(-10, 10)
                                         h_tight_pull.SetStats(0)
-                                        if bins[i] < 70: h_tight_pull.GetXaxis().SetRangeUser(0, 5)
+                                        if bins[i] < 60: h_tight_pull.GetXaxis().SetRangeUser(0, 5)
                                         elif bins[i] < 120: h_tight_pull.GetXaxis().SetRangeUser(0, 10)
                                         elif bins[i] < 200: h_tight_pull.GetXaxis().SetRangeUser(0, 15)
                                         elif bins[i] < 380: h_tight_pull.GetXaxis().SetRangeUser(0, 20)

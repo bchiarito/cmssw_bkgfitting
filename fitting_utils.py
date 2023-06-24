@@ -396,6 +396,61 @@ def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, i
     tf1.SetParLimits(4, 0, range_high/2.0)
     tf1.SetParLimits(5, -10, 0)
 
+  elif function == 'full' and N == 13: 
+    def python_func(x, p):
+        norm1 = p[0]
+        mpv1 = p[1]
+        sigma1 = p[2]
+        C1 = p[3]
+        C2 = p[4]
+        C3 = p[5]
+        bound1 = p[6]
+        b12 = p[7]
+        b23 = p[8]
+
+        if bound1 < 0: bound1 = 0
+        bound2 = bound1 + b12
+        bound3 = bound2 + b23
+
+        land1 = norm1 * ROOT.TMath.Landau(x[0], mpv1, sigma1)
+      
+        y11=norm1*ROOT.TMath.Landau(bound1, mpv1, sigma1)
+        y12=ROOT.TMath.Exp(C1*bound1)
+        if y12 == 0: exp1 = ROOT.TMath.Exp(C1*x[0])*y11
+        else: exp1 = ROOT.TMath.Exp(C1*x[0])*y11/y12
+         
+        y21=ROOT.TMath.Exp(C1*bound2)*y11/y12
+        y22=ROOT.TMath.Exp(C2*bound2)
+        exp2=ROOT.TMath.Exp(C2*x[0])*y21/y22
+
+        y31=ROOT.TMath.Exp(C2*bound3)*y21/y22
+        y32=ROOT.TMath.Exp(C3*bound3)
+        exp3=ROOT.TMath.Exp(C3*x[0])*y31/y32
+        
+        if x[0] < bound1: return land1
+        elif x[0] < bound2: return exp1
+        elif x[0] < bound3: return exp2
+        else: return exp3
+
+    NPAR = 9
+    if not initial_guesses:
+        nEntries = hist.GetEntries()
+        mean = hist.GetMean()
+        initial_guesses = [
+            nEntries, mean, 0.2, -3, -1, -0.5,
+            mean, mean/2, mean/2]
+    if not len(initial_guesses) == NPAR:
+        raise AssertionError('Length of initial guesses list must be '+str(NPAR)+"!")
+    tf1 = ROOT.TF1(getname('func'), python_func, range_low, range_high, NPAR)
+    tf1.SetParNames("Constant1","MPV1","Sigma1","C1","C2","C3","Boundary1","BoundDiff12","BoundDiff23")
+    for i, guess in enumerate(initial_guesses): tf1.SetParameter(i, guess)
+    tf1.SetParLimits(3, -10, 0)
+    tf1.SetParLimits(4, -10, 0)
+    tf1.SetParLimits(5, -10, 0)
+    tf1.SetParLimits(6, 0, 25)
+    tf1.SetParLimits(7, 0.2, 7)
+    tf1.SetParLimits(8, 0.2, 7)
+
   elif function == 'full' and N == 24:
     def python_func(x, p):
         norm1 = p[0]
