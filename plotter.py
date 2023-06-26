@@ -50,7 +50,7 @@ else: plots = main_plots
 
 eta_regions = ["all", "barrel", "endcap"]
 regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
-test_regions = ["iso_asym"]
+test_regions = ["noniso_asym"]
 if args.test: regions = test_regions
 photon_regions = ["tight", "loose"]
 bins = [20,40,60,70,80,100,120,140,160,180,200,240,300,380,460]
@@ -294,9 +294,9 @@ for item in plots:
                                 landau_guess = None
                                 exp_guess = None
                                 
-                                if region == "noniso_sym":
+                                if region == "noniso_sym" or region == "noniso_asym":
                                     if not nExp == 3 or not nLandau == 2: continue
-                                if region == "iso_asym":
+                                if region == "iso_asym" or region == "iso_sym":
                                     if not nExp == 3 or not nLandau == 1: continue
 
                                 if region == "iso_sym" or region == "iso_asym": 
@@ -376,7 +376,7 @@ for item in plots:
                                     else: continue
                                 if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 140:
                                     if nLandau == 2 and nExp == 3:
-                                        landau_guess = [1.761e+04, 0.7322, 0.1067, 0.4, 1.079, 0.2261]
+                                        landau_guess = [1.761e+04, 0.7322, 0.1067, 0.6, 1.079, 0.2261]
                                         exp_guess = [9448, -1.041, 3.2, -1.423, 3, -3]
                                     else: continue
                                 if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 160:
@@ -386,17 +386,17 @@ for item in plots:
                                     else: continue
                                 if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 160:
                                     if nLandau == 2 and nExp == 3:
-                                        landau_guess = [7468, 0.9087, 0.1663, 0.1634, 1.12, 0.2401]
+                                        landau_guess = [7468, 0.9087, 0.1663, 0.6, 1.12, 0.2401]
                                         exp_guess = [1.107e+04, -1.035, 3, -1.572, 2, -7.523]
                                     else: continue
                                 if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 180:
                                     if nLandau == 2 and nExp == 3:
-                                        landau_guess = [1.183e+04, 0.7977, 0.1293, 0.1502, 1.249, 0.27]
+                                        landau_guess = [1.183e+04, 0.7977, 0.1293, 0.6, 1.249, 0.27]
                                         exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
                                     else: continue
                                 if region == "noniso_sym" and eta_reg == "endcap" and bins[i] == 180:
                                     if nLandau == 2 and nExp == 3:
-                                        landau_guess = [7031, 1.004, 0.1965, 0.2383, 1.071, 0.2191]
+                                        landau_guess = [7031, 1.004, 0.1965, 0.6, 1.071, 0.2191]
                                         exp_guess = [1.742e+04, -1.198, 3.5, -3.296, 2.5, -1.366]
                                     else: continue
                                 if region == "noniso_sym" and eta_reg == "barrel" and bins[i] == 200:
@@ -444,7 +444,46 @@ for item in plots:
                                         old_method = True
                                         guesses = [301.3, 1.842, 0.482, 301.3, 1.842, 0.482, -1.031, -0.5918, -1.591, -0.2211, 0.5, 3.275, 0.8257, 6, 4]
                                     else: continue
-                                
+
+                                # NONISO_ASYM GUESSES
+                                if region == "noniso_asym" and eta_reg == "endcap" and bins[i] == 120:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [1.705e+04, 0.6496, 0.3, 0.7, 0.6496, 0.3]
+                                        exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
+                                elif region == "noniso_asym" and eta_reg == "barrel" and bins[i] == 160:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [9535, 0.6861, 0.08948, 0.6, 1.522, 0.3291]
+                                        exp_guess = [5.971e+04, -1.224, 4, -3.118, 4, -4.477]
+                                elif region == "noniso_asym" and eta_reg == "endcap" and bins[i] == 160:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [7468, 0.9087, 0.1663, 0.6, 1.12, 0.2401]
+                                        exp_guess = [1.107e+04, -1.035, 3, -1.572, 2, -7.523]
+                                elif region == "noniso_asym" and eta_reg == "barrel" and bins[i] == 180:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [1.183e+04, 0.7977, 0.1293, 0.6, 1.249, 0.27]
+                                        exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
+                                elif region == "noniso_asym" and eta_reg == "endcap" and bins[i] == 180:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [7031, 1.004, 0.1965, 0.8, 1.071, 0.2191]
+                                        exp_guess = [1.742e+04, -1.198, 3, -3.296, 3, -1.366]
+                                elif region == "noniso_asym" and eta_reg == "barrel" and bins[i] == 200:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [1.204e+04, 0.7742, 0.1196, 0.4986, 1.483, 0.3501]
+                                        exp_guess = [4.491e+04, -1.059, 3, -1, 3, -2.234]
+                                elif region == "noniso_asym" and eta_reg == "endcap" and bins[i] == 200:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [1.204e+04, 0.7742, 0.1196, 0.6, 1.483, 0.3501]
+                                        exp_guess = [4.491e+04, -1.059, 5.5, -3.574, 4.5, -2.234]
+                                elif region == "noniso_asym" and eta_reg == "barrel" and bins[i] == 300:
+                                    if nLandau == 2 and nExp == 3:
+                                        landau_guess = [8442, 1.149, 0.2453, 0.6, 1.115, 0.2326]
+                                        exp_guess = [3.14e+04, -1.023, 6.75, -0.5922, 1.25, -1]
+                                elif bins[i] > 300:
+                                    old_method = True
+                                    nExp += 1
+                                    guesses = None
+
+
                                 if old_method:
                                     N = str(nLandau) + str(nExp)
                                     func_full, fitresult_full = util.fit_hist(h_egamma_loose, 'full', 0, 50, int(N), initial_guesses=guesses)
