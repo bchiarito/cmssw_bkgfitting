@@ -529,7 +529,9 @@ for item in plots:
 
                                 FTEST = True if args.ftest else False
                                 if not FTEST:
-                                    func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, 2, cheb=1)
+                                    CHEB_TYPE = 1
+                                    DEGREE = 2
+                                    func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, DEGREE, cheb=CHEB_TYPE)
                                     h_egamma_tight.Fit(func_with_poly, '0L') 
                                     tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
 
@@ -568,6 +570,8 @@ for item in plots:
                                     func_with_poly = fitfuncs[best_d]
                                     tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
                                     tight_stat = statboxes[best_d]
+
+                                just_poly = util.ExtractPolyFromTightFit(func_with_poly, cheb=CHEB_TYPE)
 
                                 h_loose_pull_num = h_egamma_loose.Clone()
                                 h_loose_pull_num.Reset()
@@ -667,6 +671,12 @@ for item in plots:
                                         pad2 = ROOT.TPad('pad2', 'pad2', 0.5, 0.3, 1, 1)
                                         pad2.Draw()
                                         pad2.cd()
+                                        ROOT.gPad.SetLogy()
+                                        if bins[i] < 60: h_egamma_tight.GetXaxis().SetRangeUser(0, 5)
+                                        elif bins[i] < 120: h_egamma_tight.GetXaxis().SetRangeUser(0, 10)
+                                        elif bins[i] < 200: h_egamma_tight.GetXaxis().SetRangeUser(0, 15)
+                                        elif bins[i] < 380: h_egamma_tight.GetXaxis().SetRangeUser(0, 20)
+                                        else: h_egamma_tight.GetXaxis().SetRangeUser(0, 26)
                                         h_egamma_tight.Draw("e")
                                         if FTEST: tight_stat.Draw()
                                         tight_fit_w_constant.SetLineColor(ROOT.kBlue)
@@ -678,13 +688,32 @@ for item in plots:
                                         tight_fit_as_hist.Draw("same hist")
                                         tight_fit_w_constant.Draw('same')
                                         h_egamma_tight.Draw("e same")
-                                        ROOT.gPad.SetLogy()
-                                        if bins[i] < 60: h_egamma_tight.GetXaxis().SetRangeUser(0, 5)
-                                        elif bins[i] < 120: h_egamma_tight.GetXaxis().SetRangeUser(0, 10)
-                                        elif bins[i] < 200: h_egamma_tight.GetXaxis().SetRangeUser(0, 15)
-                                        elif bins[i] < 380: h_egamma_tight.GetXaxis().SetRangeUser(0, 20)
-                                        else: h_egamma_tight.GetXaxis().SetRangeUser(0, 26)
+
+                                        #polymax = 1.1*just_poly.GetMaximum()
+                                        #scale = just_poly.GetParameter(0) * (h_egamma_tight.GetMaximum()/polymax)
+                                        #just_poly.SetParameter(0, scale)
+                                        #print(polymax, just_poly.GetParameter(0), ROOT.gPad.GetUymax(), scale)
+                                        #just_poly.Draw("same")
+
                                         legend2.Draw("same")
+
+                                        #c1.cd()
+                                        #overlay = ROOT.TPad("overlay","",0.5, 0.3, 1, 1)
+                                        overlay = ROOT.TPad("overlay","",0, 0.05, 1, 0.5)
+                                        overlay.SetFillStyle(4000)
+                                        overlay.SetFillColor(0)
+                                        overlay.SetFrameFillStyle(4000)
+                                        overlay.SetFrameLineWidth(0)
+                                        overlay.Draw()
+                                        overlay.cd()
+                                        #ROOT.gPad.SetLogy()
+                                        if bins[i] < 60: just_poly.GetXaxis().SetRangeUser(0, 5)
+                                        elif bins[i] < 120: just_poly.GetXaxis().SetRangeUser(0, 10)
+                                        elif bins[i] < 200: just_poly.GetXaxis().SetRangeUser(0, 15)
+                                        elif bins[i] < 380: just_poly.GetXaxis().SetRangeUser(0, 20)
+                                        just_poly.SetTitle("")
+                                        just_poly.Draw("AI L")
+                                        if FTEST: tight_stat.Draw()
                                 
                                 if not args.fit:
                                     c1.cd()
