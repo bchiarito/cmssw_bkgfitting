@@ -561,7 +561,7 @@ def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, i
   fit_result = hist.Fit(tf1, fit_string, "", range_low, range_high)
   return tf1, fit_result
 
-def RSS(func, hist, bound=-1, integral=False):
+def RSS(func, hist, bound=-1, error=0, integral=False):
   '''
   helper for ftest()
   '''
@@ -570,12 +570,18 @@ def RSS(func, hist, bound=-1, integral=False):
   for i in range(hist.GetNbinsX()):
     if hist.GetBinContent(i+1) == 0: continue
     if hist.GetBinLowEdge(i+1) < bound: continue
-    if not integral:
-      val = (hist.GetBinContent(i+1) - func.Eval(hist.GetBinCenter(i+1)))**2
+    hist_val = hist.GetBinContent(i+1)
+    if integral:
+      fit_val = (func.Integral(hist.GetBinLowEdge(i+1), hist.GetBinLowEdge(i+1) + hist.GetBinWidth(i+1)))/hist.GetBinWidth(i+1)
     else:
-      val = ( hist.GetBinContent(i+1) - (func.Integral(hist.GetBinLowEdge(i+1), hist.GetBinLowEdge(i+1) + hist.GetBinWidth(i+1)))/hist.GetBinWidth(i+1) )**2
-    by_bin.append(val)
-    rss += val
+      fit_val = func.Eval(hist.GetBinCenter(i+1))
+    if error == 0:
+        sr = (hist_val - fit_val)**2
+    else:
+        adj = fit_val * error
+        sr = (max(abs(hist_val - fit_val) - adj, 0))**2
+    rss += sr
+    by_bin.append(sr)
   return rss, by_bin
 
 def count_nonzero_bins(hist, bound=-1):
