@@ -601,13 +601,14 @@ for item in plots:
                                 chi2_ndof = chi2 / ndof
                                 chi2_diff = abs(chi2_ndof - 1.0)
                                 error = 0.00
-                                while chi2_diff > TARGET_DIFFERENCE:
+                                while chi2_diff > TARGET_DIFFERENCE and chi2_ndof > 1.0:
                                     error += STEP_SIZE
-                                    #print('trying', error)
+                                    #print('trying', error, '|', chi2_diff)
                                     rss, _ = util.RSS(fit, hist, error=error, integral=integral)
                                     chi2 = math.sqrt(rss)
                                     chi2_ndof = chi2 / ndof
                                     chi2_diff = abs(chi2_ndof - 1.0)
+                                    #print('  ', 'rss', rss, 'chi2', chi2, 'chi2/ndof', chi2_ndof, 'diff', chi2_diff)
                                 bin_bin_error = error
                                 print(chi2_ndof, bin_bin_error)
 
