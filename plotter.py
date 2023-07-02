@@ -51,7 +51,7 @@ else: plots = main_plots
 
 eta_regions = ["all", "barrel", "endcap"]
 regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
-test_regions = ["noniso_sym"]
+test_regions = ["iso_sym"]
 if args.test: regions = test_regions
 photon_regions = ["tight", "loose"]
 bins = [20,40,60,70,80,100,120,140,160,180,200,240,300,380,460]
@@ -297,14 +297,24 @@ for item in plots:
                                 
                                 if not (nExp == 3 and nLandau == 1): continue 
                                 
-                                # No "bulk" region, i.e. no bins with more than 1000 entries
+                                # Rarely any "bulk" region, i.e. few bins with more than 1000 entries
                                 if region == "iso_sym" or region == "iso_asym": 
                                     old_method = True
                                     guesses = None
 
+                                # Iso-Sym Guesses
+                                if region == "iso_sym" and eta_reg == "barrel" and bins[i] == 200:
+                                    guesses = [5458, 1.394, 0.3427, -1.012, -1.784, -0.5, 2, 2, 1]
+                                if region == "iso_sym" and eta_reg == "barrel" and bins[i] == 240:
+                                    old_method = False
+                                    landau_guess = [5458, 1.394, 0.3427]
+                                    exp_guess = [5458, -1.012, 1.678, -1.784, 0.5775, -1]
+
                                 # Iso-Asym Guesses
                                 if region == "iso_asym" and eta_reg == "barrel" and bins[i] == 300:
                                     guesses = [1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, 4.5, 4, 2] 
+                                if region == "iso_asym" and eta_reg == "endcap" and bins[i] == 380:
+                                    guesses = [793.4, 2.157, 0.5491, -0.0171, -0.9465, -0.5988, 2.046, 0.9019, 4.627]
 
                                 # NonIso-Sym Guesses
                                 if region == "noniso_sym":
@@ -440,7 +450,7 @@ for item in plots:
                                                 exp_guess = [5.971e+04, -1.224, 4, -3.118, 4, -4.477]
                                         if bins[i] == 180:
                                             if nLandau == 1 and nExp == 3:
-                                                landau_guess = [1.183e+04, 0.7977, 0.1293, 0.6, 1.249, 0.27]
+                                                landau_guess = [1.183e+04, 0.7977, 0.1293]
                                                 exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
                                         if bins[i] == 200:
                                             if nLandau == 1 and nExp == 3:
@@ -492,11 +502,11 @@ for item in plots:
                                             guesses = None
                                         if bins[i] == 300:
                                             old_method = True
-                                            guesses = None
-                                    elif bins[i] == 380:
+                                            guesses = [1470, 1.687, 0.3483, -2, -1, -1, 3, 2, 1.5]
+                                    if bins[i] == 380:
                                         old_method = True
                                         guesses = None
-                                    elif bins[i] == 460:
+                                    if bins[i] == 460:
                                         old_method = True
                                         guesses = None
                               
