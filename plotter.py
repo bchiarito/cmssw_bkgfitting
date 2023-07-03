@@ -202,6 +202,9 @@ for item in plots:
                     h_egamma_tight = infile1.Get(egamma_tight_plots)
                     h_egamma_loose = infile1.Get(egamma_loose_plots)
                     
+                    # Set Poisson errors for tight histogram
+                    h_egamma_tight.SetBinErrorOption(ROOT.TH1.kPoisson)
+
                     # Configure display options
                     h_egamma_tight.SetLineColor(ROOT.kBlack)
                     h_egamma_loose.SetLineColor(ROOT.kBlack)
@@ -653,9 +656,9 @@ for item in plots:
                                 h_loose_pull_num.Add(h_egamma_loose, loose_fit_as_hist, 1, -1)  # Numerator of pull hist is data - fit
 
                                 for j in range(h_loose_pull_num.GetNbinsX()): 
-                                    if h_egamma_loose.GetBinContent(j+1) == 0: sqrt_err = 1.8
-                                    else: sqrt_err = h_egamma_loose.GetBinError(j+1)
-                                    h_loose_pull.SetBinContent(j+1, h_loose_pull_num.GetBinContent(j+1)/sqrt_err)
+                                    if h_egamma_loose.GetBinContent(j+1) == 0: err = 1.8
+                                    else: err = h_egamma_loose.GetBinError(j+1)
+                                    h_loose_pull.SetBinContent(j+1, h_loose_pull_num.GetBinContent(j+1)/err)
                                     h_loose_pull.SetBinError(j+1, 1)
                                 
                                 h_tight_pull_num = h_egamma_tight.Clone()
@@ -665,9 +668,11 @@ for item in plots:
                                 h_tight_pull_num.Add(h_egamma_tight, tight_fit_as_hist, 1, -1)  # Numerator of pull hist is data - fit
                                 
                                 for j in range(h_tight_pull_num.GetNbinsX()): 
-                                    if h_egamma_tight.GetBinContent(j+1) == 0: sqrt_err = 1.8
-                                    else: sqrt_err = h_egamma_tight.GetBinError(j+1)
-                                    h_tight_pull.SetBinContent(j+1, h_tight_pull_num.GetBinContent(j+1)/sqrt_err)
+                                    if h_egamma_tight.GetBinContent(j+1) == 0: err = 1.8
+                                    else: 
+                                        if tight_fit_as_hist.GetBinContent(j+1) > h_egamma_tight.GetBinContent(j+1): err = h_egamma_tight.GetBinErrorUp(j+1)
+                                        else: err = h_egamma_tight.GetBinErrorLow(j+1)
+                                    h_tight_pull.SetBinContent(j+1, h_tight_pull_num.GetBinContent(j+1)/err)
                                     h_tight_pull.SetBinError(j+1, 1)
 
                                 # pull for tight fit with constant
