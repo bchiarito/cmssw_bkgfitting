@@ -51,7 +51,13 @@ else: plots = main_plots
 
 eta_regions = ["all", "barrel", "endcap"]
 regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
-test_regions = ["iso_sym"]
+
+if "iso_sym" in args.testBin: test_regions = ["iso_sym"]
+elif "iso_asym" in args.testBin: test_regions = ["iso_asym"]
+elif "noniso_sym" in args.testBin: test_regions = ["noniso_sym"]
+elif "noniso_asym" in args.testBin: test_regions = ["noniso_asym"]
+else: test_regions = ["noniso_sym"]
+
 if args.test: regions = test_regions
 photon_regions = ["tight", "loose"]
 bins = [20,40,60,70,80,100,120,140,160,180,200,240,300,380,460]
@@ -303,6 +309,9 @@ for item in plots:
                                     guesses = None
 
                                 # Iso-Sym Guesses
+                                if region == "iso_sym" and eta_reg == "barrel" and bins[i] == 20:
+                                    nExp -= 1
+                                    guesses = [1313, 0.7032, 0.1068, -5.47, -10, 1.014, 0.6314]
                                 if region == "iso_sym" and eta_reg == "barrel" and bins[i] == 200:
                                     guesses = [5458, 1.394, 0.3427, -1.012, -1.784, -0.5, 2, 2, 1]
                                 if region == "iso_sym" and eta_reg == "barrel" and bins[i] == 240:
@@ -322,7 +331,7 @@ for item in plots:
                                         if bins[i] == 20:
                                             if nLandau == 1 and nExp == 3:
                                                 landau_guess = [3.491e+06, 0.8838, 0.145] 
-                                                exp_guess = [8.593e+05, -4.278, 1.595, -7.263, 0.2, -9.997]
+                                                exp_guess = [8.593e+05, -4.278, 1.595, -7.263, 0.3, -8]
                                         if bins[i] == 40:
                                             if nLandau == 1 and nExp == 3:
                                                 landau_guess = [1.705e+04, 1.33, 0.205]
@@ -416,6 +425,10 @@ for item in plots:
                                             if nLandau == 1 and nExp == 3:
                                                 landau_guess = [1.204e+04, 0.7742, 0.1196]
                                                 exp_guess = [4.491e+04, -1.059, 5.5, -3.574, 4.5, -2.234]
+                                        if bins[i] == 240:
+                                            if nLandau == 1 and nExp == 3:
+                                                landau_guess = [7937, 1.269, 0.2811]
+                                                exp_guess = [4.457e+04, -2, 5, -1, 1.8, -0.5]
                                         if bins[i] == 300:
                                             old_method = True
                                             if nLandau == 1 and nExp == 3:
@@ -423,7 +436,8 @@ for item in plots:
                                         if bins[i] == 380:
                                             old_method = True
                                             if nLandau == 1 and nExp == 3:
-                                                guesses = [890.4, 1.723, 0.4403, -1.441, -0.9773, -0.5518, 0.5, 4.1, 0.5]
+                                                #guesses = [890.4, 1.723, 0.4403, -1.441, -0.9773, -0.5518, 0.5, 4.1, 0.5]
+                                                guesses = [890.4, 1.723, 0.4403, -1.441, -0.9773, -0.5518, 2.5, 2.5, 5]
                                         if bins[i] == 460:
                                             old_method = True
                                             if nLandau == 1 and nExp == 3:
@@ -464,6 +478,14 @@ for item in plots:
                                             if nLandau == 1 and nExp == 3:
                                                 landau_guess = [8442, 1.149, 0.2453]
                                                 exp_guess = [3.14e+04, -1.023, 6.75, -0.5922, 1.25, -1]
+                                        if bins[i] == 380:
+                                            if nLandau == 1 and nExp == 3:
+                                                old_method = True
+                                                guesses = [1430, 2.107, 0.5122, -0.04034, -1.359, -0.5, 3, 3, 2]
+                                        if bins[i] == 460:
+                                            if nLandau == 1 and nExp == 3:
+                                                old_method = True
+                                                guesses = [345.4, 2.06, 0.485, -2, -1, -0.5, 3, 2, 1]
                                     elif eta_reg == "endcap":
                                         if bins[i] == 60:
                                             if nLandau == 1 and nExp == 3:
@@ -503,12 +525,14 @@ for item in plots:
                                         if bins[i] == 300:
                                             old_method = True
                                             guesses = [1470, 1.687, 0.3483, -2, -1, -1, 3, 2, 1.5]
-                                    if bins[i] == 380:
-                                        old_method = True
-                                        guesses = None
-                                    if bins[i] == 460:
-                                        old_method = True
-                                        guesses = None
+                                        if bins[i] == 380:
+                                            if nLandau == 1 and nExp == 3:
+                                                old_method = True
+                                                guesses = [1430, 2.107, 0.5122, -0.04034, -1.359, -0.5, 3, 3, 2]
+                                        if bins[i] == 460:
+                                            if nLandau == 1 and nExp == 3:
+                                                old_method = True
+                                                guesses = [345.4, 2.06, 0.485, -2, -1, -0.5, 3, 2, 1]
                               
                                 if old_method:
                                     N = str(nLandau) + str(nExp)
