@@ -610,7 +610,6 @@ for item in plots:
                                     chi2_diff = abs(chi2_ndof - 1.0)
                                     #print('  ', 'rss', rss, 'chi2', chi2, 'chi2/ndof', chi2_ndof, 'diff', chi2_diff)
                                 bin_bin_error = error
-                                print(chi2_ndof, bin_bin_error)
 
                                 h_loose_pull_num = h_egamma_loose.Clone()
                                 h_loose_pull_num.Reset()
@@ -731,10 +730,10 @@ for item in plots:
                                         tight_fit_as_hist.Draw("same hist")
                                         tight_fit_w_constant.Draw('same')
                                         h_egamma_tight.Draw("e same")
-
+                                        ROOT.gPad.Update()
                                         legend2.Draw("same")
 
-                                        overlay = ROOT.TPad("overlay","",0, 0.05, 1, 0.5)
+                                        overlay = ROOT.TPad("overlay","",0, 0.06, 1, 0.5)
                                         overlay.SetFillStyle(4000)
                                         overlay.SetFillColor(0)
                                         overlay.SetFrameFillStyle(4000)
@@ -748,6 +747,11 @@ for item in plots:
                                         elif bins[i] < 380: just_poly.GetXaxis().SetRangeUser(0, 20)
                                         just_poly.SetTitle("")
                                         just_poly.Draw("AI L")
+                                        ROOT.gPad.Update()
+                                        rightaxis = ROOT.TGaxis(ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUymax(), 510, "L+")
+                                        rightaxis.SetLineColor(ROOT.kRed);
+                                        rightaxis.SetLabelColor(ROOT.kRed);
+                                        rightaxis.Draw()
                                         legend2.AddEntry('', 'Chi2/Ndof: {:.3f}'.format(chi2_ndof), '')
                                         legend2.AddEntry('', 'Bin Error: {:.1%}'.format(bin_bin_error), '')
                                 
