@@ -52,10 +52,10 @@ else: plots = main_plots
 eta_regions = ["all", "barrel", "endcap"]
 regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
 
-if "iso_sym" in args.testBin: test_regions = ["iso_sym"]
-elif "iso_asym" in args.testBin: test_regions = ["iso_asym"]
+if "noniso_asym" in args.testBin: test_regions = ["noniso_asym"]
 elif "noniso_sym" in args.testBin: test_regions = ["noniso_sym"]
-elif "noniso_asym" in args.testBin: test_regions = ["noniso_asym"]
+elif "iso_asym" in args.testBin: test_regions = ["iso_asym"]
+elif "iso_sym" in args.testBin: test_regions = ["iso_sym"]
 else: test_regions = ["noniso_sym"]
 
 if args.test: regions = test_regions
@@ -682,9 +682,11 @@ for item in plots:
                                 h_tight_pullc_num.Add(h_egamma_tight, tight_fit_w_constant, 1, -1)  # Numerator of pull hist is data - fit
                                 
                                 for j in range(h_tight_pullc_num.GetNbinsX()): 
-                                    if h_egamma_tight.GetBinContent(j+1) == 0: sqrt_err = 1.8
-                                    else: sqrt_err = h_egamma_tight.GetBinError(j+1)
-                                    h_tight_pullc.SetBinContent(j+1, h_tight_pullc_num.GetBinContent(j+1)/sqrt_err)
+                                    if h_egamma_tight.GetBinContent(j+1) == 0: err = 1.8
+                                    else: 
+                                        if tight_fit_as_hist.GetBinContent(j+1) > h_egamma_tight.GetBinContent(j+1): err = h_egamma_tight.GetBinErrorUp(j+1)
+                                        else: err = h_egamma_tight.GetBinErrorLow(j+1)
+                                    h_tight_pullc.SetBinContent(j+1, h_tight_pullc_num.GetBinContent(j+1)/err)
                                     h_tight_pullc.SetBinError(j+1, 0) # no error bar
                                 
                                 # Create title for plot 
