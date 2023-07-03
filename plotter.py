@@ -597,6 +597,7 @@ for item in plots:
                                     tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
                                     tight_stat = statboxes[best_d]
 
+                                #just_poly = util.ExtractPolyFromTightFit(func_with_poly, 0, 3, cheb=CHEB_TYPE)
                                 just_poly = util.ExtractPolyFromTightFit(func_with_poly, cheb=CHEB_TYPE)
 
                                 # determine bin-by-bin error
@@ -750,13 +751,17 @@ for item in plots:
                                         overlay.SetFrameLineWidth(0)
                                         overlay.Draw()
                                         overlay.cd()
-                                        #ROOT.gPad.SetLogy()
-                                        if bins[i] < 60: just_poly.GetXaxis().SetRangeUser(0, 5)
-                                        elif bins[i] < 120: just_poly.GetXaxis().SetRangeUser(0, 10)
-                                        elif bins[i] < 200: just_poly.GetXaxis().SetRangeUser(0, 15)
-                                        elif bins[i] < 380: just_poly.GetXaxis().SetRangeUser(0, 20)
+
+                                        empty = ROOT.TH1F('empty', '', 100, 0, 50)
+                                        if bins[i] < 60: empty.GetXaxis().SetRangeUser(0, 5)
+                                        elif bins[i] < 120: empty.GetXaxis().SetRangeUser(0, 10)
+                                        elif bins[i] < 200: empty.GetXaxis().SetRangeUser(0, 15)
+                                        elif bins[i] < 380: empty.GetXaxis().SetRangeUser(0, 20)
+                                        just_poly.SetRange(0,last)
+                                        empty.GetYaxis().SetRangeUser(just_poly.GetMinimum(), just_poly.GetMaximum())
+                                        empty.Draw('AH')
                                         just_poly.SetTitle("")
-                                        just_poly.Draw("AI L")
+                                        just_poly.Draw("AI L same")
                                         ROOT.gPad.Update()
                                         rightaxis = ROOT.TGaxis(ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUymax(), 510, "L+")
                                         rightaxis.SetLineColor(ROOT.kRed);
@@ -764,6 +769,10 @@ for item in plots:
                                         rightaxis.Draw()
                                         legend2.AddEntry('', 'Chi2/Ndof: {:.3f}'.format(chi2_ndof), '')
                                         legend2.AddEntry('', 'Bin Error: {:.1%}'.format(bin_bin_error), '')
+                                        #topaxis = ROOT.TGaxis(ROOT.gPad.GetUxmin(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUxmin(), ROOT.gPad.GetUxmax(), 510, "+L")
+                                        #topaxis.SetLineColor(ROOT.kRed);
+                                        #topaxis.SetLabelColor(ROOT.kRed);
+                                        #topaxis.Draw()
                                 
                                 if not args.fit:
                                     c1.cd()
