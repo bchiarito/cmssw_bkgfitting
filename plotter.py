@@ -628,7 +628,6 @@ for item in plots:
                                 just_poly = util.ExtractPolyFromTightFit(func_with_poly, cheb=CHEB_TYPE)
 
                                 # determine bin-by-bin error
-                                TARGET_DIFFERENCE = 0.1
                                 STEP_SIZE = 0.001
                                 integral = False
                                 hist = h_egamma_tight
@@ -639,7 +638,7 @@ for item in plots:
                                 chi2_ndof = chi2 / ndof
                                 chi2_diff = abs(chi2_ndof - 1.0)
                                 error = 0.00
-                                while chi2_diff > TARGET_DIFFERENCE and chi2_ndof > 1.0:
+                                while chi2_ndof > 1.0:
                                     error += STEP_SIZE
                                     #print('trying', error, '|', chi2_diff)
                                     rss, _ = util.RSS(fit, hist, error=error, integral=integral)
@@ -711,13 +710,13 @@ for item in plots:
                                 #if not args.ratio: legend1.AddEntry(0, "Chi2/NDF: " + str(chi2 / ndf), "")
                                 legend2 = ROOT.TLegend(0.29, 0.70, 0.62, 0.89)
                                 legend2.AddEntry(h_egamma_tight, "Tight Photon, " + str(h_egamma_tight.GetEntries()), "l")
-                                legend2.AddEntry(tight_fit_as_hist, "Fitted Tight (degree "+str(func_with_poly.GetNpar()-1)+")", "l")
-                                legend2.AddEntry(tight_fit_w_constant, "Constant fit, C = {:.5}".format(fitted_func_times_constant.GetParameter(0)), "l")
 
                                 
                                 if FTEST: legend2.AddEntry(tight_fit_as_hist, "Fit w f-test (Degree "+str(func_with_poly.GetNpar()-1)+")", "l")
                                 else: legend2.AddEntry(tight_fit_as_hist, "Fit (Degree "+str(func_with_poly.GetNpar()-1)+")", "l")
                                 legend2.AddEntry(tight_fit_w_constant, "Constant fit, C = {:.4}".format(fitted_func_times_constant.GetParameter(0)), "l")
+                                legend2.AddEntry('', 'Chi2/Ndof: {:.3f}'.format(chi2_ndof), '')
+                                legend2.AddEntry('', 'Bin Error: {:.1%}'.format(bin_bin_error), '')
                                 
                                 # Draw plots
                                 if args.fit: c1.cd(1)
@@ -796,8 +795,7 @@ for item in plots:
                                         rightaxis.SetLineColor(ROOT.kRed);
                                         rightaxis.SetLabelColor(ROOT.kRed);
                                         rightaxis.Draw()
-                                        legend2.AddEntry('', 'Chi2/Ndof: {:.3f}'.format(chi2_ndof), '')
-                                        legend2.AddEntry('', 'Bin Error: {:.1%}'.format(bin_bin_error), '')
+                                        ROOT.gPad.Update()
                                         #topaxis = ROOT.TGaxis(ROOT.gPad.GetUxmin(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUxmin(), ROOT.gPad.GetUxmax(), 510, "+L")
                                         #topaxis.SetLineColor(ROOT.kRed);
                                         #topaxis.SetLabelColor(ROOT.kRed);
