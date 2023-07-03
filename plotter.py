@@ -773,7 +773,7 @@ for item in plots:
                                         h_egamma_tight.Draw("e same")
                                         ROOT.gPad.Update()
                                         legend2.Draw("same")
-
+                                        
                                         overlay = ROOT.TPad("overlay","",0, 0.06, 1, 0.5)
                                         overlay.SetFillStyle(4000)
                                         overlay.SetFillColor(0)
@@ -783,6 +783,7 @@ for item in plots:
                                         overlay.cd()
 
                                         empty = ROOT.TH1F('empty', '', 100, 0, 50)
+                                        empty.SetLineColor(ROOT.kRed)
                                         if bins[i] < 60: empty.GetXaxis().SetRangeUser(0, 5)
                                         elif bins[i] < 120: empty.GetXaxis().SetRangeUser(0, 10)
                                         elif bins[i] < 200: empty.GetXaxis().SetRangeUser(0, 15)
