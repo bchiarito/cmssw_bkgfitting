@@ -606,7 +606,7 @@ def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, i
   fit_result = hist.Fit(tf1, fit_string, "", range_low, range_high)
   return tf1, fit_result
 
-def RSS(func, hist, bound=-1, error=0, integral=False):
+def RSS(func, hist, bound=-1, error=0, integral=False, chi2=False):
   '''
   helper for ftest()
   '''
@@ -620,13 +620,20 @@ def RSS(func, hist, bound=-1, error=0, integral=False):
       fit_val = (func.Integral(hist.GetBinLowEdge(i+1), hist.GetBinLowEdge(i+1) + hist.GetBinWidth(i+1)))/hist.GetBinWidth(i+1)
     else:
       fit_val = func.Eval(hist.GetBinCenter(i+1))
+
+    if chi2:
+        if hist_val > fit_val: hist_error = hist.GetBinErrorLow(i+1)
+        else: hist_error = hist.GetBinErrorUp(i+1)
+    else:
+        hist_error = 1
     if error == 0:
         sr = (hist_val - fit_val)**2
     else:
         adj = fit_val * error
         sr = (max(abs(hist_val - fit_val) - adj, 0))**2
-    rss += sr
-    by_bin.append(sr)
+    sr_sigma= sr/(hist_error)**2
+    rss += sr_sigma
+    by_bin.append((i, hist.GetBinLowEdge(i+1), hist_val, fit_val, sr_sigma, sr, hist_error))
   return rss, by_bin
 
 def count_nonzero_bins(hist, bound=-1):
@@ -652,8 +659,8 @@ def ftest(hist, func2, fit2, func1, fit1, sig=0.1, integral=False):
     '''
     F-test comparing fit2 (more parameters) vs fit1 (less parameters)
     '''
-    rss1, _ = RSS(func1, hist, integral=integral)
-    rss2, _ = RSS(func2, hist, integral=integral)
+    rss1, _ = RSS(func1, hist, integral=integral, chi2=False)
+    rss2, _ = RSS(func2, hist, integral=integral, chi2=False)
     p1 = func1.GetNpar()
     p2 = func2.GetNpar()
     n = count_nonzero_bins(hist)
@@ -661,7 +668,7 @@ def ftest(hist, func2, fit2, func1, fit1, sig=0.1, integral=False):
     dof1, dof2 = p2 - p1, n - p2
     target = lookup_ftest_target(dof1, dof2, sig)
     decision = F > target
-    return decision, F, target, dof1, dof2
+    return decision, F, target, rss1, rss2, dof1, dof2
 
 if __name__ == '__main__':
   RANGE_LOW = 0 
