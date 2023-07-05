@@ -668,6 +668,9 @@ for item in plots:
                                 h_tight_pull.Reset()
                                 h_tight_pull_num.Add(h_egamma_tight, tight_fit_as_hist, 1, -1)  # Numerator of pull hist is data - fit
                                 
+                                h_tight_pull_error = h_tight_pull.Clone() # to visualize binbin error
+                                h_tight_pull_error.Reset()
+
                                 for j in range(h_tight_pull_num.GetNbinsX()): 
                                     if h_egamma_tight.GetBinContent(j+1) == 0: err = 1.8
                                     else: 
@@ -675,6 +678,8 @@ for item in plots:
                                         else: err = h_egamma_tight.GetBinErrorLow(j+1)
                                     h_tight_pull.SetBinContent(j+1, h_tight_pull_num.GetBinContent(j+1)/err)
                                     h_tight_pull.SetBinError(j+1, 1)
+                                    h_tight_pull_error.SetBinContent(j+1, 0)
+                                    h_tight_pull_error.SetBinError(j+1, (tight_fit_as_hist.GetBinContent(j+1)*bin_bin_error)/err)
 
                                 # pull for tight fit with constant
                                 h_tight_pullc_num = h_egamma_tight.Clone()
@@ -834,9 +839,13 @@ for item in plots:
                                             pad4 = ROOT.TPad('pad4', 'pad4', 0.5, 0, 1, 0.3)
                                             pad4.Draw()
                                             pad4.cd()
+                                            h_tight_pull.Draw('pe')
+                                            h_tight_pull_error.SetLineColor(ROOT.kGray+2)
+                                            h_tight_pull_error.SetFillColor(ROOT.kGray+2)
+                                            h_tight_pull_error.Draw('same e2')
                                             h_tight_pull.SetTitle("(Tight - Fit) / Error")
                                             h_tight_pull.SetLineColor(ROOT.kBlack)
-                                            h_tight_pull.Draw('pe')
+                                            h_tight_pull.Draw('pe same')
                                             h_tight_pull.SetMarkerStyle(8)
                                             h_tight_pull.SetMarkerSize(0.25)
                                             h_tight_pull.GetYaxis().SetRangeUser(-10, 10)
