@@ -613,18 +613,16 @@ for item in plots:
                                     for d2 in range(NUM_DEGREES+1):
                                         for d1 in range(d2):
                                             if not d1 == best_d: continue
-                                            decision, ftest, target, dof1, dof2 = util.ftest(
+                                            decision, ftest, target, rss1, rss2, dof1, dof2 = util.ftest(
                                                 h_egamma_tight, fitfuncs[d2], fitresults[d2], fitfuncs[d1], fitresults[d1])
                                             print(d2, '>', d1, decision)
                                             print('  F={} target={}'.format(ftest, target), '({}, {}) dof'.format(dof1, dof2))
-                                            print('')
                                             if decision: best_d = d2
                                     print('Best: ', best_d)
                                     func_with_poly = fitfuncs[best_d]
                                     tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
                                     tight_stat = statboxes[best_d]
 
-                                #just_poly = util.ExtractPolyFromTightFit(func_with_poly, 0, 3, cheb=CHEB_TYPE)
                                 just_poly = util.ExtractPolyFromTightFit(func_with_poly, cheb=CHEB_TYPE)
 
                                 # determine bin-by-bin error
@@ -633,19 +631,17 @@ for item in plots:
                                 hist = h_egamma_tight
                                 fit = func_with_poly
                                 ndof = util.count_nonzero_bins(hist) - fit.GetNpar()
-                                rss, _ = util.RSS(fit, hist, error=0, integral=integral)
-                                chi2 = math.sqrt(rss)
+                                chi2, by_bin = util.RSS(fit, hist, error=0, integral=integral, chi2=True)
                                 chi2_ndof = chi2 / ndof
-                                chi2_diff = abs(chi2_ndof - 1.0)
                                 error = 0.00
+                                #print('initial')
+                                #print('chi2', chi2, 'ndof', ndof, 'chi2_ndof', chi2_ndof)
                                 while chi2_ndof > 1.0:
                                     error += STEP_SIZE
-                                    #print('trying', error, '|', chi2_diff)
-                                    rss, _ = util.RSS(fit, hist, error=error, integral=integral)
-                                    chi2 = math.sqrt(rss)
+                                    #print('trying', error)
+                                    chi2, _ = util.RSS(fit, hist, error=error, integral=integral, chi2=True)
                                     chi2_ndof = chi2 / ndof
-                                    chi2_diff = abs(chi2_ndof - 1.0)
-                                    #print('  ', 'rss', rss, 'chi2', chi2, 'chi2/ndof', chi2_ndof, 'diff', chi2_diff)
+                                    #print('  ', 'chi2', chi2, 'chi2/ndof', chi2_ndof)
                                 bin_bin_error = error
 
                                 h_loose_pull_num = h_egamma_loose.Clone()
