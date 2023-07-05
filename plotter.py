@@ -25,6 +25,7 @@ parser.add_argument("--fit", default=False, action="store_true", help="create fi
 parser.add_argument("--name", default="plots", help="create name for plots pdf")
 parser.add_argument("--ftest", default=None, help="format: '<CHEB_TYPE> <MAXDEGREE>', default is no f-test")
 parser.add_argument("--integral", default=False, action="store_true", help="add I to tight fit")
+parser.add_argument("--printFtest", "--printftest", default=False, action="store_true", help="for a fixed test bin, create a pdf of all possible ftest fits")
 
 # parse args
 args = parser.parse_args()
@@ -52,11 +53,11 @@ else: plots = main_plots
 eta_regions = ["all", "barrel", "endcap"]
 regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
 
-if "noniso_asym" in args.testBin: test_regions = ["noniso_asym"]
+if args.testBin is None: test_regions = ["noniso_sym"] 
+elif "noniso_asym" in args.testBin: test_regions = ["noniso_asym"]
 elif "noniso_sym" in args.testBin: test_regions = ["noniso_sym"]
 elif "iso_asym" in args.testBin: test_regions = ["iso_asym"]
 elif "iso_sym" in args.testBin: test_regions = ["iso_sym"]
-else: test_regions = ["noniso_sym"]
 
 if args.test: regions = test_regions
 photon_regions = ["tight", "loose"]
@@ -173,6 +174,9 @@ for item in plots:
         if args.ratio: ROOT.TPad.Divide(c1, 1, 2)
         if args.testBin is not None: test_bin = binConverter(args.testBin)
         for region in regions:  # loop through twoprong sideband regions
+            if args.printFtest and args.testBin is None:
+                print("EMPTY PDF: Must have --testBin option when using --printFtest")
+                break
             if args.testBin is not None: 
                 if not region == test_bin[0]: continue
             for i in range(len(bins)):  # loop through pt bins for a fixed twoprong sideband
@@ -581,16 +585,18 @@ for item in plots:
                                 tight_fit_w_constant = util.TemplateToHistogram(fitted_func_times_constant, 1000, 0, 50)
 
                                 FTEST = True if args.ftest else False
+                                NUM_PLOTS = 1
                                 if not FTEST:
                                     CHEB_TYPE = 1
                                     DEGREE = 2
                                     func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, DEGREE, cheb=CHEB_TYPE)
                                     h_egamma_tight.Fit(func_with_poly, '0L' if not args.integral else '0LI')
                                     tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
-
+                                
                                 if FTEST:
                                     parse = args.ftest.split()
                                     NUM_DEGREES = int(parse[1])
+                                    if args.printFtest and args.testBin is not None: NUM_PLOTS = NUM_DEGREES+1
                                     CHEB_TYPE = int(parse[0])
                                     fitfuncs = []
                                     fitresults = []
@@ -709,139 +715,145 @@ for item in plots:
                                 legend2 = ROOT.TLegend(0.29, 0.70, 0.62, 0.89)
                                 legend2.AddEntry(h_egamma_tight, "Tight Photon, " + str(h_egamma_tight.GetEntries()), "l")
 
-                                
-                                if FTEST: legend2.AddEntry(tight_fit_as_hist, "Fit w f-test (Degree "+str(func_with_poly.GetNpar()-1)+")", "l")
-                                else: legend2.AddEntry(tight_fit_as_hist, "Fit (Degree "+str(func_with_poly.GetNpar()-1)+")", "l")
-                                legend2.AddEntry(tight_fit_w_constant, "Constant fit, C = {:.4}".format(fitted_func_times_constant.GetParameter(0)), "l")
-                                legend2.AddEntry('', 'Chi2/Ndof: {:.3f}'.format(chi2_ndof), '')
-                                legend2.AddEntry('', 'Bin Error: {:.1%}'.format(bin_bin_error), '')
-                                
-                                # Draw plots
-                                if args.fit: c1.cd(1)
-                                else:
-                                  c1.cd()
-                                  pad1 = ROOT.TPad('pad1', 'pad1', 0, 0.3, 0.5, 1)
-                                  pad1.Draw()
-                                  pad1.cd()
-                                
-                                h_egamma_loose.SetTitle(title)
-                                h_egamma_loose.SetMaximum()
-                                h_egamma_loose.Draw("e")
-                                loose_fit_as_hist.SetLineColor(ROOT.kRed+1)
-                                loose_fit_as_hist.Draw("same")
-                                if not(left == 0 and right == 50):
-                                    try:
-                                        stats1.Draw()
-                                        stats2.Draw()
-                                    except NameError:
-                                        pass
-                                ROOT.gPad.SetLogy()
-                                if bins[i] < 60: h_egamma_loose.GetXaxis().SetRangeUser(0, 5)
-                                elif bins[i] < 120: h_egamma_loose.GetXaxis().SetRangeUser(0, 10)
-                                elif bins[i] < 200: h_egamma_loose.GetXaxis().SetRangeUser(0, 15)
-                                elif bins[i] < 380: h_egamma_loose.GetXaxis().SetRangeUser(0, 20)
-                                else: h_egamma_loose.GetXaxis().SetRangeUser(0, 26)
-                                legend1.Draw("same")
-                                ROOT.gPad.Update()
-                                
-                                if not args.fit:
-                                    if not region == "iso_sym":
-                                        c1.cd()
-                                        pad2 = ROOT.TPad('pad2', 'pad2', 0.5, 0.3, 1, 1)
-                                        pad2.Draw()
-                                        pad2.cd()
-                                        ROOT.gPad.SetLogy()
-                                        if bins[i] < 60: h_egamma_tight.GetXaxis().SetRangeUser(0, 5)
-                                        elif bins[i] < 120: h_egamma_tight.GetXaxis().SetRangeUser(0, 10)
-                                        elif bins[i] < 200: h_egamma_tight.GetXaxis().SetRangeUser(0, 15)
-                                        elif bins[i] < 380: h_egamma_tight.GetXaxis().SetRangeUser(0, 20)
-                                        else: h_egamma_tight.GetXaxis().SetRangeUser(0, 26)
-                                        h_egamma_tight.Draw("e")
-                                        if FTEST: tight_stat.Draw()
-                                        tight_fit_w_constant.SetLineColor(ROOT.kBlue)
-                                        tight_fit_as_hist.SetLineColor(ROOT.kRed)
-                                        tight_fit_as_hist.SetLineWidth(1)
-                                        tight_fit_as_hist_errorbars = tight_fit_as_hist.Clone()
-                                        tight_fit_as_hist_errorbars.SetFillColor(ROOT.kRed+2)
-                                        tight_fit_as_hist_errorbars.Draw("same e2")
-                                        tight_fit_as_hist.Draw("same hist")
-                                        tight_fit_w_constant.Draw('same')
-                                        h_egamma_tight.Draw("e same")
-                                        ROOT.gPad.Update()
-                                        legend2.Draw("same")
-
-                                        overlay = ROOT.TPad("overlay","",0, 0.06, 1, 0.5)
-                                        overlay.SetFillStyle(4000)
-                                        overlay.SetFillColor(0)
-                                        overlay.SetFrameFillStyle(4000)
-                                        overlay.SetFrameLineWidth(0)
-                                        overlay.Draw()
-                                        overlay.cd()
-
-                                        empty = ROOT.TH1F('empty', '', 100, 0, 50)
-                                        if bins[i] < 60: empty.GetXaxis().SetRangeUser(0, 5)
-                                        elif bins[i] < 120: empty.GetXaxis().SetRangeUser(0, 10)
-                                        elif bins[i] < 200: empty.GetXaxis().SetRangeUser(0, 15)
-                                        elif bins[i] < 380: empty.GetXaxis().SetRangeUser(0, 20)
-                                        just_poly.SetRange(0,last)
-                                        empty.GetYaxis().SetRangeUser(just_poly.GetMinimum(), just_poly.GetMaximum())
-                                        empty.Draw('AH')
-                                        just_poly.SetTitle("")
-                                        just_poly.Draw("AI L same")
-                                        ROOT.gPad.Update()
-                                        rightaxis = ROOT.TGaxis(ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUymax(), 510, "L+")
-                                        rightaxis.SetLineColor(ROOT.kRed);
-                                        rightaxis.SetLabelColor(ROOT.kRed);
-                                        rightaxis.Draw()
-                                        ROOT.gPad.Update()
-                                        #topaxis = ROOT.TGaxis(ROOT.gPad.GetUxmin(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUxmin(), ROOT.gPad.GetUxmax(), 510, "+L")
-                                        #topaxis.SetLineColor(ROOT.kRed);
-                                        #topaxis.SetLabelColor(ROOT.kRed);
-                                        #topaxis.Draw()
-                                
-                                if not args.fit:
-                                    c1.cd()
-                                    pad3 = ROOT.TPad('pad3', 'pad3', 0, 0, 0.5, 0.3)
-                                    pad3.Draw()
-                                    pad3.cd()
-                                    h_loose_pull.SetTitle("(Loose - Fit) / Error")
-                                    h_loose_pull.SetLineColor(ROOT.kBlack)
-                                    h_loose_pull.Draw('pe')
-                                    h_loose_pull.SetMarkerStyle(8)
-                                    h_loose_pull.SetMarkerSize(0.25)
-                                    h_loose_pull.GetYaxis().SetRangeUser(-10, 10)
-                                    h_loose_pull.SetStats(0)
-                                    if bins[i] < 60: h_loose_pull.GetXaxis().SetRangeUser(0, 5)
-                                    elif bins[i] < 120: h_loose_pull.GetXaxis().SetRangeUser(0, 10)
-                                    elif bins[i] < 200: h_loose_pull.GetXaxis().SetRangeUser(0, 15)
-                                    elif bins[i] < 380: h_loose_pull.GetXaxis().SetRangeUser(0, 20)
-                                    else: h_loose_pull.GetXaxis().SetRangeUser(0, 26)
+                                for plot in range(NUM_PLOTS):
+                                    if args.printFtest and args.testBin:
+                                        func_with_poly = fitfuncs[plot]
+                                        tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
+                                        tight_stat = statboxes[plot]
                                     
-                                    if not region == "iso_sym":
+                                    if FTEST: legend2.AddEntry(tight_fit_as_hist, "Fit w f-test (Degree "+str(func_with_poly.GetNpar()-1)+")", "l")
+                                    else: legend2.AddEntry(tight_fit_as_hist, "Fit (Degree "+str(func_with_poly.GetNpar()-1)+")", "l")
+                                    legend2.AddEntry(tight_fit_w_constant, "Constant fit, C = {:.4}".format(fitted_func_times_constant.GetParameter(0)), "l")
+                                    legend2.AddEntry('', 'Chi2/Ndof: {:.3f}'.format(chi2_ndof), '')
+                                    legend2.AddEntry('', 'Bin Error: {:.1%}'.format(bin_bin_error), '')
+                                    
+                                    # Draw plots
+                                    if args.fit: c1.cd(1)
+                                    else:
+                                      c1.cd()
+                                      pad1 = ROOT.TPad('pad1', 'pad1', 0, 0.3, 0.5, 1)
+                                      pad1.Draw()
+                                      pad1.cd()
+                                    
+                                    h_egamma_loose.SetTitle(title)
+                                    h_egamma_loose.SetMaximum()
+                                    h_egamma_loose.Draw("e")
+                                    loose_fit_as_hist.SetLineColor(ROOT.kRed+1)
+                                    loose_fit_as_hist.Draw("same")
+                                    if not(left == 0 and right == 50):
+                                        try:
+                                            stats1.Draw()
+                                            stats2.Draw()
+                                        except NameError:
+                                            pass
+                                    ROOT.gPad.SetLogy()
+                                    if bins[i] < 60: h_egamma_loose.GetXaxis().SetRangeUser(0, 5)
+                                    elif bins[i] < 120: h_egamma_loose.GetXaxis().SetRangeUser(0, 10)
+                                    elif bins[i] < 200: h_egamma_loose.GetXaxis().SetRangeUser(0, 15)
+                                    elif bins[i] < 380: h_egamma_loose.GetXaxis().SetRangeUser(0, 20)
+                                    else: h_egamma_loose.GetXaxis().SetRangeUser(0, 26)
+                                    legend1.Draw("same")
+                                    ROOT.gPad.Update()
+                                    
+                                    if not args.fit:
+                                        if not region == "iso_sym":
+                                            c1.cd()
+                                            pad2 = ROOT.TPad('pad2', 'pad2', 0.5, 0.3, 1, 1)
+                                            pad2.Draw()
+                                            pad2.cd()
+                                            ROOT.gPad.SetLogy()
+                                            if bins[i] < 60: h_egamma_tight.GetXaxis().SetRangeUser(0, 5)
+                                            elif bins[i] < 120: h_egamma_tight.GetXaxis().SetRangeUser(0, 10)
+                                            elif bins[i] < 200: h_egamma_tight.GetXaxis().SetRangeUser(0, 15)
+                                            elif bins[i] < 380: h_egamma_tight.GetXaxis().SetRangeUser(0, 20)
+                                            else: h_egamma_tight.GetXaxis().SetRangeUser(0, 26)
+                                            h_egamma_tight.Draw("e")
+                                            if FTEST: tight_stat.Draw()
+                                            tight_fit_w_constant.SetLineColor(ROOT.kBlue)
+                                            tight_fit_as_hist.SetLineColor(ROOT.kRed)
+                                            tight_fit_as_hist.SetLineWidth(1)
+                                            tight_fit_as_hist_errorbars = tight_fit_as_hist.Clone()
+                                            tight_fit_as_hist_errorbars.SetFillColor(ROOT.kRed+2)
+                                            tight_fit_as_hist_errorbars.Draw("same e2")
+                                            tight_fit_as_hist.Draw("same hist")
+                                            tight_fit_w_constant.Draw('same')
+                                            h_egamma_tight.Draw("e same")
+                                            ROOT.gPad.Update()
+                                            legend2.Draw("same")
+                                            
+                                            overlay = ROOT.TPad("overlay","",0, 0.06, 1, 0.5)
+                                            overlay.SetFillStyle(4000)
+                                            overlay.SetFillColor(0)
+                                            overlay.SetFrameFillStyle(4000)
+                                            overlay.SetFrameLineWidth(0)
+                                            overlay.Draw()
+                                            overlay.cd()
+
+                                            empty = ROOT.TH1F('empty', '', 100, 0, 50)
+                                            empty.SetLineColor(ROOT.kRed)
+                                            if bins[i] < 60: empty.GetXaxis().SetRangeUser(0, 5)
+                                            elif bins[i] < 120: empty.GetXaxis().SetRangeUser(0, 10)
+                                            elif bins[i] < 200: empty.GetXaxis().SetRangeUser(0, 15)
+                                            elif bins[i] < 380: empty.GetXaxis().SetRangeUser(0, 20)
+                                            just_poly.SetRange(0,last)
+                                            empty.GetYaxis().SetRangeUser(just_poly.GetMinimum(), just_poly.GetMaximum())
+                                            empty.Draw('AH')
+                                            just_poly.SetTitle("")
+                                            just_poly.Draw("AI L same")
+                                            ROOT.gPad.Update()
+                                            rightaxis = ROOT.TGaxis(ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUymax(), 510, "L+")
+                                            rightaxis.SetLineColor(ROOT.kRed);
+                                            rightaxis.SetLabelColor(ROOT.kRed);
+                                            rightaxis.Draw()
+                                            ROOT.gPad.Update()
+                                            #topaxis = ROOT.TGaxis(ROOT.gPad.GetUxmin(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUxmin(), ROOT.gPad.GetUxmax(), 510, "+L")
+                                            #topaxis.SetLineColor(ROOT.kRed);
+                                            #topaxis.SetLabelColor(ROOT.kRed);
+                                            #topaxis.Draw()
+                                    
+                                    if not args.fit:
                                         c1.cd()
-                                        pad4 = ROOT.TPad('pad4', 'pad4', 0.5, 0, 1, 0.3)
-                                        pad4.Draw()
-                                        pad4.cd()
-                                        h_tight_pull.SetTitle("(Tight - Fit) / Error")
-                                        h_tight_pull.SetLineColor(ROOT.kBlack)
-                                        h_tight_pull.Draw('pe')
-                                        h_tight_pull.SetMarkerStyle(8)
-                                        h_tight_pull.SetMarkerSize(0.25)
-                                        h_tight_pull.GetYaxis().SetRangeUser(-10, 10)
-                                        h_tight_pull.SetStats(0)
-                                        if bins[i] < 60: h_tight_pull.GetXaxis().SetRangeUser(0, 5)
-                                        elif bins[i] < 120: h_tight_pull.GetXaxis().SetRangeUser(0, 10)
-                                        elif bins[i] < 200: h_tight_pull.GetXaxis().SetRangeUser(0, 15)
-                                        elif bins[i] < 380: h_tight_pull.GetXaxis().SetRangeUser(0, 20)
-                                        else: h_tight_pull.GetXaxis().SetRangeUser(0, 26)
-                                        h_tight_pullc.SetMarkerColor(ROOT.kBlue)
-                                        h_tight_pullc.SetMarkerStyle(8)
-                                        h_tight_pullc.SetMarkerSize(0.25)
-                                        h_tight_pullc.Draw('pe same')
+                                        pad3 = ROOT.TPad('pad3', 'pad3', 0, 0, 0.5, 0.3)
+                                        pad3.Draw()
+                                        pad3.cd()
+                                        h_loose_pull.SetTitle("(Loose - Fit) / Error")
+                                        h_loose_pull.SetLineColor(ROOT.kBlack)
+                                        h_loose_pull.Draw('pe')
+                                        h_loose_pull.SetMarkerStyle(8)
+                                        h_loose_pull.SetMarkerSize(0.25)
+                                        h_loose_pull.GetYaxis().SetRangeUser(-10, 10)
+                                        h_loose_pull.SetStats(0)
+                                        if bins[i] < 60: h_loose_pull.GetXaxis().SetRangeUser(0, 5)
+                                        elif bins[i] < 120: h_loose_pull.GetXaxis().SetRangeUser(0, 10)
+                                        elif bins[i] < 200: h_loose_pull.GetXaxis().SetRangeUser(0, 15)
+                                        elif bins[i] < 380: h_loose_pull.GetXaxis().SetRangeUser(0, 20)
+                                        else: h_loose_pull.GetXaxis().SetRangeUser(0, 26)
+                                        
+                                        if not region == "iso_sym":
+                                            c1.cd()
+                                            pad4 = ROOT.TPad('pad4', 'pad4', 0.5, 0, 1, 0.3)
+                                            pad4.Draw()
+                                            pad4.cd()
+                                            h_tight_pull.SetTitle("(Tight - Fit) / Error")
+                                            h_tight_pull.SetLineColor(ROOT.kBlack)
+                                            h_tight_pull.Draw('pe')
+                                            h_tight_pull.SetMarkerStyle(8)
+                                            h_tight_pull.SetMarkerSize(0.25)
+                                            h_tight_pull.GetYaxis().SetRangeUser(-10, 10)
+                                            h_tight_pull.SetStats(0)
+                                            if bins[i] < 60: h_tight_pull.GetXaxis().SetRangeUser(0, 5)
+                                            elif bins[i] < 120: h_tight_pull.GetXaxis().SetRangeUser(0, 10)
+                                            elif bins[i] < 200: h_tight_pull.GetXaxis().SetRangeUser(0, 15)
+                                            elif bins[i] < 380: h_tight_pull.GetXaxis().SetRangeUser(0, 20)
+                                            else: h_tight_pull.GetXaxis().SetRangeUser(0, 26)
+                                            h_tight_pullc.SetMarkerColor(ROOT.kBlue)
+                                            h_tight_pullc.SetMarkerStyle(8)
+                                            h_tight_pullc.SetMarkerSize(0.25)
+                                            h_tight_pullc.Draw('pe same')
+                                    
+                                    ROOT.gPad.Update()
+                                    if args.testBin is not None and not args.printFtest: raw_input()
+                                    c1.Print(args.name + ".pdf")
                                 
-                                ROOT.gPad.Update()
-                                if args.testBin is not None: raw_input()
-                                c1.Print(args.name + ".pdf")
-                            
-c1.Print(args.name + ".pdf]")
-infile1.Close()
+    c1.Print(args.name + ".pdf]")
+    infile1.Close()

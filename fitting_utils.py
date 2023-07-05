@@ -659,8 +659,8 @@ def ftest(hist, func2, fit2, func1, fit1, sig=0.1, integral=False):
     '''
     F-test comparing fit2 (more parameters) vs fit1 (less parameters)
     '''
-    rss1, _ = RSS(func1, hist, integral=integral, chi2=False)
-    rss2, _ = RSS(func2, hist, integral=integral, chi2=False)
+    rss1, _ = RSS(func1, hist, integral=integral, chi2=True)
+    rss2, _ = RSS(func2, hist, integral=integral, chi2=True)
     p1 = func1.GetNpar()
     p2 = func2.GetNpar()
     n = count_nonzero_bins(hist)
