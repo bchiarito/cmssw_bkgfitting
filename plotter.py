@@ -587,8 +587,8 @@ for item in plots:
                                 FTEST = True if args.ftest else False
                                 NUM_PLOTS = 1
                                 if not FTEST:
-                                    CHEB_TYPE = 1
-                                    DEGREE = 2
+                                    CHEB_TYPE = 0
+                                    DEGREE = 0
                                     func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, DEGREE, cheb=CHEB_TYPE)
                                     h_egamma_tight.Fit(func_with_poly, '0L' if not args.integral else '0LI')
                                     tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
@@ -628,104 +628,104 @@ for item in plots:
                                     func_with_poly = fitfuncs[best_d]
                                     tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
                                     tight_stat = statboxes[best_d]
-
-                                just_poly = util.ExtractPolyFromTightFit(func_with_poly, cheb=CHEB_TYPE)
-
-                                # determine bin-by-bin error
-                                STEP_SIZE = 0.001
-                                integral = False
-                                hist = h_egamma_tight
-                                fit = func_with_poly
-                                ndof = util.count_nonzero_bins(hist) - fit.GetNpar()
-                                chi2, by_bin = util.RSS(fit, hist, error=0, integral=integral, chi2=True)
-                                chi2_ndof = chi2 / ndof
-                                error = 0.00
-                                #print('initial')
-                                #print('chi2', chi2, 'ndof', ndof, 'chi2_ndof', chi2_ndof)
-                                while chi2_ndof > 1.0:
-                                    error += STEP_SIZE
-                                    #print('trying', error)
-                                    chi2, _ = util.RSS(fit, hist, error=error, integral=integral, chi2=True)
-                                    chi2_ndof = chi2 / ndof
-                                    #print('  ', 'chi2', chi2, 'chi2/ndof', chi2_ndof)
-                                bin_bin_error = error
-
-                                h_loose_pull_num = h_egamma_loose.Clone()
-                                h_loose_pull_num.Reset()
-                                h_loose_pull = h_egamma_loose.Clone()
-                                h_loose_pull.Reset()
-                                h_loose_pull_num.Add(h_egamma_loose, loose_fit_as_hist, 1, -1)  # Numerator of pull hist is data - fit
-
-                                for j in range(h_loose_pull_num.GetNbinsX()): 
-                                    if h_egamma_loose.GetBinContent(j+1) == 0: err = 1.8
-                                    else: err = h_egamma_loose.GetBinError(j+1)
-                                    h_loose_pull.SetBinContent(j+1, h_loose_pull_num.GetBinContent(j+1)/err)
-                                    h_loose_pull.SetBinError(j+1, 1)
                                 
-                                h_tight_pull_num = h_egamma_tight.Clone()
-                                h_tight_pull_num.Reset()
-                                h_tight_pull = h_egamma_tight.Clone()
-                                h_tight_pull.Reset()
-                                h_tight_pull_num.Add(h_egamma_tight, tight_fit_as_hist, 1, -1)  # Numerator of pull hist is data - fit
-                                
-                                h_tight_pull_error = h_tight_pull.Clone() # to visualize binbin error
-                                h_tight_pull_error.Reset()
-
-                                for j in range(h_tight_pull_num.GetNbinsX()): 
-                                    if h_egamma_tight.GetBinContent(j+1) == 0: err = 1.8
-                                    else: 
-                                        if tight_fit_as_hist.GetBinContent(j+1) > h_egamma_tight.GetBinContent(j+1): err = h_egamma_tight.GetBinErrorUp(j+1)
-                                        else: err = h_egamma_tight.GetBinErrorLow(j+1)
-                                    h_tight_pull.SetBinContent(j+1, h_tight_pull_num.GetBinContent(j+1)/err)
-                                    h_tight_pull.SetBinError(j+1, 1)
-                                    h_tight_pull_error.SetBinContent(j+1, 0)
-                                    h_tight_pull_error.SetBinError(j+1, (tight_fit_as_hist.GetBinContent(j+1)*bin_bin_error)/err)
-
-                                # pull for tight fit with constant
-                                h_tight_pullc_num = h_egamma_tight.Clone()
-                                h_tight_pullc_num.Reset()
-                                h_tight_pullc = h_egamma_tight.Clone()
-                                h_tight_pullc.Reset()
-                                h_tight_pullc_num.Add(h_egamma_tight, tight_fit_w_constant, 1, -1)  # Numerator of pull hist is data - fit
-                                
-                                for j in range(h_tight_pullc_num.GetNbinsX()): 
-                                    if h_egamma_tight.GetBinContent(j+1) == 0: err = 1.8
-                                    else: 
-                                        if tight_fit_as_hist.GetBinContent(j+1) > h_egamma_tight.GetBinContent(j+1): err = h_egamma_tight.GetBinErrorUp(j+1)
-                                        else: err = h_egamma_tight.GetBinErrorLow(j+1)
-                                    h_tight_pullc.SetBinContent(j+1, h_tight_pullc_num.GetBinContent(j+1)/err)
-                                    h_tight_pullc.SetBinError(j+1, 0) # no error bar
-                                
-                                # Create title for plot 
-                                title = region + " Twoprong"
-                                if eta_reg == "barrel": title += ", Barrel"
-                                elif eta_reg == "endcap": title += ", Endcap"
-                                if i == len(bins) - 1: title += ", pt > " + str(bins[i])
-                                else: title += ", " + str(bins[i]) + " < pt < " + str(bins[i+1]) 
-                                if not old_method:
-                                    if nLandau == 1: title += ", 1 land"
-                                    elif nLandau == 2: title += ", 2 land"
-                                    if nExp == 1: title += ", 1 exp"
-                                    elif nExp == 2: title += ", 2 exp"
-                                    elif nExp == 3: title += ", 3 exp"
-                                    elif nExp == 4: title += ", 4 exp"
-                                if old_method:
-                                    title += ", full fit (" + str(nLandau) + " land " + str(nExp) + " exp)"
-
-                                # Legend creation
-                                if old_method: legend1 = ROOT.TLegend(0.35, 0.78, 0.6, 0.88)
-                                else: legend1 = ROOT.TLegend(0.62, 0.27, 0.9, 0.37)
-                                legend1.AddEntry(h_egamma_loose, "Loose Photon, " + str(h_egamma_loose.GetEntries()), "l")
-                                #if not args.ratio: legend1.AddEntry(0, "Chi2/NDF: " + str(chi2 / ndf), "")
-                                legend2 = ROOT.TLegend(0.29, 0.70, 0.62, 0.89)
-                                legend2.AddEntry(h_egamma_tight, "Tight Photon, " + str(h_egamma_tight.GetEntries()), "l")
-
                                 for plot in range(NUM_PLOTS):
                                     if args.printFtest and args.testBin:
                                         func_with_poly = fitfuncs[plot]
                                         tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
                                         tight_stat = statboxes[plot]
+
+                                    just_poly = util.ExtractPolyFromTightFit(func_with_poly, cheb=CHEB_TYPE)
+
+                                    # determine bin-by-bin error
+                                    STEP_SIZE = 0.001
+                                    integral = False
+                                    hist = h_egamma_tight
+                                    fit = func_with_poly
+                                    ndof = util.count_nonzero_bins(hist) - fit.GetNpar()
+                                    chi2, by_bin = util.RSS(fit, hist, error=0, integral=integral, chi2=True)
+                                    chi2_ndof = chi2 / ndof
+                                    error = 0.00
+                                    #print('initial')
+                                    #print('chi2', chi2, 'ndof', ndof, 'chi2_ndof', chi2_ndof)
+                                    while chi2_ndof > 1.0:
+                                        error += STEP_SIZE
+                                        #print('trying', error)
+                                        chi2, _ = util.RSS(fit, hist, error=error, integral=integral, chi2=True)
+                                        chi2_ndof = chi2 / ndof
+                                        #print('  ', 'chi2', chi2, 'chi2/ndof', chi2_ndof)
+                                    bin_bin_error = error
+
+                                    h_loose_pull_num = h_egamma_loose.Clone()
+                                    h_loose_pull_num.Reset()
+                                    h_loose_pull = h_egamma_loose.Clone()
+                                    h_loose_pull.Reset()
+                                    h_loose_pull_num.Add(h_egamma_loose, loose_fit_as_hist, 1, -1)  # Numerator of pull hist is data - fit
+
+                                    for j in range(h_loose_pull_num.GetNbinsX()): 
+                                        if h_egamma_loose.GetBinContent(j+1) == 0: err = 1.8
+                                        else: err = h_egamma_loose.GetBinError(j+1)
+                                        h_loose_pull.SetBinContent(j+1, h_loose_pull_num.GetBinContent(j+1)/err)
+                                        h_loose_pull.SetBinError(j+1, 1)
                                     
+                                    h_tight_pull_num = h_egamma_tight.Clone()
+                                    h_tight_pull_num.Reset()
+                                    h_tight_pull = h_egamma_tight.Clone()
+                                    h_tight_pull.Reset()
+                                    h_tight_pull_num.Add(h_egamma_tight, tight_fit_as_hist, 1, -1)  # Numerator of pull hist is data - fit
+                                    
+                                    h_tight_pull_error = h_tight_pull.Clone() # to visualize binbin error
+                                    h_tight_pull_error.Reset()
+
+                                    for j in range(h_tight_pull_num.GetNbinsX()): 
+                                        if h_egamma_tight.GetBinContent(j+1) == 0: err = 1.8
+                                        else: 
+                                            if tight_fit_as_hist.GetBinContent(j+1) > h_egamma_tight.GetBinContent(j+1): err = h_egamma_tight.GetBinErrorUp(j+1)
+                                            else: err = h_egamma_tight.GetBinErrorLow(j+1)
+                                        h_tight_pull.SetBinContent(j+1, h_tight_pull_num.GetBinContent(j+1)/err)
+                                        h_tight_pull.SetBinError(j+1, 1)
+                                        h_tight_pull_error.SetBinContent(j+1, 0)
+                                        h_tight_pull_error.SetBinError(j+1, (tight_fit_as_hist.GetBinContent(j+1)*bin_bin_error)/err)
+
+                                    # pull for tight fit with constant
+                                    h_tight_pullc_num = h_egamma_tight.Clone()
+                                    h_tight_pullc_num.Reset()
+                                    h_tight_pullc = h_egamma_tight.Clone()
+                                    h_tight_pullc.Reset()
+                                    h_tight_pullc_num.Add(h_egamma_tight, tight_fit_w_constant, 1, -1)  # Numerator of pull hist is data - fit
+                                    
+                                    for j in range(h_tight_pullc_num.GetNbinsX()): 
+                                        if h_egamma_tight.GetBinContent(j+1) == 0: err = 1.8
+                                        else: 
+                                            if tight_fit_as_hist.GetBinContent(j+1) > h_egamma_tight.GetBinContent(j+1): err = h_egamma_tight.GetBinErrorUp(j+1)
+                                            else: err = h_egamma_tight.GetBinErrorLow(j+1)
+                                        h_tight_pullc.SetBinContent(j+1, h_tight_pullc_num.GetBinContent(j+1)/err)
+                                        h_tight_pullc.SetBinError(j+1, 0) # no error bar
+                                    
+                                    # Create title for plot 
+                                    title = region + " Twoprong"
+                                    if eta_reg == "barrel": title += ", Barrel"
+                                    elif eta_reg == "endcap": title += ", Endcap"
+                                    if i == len(bins) - 1: title += ", pt > " + str(bins[i])
+                                    else: title += ", " + str(bins[i]) + " < pt < " + str(bins[i+1]) 
+                                    if not old_method:
+                                        if nLandau == 1: title += ", 1 land"
+                                        elif nLandau == 2: title += ", 2 land"
+                                        if nExp == 1: title += ", 1 exp"
+                                        elif nExp == 2: title += ", 2 exp"
+                                        elif nExp == 3: title += ", 3 exp"
+                                        elif nExp == 4: title += ", 4 exp"
+                                    if old_method:
+                                        title += ", full fit (" + str(nLandau) + " land " + str(nExp) + " exp)"
+
+                                    
+                                    # Legend creation
+                                    if old_method: legend1 = ROOT.TLegend(0.35, 0.78, 0.6, 0.88)
+                                    else: legend1 = ROOT.TLegend(0.62, 0.27, 0.9, 0.37)
+                                    legend1.AddEntry(h_egamma_loose, "Loose Photon, " + str(h_egamma_loose.GetEntries()), "l")
+                                    #if not args.ratio: legend1.AddEntry(0, "Chi2/NDF: " + str(chi2 / ndf), "")
+                                    legend2 = ROOT.TLegend(0.29, 0.70, 0.62, 0.89)
+                                    legend2.AddEntry(h_egamma_tight, "Tight Photon, " + str(h_egamma_tight.GetEntries()), "l")
                                     if FTEST: legend2.AddEntry(tight_fit_as_hist, "Fit w f-test (Degree "+str(func_with_poly.GetNpar()-1)+")", "l")
                                     else: legend2.AddEntry(tight_fit_as_hist, "Fit (Degree "+str(func_with_poly.GetNpar()-1)+")", "l")
                                     legend2.AddEntry(tight_fit_w_constant, "Constant fit, C = {:.4}".format(fitted_func_times_constant.GetParameter(0)), "l")
