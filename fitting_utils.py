@@ -281,20 +281,8 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, cheb=0, para
 
 def ExtractPolyFromTightFit(fitfunc, range_low=0, range_high=50, cheb=0, debug=False):
     nparam = fitfunc.GetNpar()
-    #if cheb==0:
-    if False:
-        poly_str = ""
-        for n in range(nparam):
-            par_int = str(n)
-            power = str(n)
-            if n == 0: str_add = "[0]"
-            else: str_add = " + [{}]*x^{}".format(par_int, power)
-            poly_str += str_add
-        if debug: print(poly_str)
-        extracted_poly = ROOT.TF1(getname('func'), poly_str, range_low, range_high, nparam)
-    if cheb>=0:
-        _, _, cheb_func = MultiplyWithPolyToTF1(lambda x : x[0], nparam-1, cheb=cheb)
-        extracted_poly = ROOT.TF1(getname('func'), cheb_func, range_low, range_high, nparam)
+    _, _, cheb_func = MultiplyWithPolyToTF1(lambda x : x[0], nparam-1, cheb=cheb)
+    extracted_poly = ROOT.TF1(getname('func'), cheb_func, range_low, range_high, nparam)
     for n in range(nparam):
         extracted_poly.SetParameter(n, fitfunc.GetParameter(n))
         if debug: print(n, fitfunc.GetParameter(n))
