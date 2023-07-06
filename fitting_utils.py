@@ -606,7 +606,7 @@ def RSS(func, hist, bound=-1, error=0, integral=False, chi2=False):
   rss = 0
   by_bin = []
   for i in range(hist.GetNbinsX()):
-    if hist.GetBinContent(i+1) == 0: continue
+    #if hist.GetBinContent(i+1) == 0: continue
     if hist.GetBinLowEdge(i+1) < bound: continue
     hist_val = hist.GetBinContent(i+1)
     if integral:
@@ -617,6 +617,7 @@ def RSS(func, hist, bound=-1, error=0, integral=False, chi2=False):
     if chi2:
         if hist_val > fit_val: hist_error = hist.GetBinErrorLow(i+1)
         else: hist_error = hist.GetBinErrorUp(i+1)
+        if hist_val==0: hist_error = hist.GetBinErrorUp(i+1)
     else:
         hist_error = 1
     if error == 0:

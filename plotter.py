@@ -650,7 +650,8 @@ for item in plots:
                                     integral = False
                                     hist = h_egamma_tight
                                     fit = func_with_poly
-                                    ndof = util.count_nonzero_bins(hist) - fit.GetNpar()
+                                    #ndof = util.count_nonzero_bins(hist) - fit.GetNpar()
+                                    ndof = tlast_bin - fit.GetNpar()
                                     chi2, by_bin = util.RSS(fit, hist, error=0, integral=integral, chi2=True)
                                     chi2_ndof = chi2 / ndof
                                     error = 0.00
@@ -663,6 +664,28 @@ for item in plots:
                                         chi2_ndof = chi2 / ndof
                                         #print('  ', 'chi2', chi2, 'chi2/ndof', chi2_ndof)
                                     bin_bin_error = error
+
+                                    '''
+                                    print('example:')
+                                    chi2 = 0
+                                    for j in range(h_egamma_tight.GetNbinsX()):
+                                        if j > tlast_bin: continue
+                                        edge = h_egamma_tight.GetBinLowEdge(j+1)
+                                        hist = h_egamma_tight.GetBinContent(j+1)
+                                        fit = tight_fit_as_hist.GetBinContent(j+1)
+                                        if h_egamma_tight.GetBinContent(j+1) == 0:
+                                            err = h_egamma_tight.GetBinErrorUp(j+1)
+                                        else: 
+                                            if tight_fit_as_hist.GetBinContent(j+1) > h_egamma_tight.GetBinContent(j+1):
+                                                err = h_egamma_tight.GetBinErrorUp(j+1)
+                                            else: err = h_egamma_tight.GetBinErrorLow(j+1)
+                                        pull = (hist - fit)/err
+                                        pull2 = pull**2
+                                        chi2 += pull2
+                                        print('{:<2} bin {:<4} hist {:<8.4} fit {:<12.4} err {:<8.4} pull {:<12.4} pull^2 {:<12.4}'.format(j, edge, hist, fit, err, pull, pull2))
+                                        #print('{:<2} bin {:<4} hist {:<8.4} fit {:<12.4} err {:<8.4} pull {:<12.4} pull^2 {:<12.4} func {}'.format(j, edge, hist, fit, err, pull, pull2, by_bin[j][4]))
+                                    print('chi2', chi2, 'ndof', ndof, 'chi2/ndof', chi2/ndof)
+                                    '''
 
                                     h_loose_pull_num = h_egamma_loose.Clone()
                                     h_loose_pull_num.Reset()
@@ -686,9 +709,11 @@ for item in plots:
                                     h_tight_pull_error.Reset()
 
                                     for j in range(h_tight_pull_num.GetNbinsX()): 
-                                        if h_egamma_tight.GetBinContent(j+1) == 0: err = 1.8
+                                        if h_egamma_tight.GetBinContent(j+1) == 0:
+                                            err = h_egamma_tight.GetBinErrorUp(j+1)
                                         else: 
-                                            if tight_fit_as_hist.GetBinContent(j+1) > h_egamma_tight.GetBinContent(j+1): err = h_egamma_tight.GetBinErrorUp(j+1)
+                                            if tight_fit_as_hist.GetBinContent(j+1) > h_egamma_tight.GetBinContent(j+1):
+                                                err = h_egamma_tight.GetBinErrorUp(j+1)
                                             else: err = h_egamma_tight.GetBinErrorLow(j+1)
                                         h_tight_pull.SetBinContent(j+1, h_tight_pull_num.GetBinContent(j+1)/err)
                                         h_tight_pull.SetBinError(j+1, 1)
@@ -808,6 +833,7 @@ for item in plots:
                                             elif bins[i] < 120: empty.GetXaxis().SetRangeUser(0, 10)
                                             elif bins[i] < 200: empty.GetXaxis().SetRangeUser(0, 15)
                                             elif bins[i] < 380: empty.GetXaxis().SetRangeUser(0, 20)
+                                            else: empty.GetXaxis().SetRangeUser(0, 26)
                                             empty.GetYaxis().SetRangeUser(just_poly.GetMinimum(), just_poly.GetMaximum())
                                             empty.Draw('AH')
                                             just_poly.SetTitle("")
