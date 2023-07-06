@@ -831,6 +831,7 @@ for item in plots:
                                             elif bins[i] < 120: empty.GetXaxis().SetRangeUser(0, 10)
                                             elif bins[i] < 200: empty.GetXaxis().SetRangeUser(0, 15)
                                             elif bins[i] < 380: empty.GetXaxis().SetRangeUser(0, 20)
+                                            else: empty.GetXaxis().SetRangeUser(0, 26)
                                             empty.GetYaxis().SetRangeUser(just_poly.GetMinimum(), just_poly.GetMaximum())
                                             empty.Draw('AH')
                                             just_poly.SetTitle("")
