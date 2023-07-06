@@ -636,6 +636,14 @@ for item in plots:
                                         tight_stat = statboxes[plot]
 
                                     just_poly = util.ExtractPolyFromTightFit(func_with_poly, cheb=CHEB_TYPE)
+                                    tlast_bin = h_egamma_tight.GetNbinsX() + 1
+                                    for b in reversed(range(h_egamma_tight.GetNbinsX())):
+                                      if h_egamma_tight.GetBinContent(b+1)==0: continue
+                                      else:
+                                        tlast_bin = b + 1
+                                        break
+                                    rightmost_tightdata = h_egamma_loose.GetBinLowEdge(tlast_bin+1)
+                                    just_poly.SetRange(0,rightmost_tightdata)
 
                                     # determine bin-by-bin error
                                     STEP_SIZE = 0.001
@@ -787,7 +795,6 @@ for item in plots:
                                             h_egamma_tight.Draw("e same")
                                             ROOT.gPad.Update()
                                             legend2.Draw("same")
-                                            
                                             overlay = ROOT.TPad("overlay","",0, 0.06, 1, 0.5)
                                             overlay.SetFillStyle(4000)
                                             overlay.SetFillColor(0)
@@ -795,14 +802,12 @@ for item in plots:
                                             overlay.SetFrameLineWidth(0)
                                             overlay.Draw()
                                             overlay.cd()
-
                                             empty = ROOT.TH1F('empty', '', 100, 0, 50)
                                             empty.SetLineColor(ROOT.kRed)
                                             if bins[i] < 60: empty.GetXaxis().SetRangeUser(0, 5)
                                             elif bins[i] < 120: empty.GetXaxis().SetRangeUser(0, 10)
                                             elif bins[i] < 200: empty.GetXaxis().SetRangeUser(0, 15)
                                             elif bins[i] < 380: empty.GetXaxis().SetRangeUser(0, 20)
-                                            just_poly.SetRange(0,last)
                                             empty.GetYaxis().SetRangeUser(just_poly.GetMinimum(), just_poly.GetMaximum())
                                             empty.Draw('AH')
                                             just_poly.SetTitle("")
