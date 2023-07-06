@@ -580,16 +580,16 @@ for item in plots:
                                             loose_fit_as_hist.SetBinContent(b+1, 0)
                         
                                 fitted_func = util.HistogramToFunction(loose_fit_as_hist)
-                                fitted_func_times_constant, _ = util.MultiplyWithPolyToTF1(fitted_func, 0, cheb=0)
+                                fitted_func_times_constant, _, _ = util.MultiplyWithPolyToTF1(fitted_func, 0, cheb=0)
                                 h_egamma_tight.Fit(fitted_func_times_constant, '0L' if not args.integral else '0LI')
                                 tight_fit_w_constant = util.TemplateToHistogram(fitted_func_times_constant, 1000, 0, 50)
 
                                 FTEST = True if args.ftest else False
                                 NUM_PLOTS = 1
                                 if not FTEST:
-                                    CHEB_TYPE = 0
-                                    DEGREE = 0
-                                    func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, DEGREE, cheb=CHEB_TYPE)
+                                    CHEB_TYPE = 1
+                                    DEGREE = 1
+                                    func_with_poly, _, _ = util.MultiplyWithPolyToTF1(fitted_func, DEGREE, cheb=CHEB_TYPE)
                                     h_egamma_tight.Fit(func_with_poly, '0L' if not args.integral else '0LI')
                                     tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
                                 
@@ -602,7 +602,7 @@ for item in plots:
                                     fitresults = []
                                     statboxes = []
                                     for degree in range(NUM_DEGREES+1):
-                                        func_with_poly, _ = util.MultiplyWithPolyToTF1(fitted_func, degree, cheb=CHEB_TYPE)
+                                        func_with_poly, _, _ = util.MultiplyWithPolyToTF1(fitted_func, degree, cheb=CHEB_TYPE)
                                         fitresult = h_egamma_tight.Fit(func_with_poly, '0SL' if not args.integral else '0SLI')
                                         tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
 

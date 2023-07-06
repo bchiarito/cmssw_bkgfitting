@@ -111,151 +111,155 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, cheb=0, para
   when cheb=2 use Chebyshev polynomials of the second kind
   '''
   if degree == 0 and cheb == 0:
-    def func_after_mult(x, p):
-      return func(x) * (p[0])
+    def polynomial(x, p):
+      return (p[0])
   if degree == 1 and cheb == 0:
-    def func_after_mult(x, p):
-      return func(x) * (p[0] + p[1]*x[0])
+    def polynomial(x, p):
+      return (p[0] + p[1]*x[0])
   if degree == 2 and cheb == 0:
-    def func_after_mult(x, p):
-      return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2))
+    def polynomial(x, p):
+      return (p[0] + p[1]*x[0] + p[2]*(x[0]**2))
   if degree == 3 and cheb == 0:
-    def func_after_mult(x, p):
-      return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3))
+    def polynomial(x, p):
+      return (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3))
   if degree == 4 and cheb == 0:
-    def func_after_mult(x, p):
-      return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
+    def polynomial(x, p):
+      return (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
                         + p[4]*(x[0]**4))
   if degree == 5 and cheb == 0:
-    def func_after_mult(x, p):
-      return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
+    def polynomial(x, p):
+      return (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
                         + p[4]*(x[0]**4) + p[5]*x[0]**5)
   if degree == 6 and cheb == 0:
-    def func_after_mult(x, p):
-      return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
+    def polynomial(x, p):
+      return (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
                         + p[4]*(x[0]**4) + p[5]*x[0]**5 + p[6]*x[0]**6)
   if degree == 7 and cheb == 0:
-    def func_after_mult(x, p):
-      return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
+    def polynomial(x, p):
+      return (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
                         + p[4]*(x[0]**4) + p[5]*x[0]**5 + p[6]*x[0]**6 + p[7]*x[0]**7)
   if degree == 8 and cheb == 0:
-    def func_after_mult(x, p):
-      return func(x) * (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3) 
+    def polynomial(x, p):
+      return (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3) 
                         + p[4]*(x[0]**4) + p[5]*x[0]**5 + p[6]*x[0]**6 + p[7]*x[0]**7
                         + p[8]*x[0]**8)
 
   if degree == 0 and cheb == 1:
-    def func_after_mult(x, p):
-      return func(x) * (p[0])
+    def polynomial(x, p):
+      return (p[0])
   if degree == 1 and cheb == 1:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1))
+      return (p[0] + p[1]*cheb_fn(X, 1, 1))
   if degree == 2 and cheb == 1:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1))
+      return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1))
   if degree == 3 and cheb == 1:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
+      return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
                         + p[3]*cheb_fn(X, 3, 1))
   if degree == 4 and cheb == 1:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
+      return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
                         + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1))
   if degree == 5 and cheb == 1:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
+      return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
                         + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
                         + p[5]*cheb_fn(X, 5, 1))
   if degree == 6 and cheb == 1:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
+      return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
                         + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
                         + p[5]*cheb_fn(X, 5, 1) + p[6]*cheb_fn(X, 6, 1))
   if degree == 7 and cheb == 1:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
+      return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
                         + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
                         + p[5]*cheb_fn(X, 5, 1) + p[6]*cheb_fn(X, 6, 1)
                         + p[7]*cheb_fn(X, 7, 1))
   if degree == 7 and cheb == 1:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
+      return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
                         + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
                         + p[5]*cheb_fn(X, 5, 1) + p[6]*cheb_fn(X, 6, 1)
                         + p[7]*cheb_fn(X, 7, 1) + p[6]*cheb_fn(X, 8, 1))
   if degree == 8 and cheb == 1:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
+      return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
                         + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
                         + p[5]*cheb_fn(X, 5, 1) + p[6]*cheb_fn(X, 6, 1)
                         + p[7]*cheb_fn(X, 7, 1) + p[6]*cheb_fn(X, 8, 1)
                         + p[8]*cheb_fn(X, 8, 1))
 
   if degree == 0 and cheb == 2:
-    def func_after_mult(x, p):
-      return func(x) * (p[0])
+    def polynomial(x, p):
+      return (p[0])
   if degree == 1 and cheb == 2:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2))
+      return (p[0] + p[1]*cheb_fn(X, 1, 2))
   if degree == 2 and cheb == 2:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2))
+      return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2))
   if degree == 3 and cheb == 2:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
+      return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
                         + p[3]*cheb_fn(X, 3, 2))
   if degree == 4 and cheb == 2:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
+      return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
                         + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2))
   if degree == 5 and cheb == 2:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
+      return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
                         + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
                         + p[5]*cheb_fn(X, 5, 2))
   if degree == 6 and cheb == 2:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
+      return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
                         + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
                         + p[5]*cheb_fn(X, 5, 2) + p[6]*cheb_fn(X, 6, 2))
   if degree == 7 and cheb == 2:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
+      return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
                         + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
                         + p[5]*cheb_fn(X, 5, 2) + p[6]*cheb_fn(X, 6, 2)
                         + p[7]*cheb_fn(X, 7, 2))
   if degree == 7 and cheb == 2:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
+      return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
                         + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
                         + p[5]*cheb_fn(X, 5, 2) + p[6]*cheb_fn(X, 6, 2)
                         + p[7]*cheb_fn(X, 7, 2) + p[6]*cheb_fn(X, 8, 2))
   if degree == 8 and cheb == 2:
-    def func_after_mult(x, p):
+    def polynomial(x, p):
       X = x[0]
-      return func(x) * (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
+      return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
                         + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
                         + p[5]*cheb_fn(X, 5, 2) + p[6]*cheb_fn(X, 6, 2)
                         + p[7]*cheb_fn(X, 7, 2) + p[6]*cheb_fn(X, 8, 2)
                         + p[8]*cheb_fn(X, 8, 2))
 
+  def func_after_mult(x, p):
+    return func(x) * polynomial(x, p)
+
+  globals()[getname('func')] = polynomial
   globals()[getname('func')] = func_after_mult
   tf1 = ROOT.TF1(getname(), func_after_mult, range_low, range_high, degree+1)
 
@@ -273,7 +277,7 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, cheb=0, para
     for i in range(degree+1): tf1.SetParameter(i, 0.1**i)
   else:
     tf1.SetParameters(*parameters)
-  return tf1, func_after_mult
+  return tf1, func_after_mult, polynomial
 
 def ExtractPolyFromTightFit(fitfunc, range_low=0, range_high=50, cheb=0, debug=False):
     nparam = fitfunc.GetNpar()
@@ -289,7 +293,7 @@ def ExtractPolyFromTightFit(fitfunc, range_low=0, range_high=50, cheb=0, debug=F
         if debug: print(poly_str)
         extracted_poly = ROOT.TF1(getname('func'), poly_str, range_low, range_high, nparam)
     if cheb>=0:
-        _, cheb_func = MultiplyWithPolyToTF1(lambda x : x[0], nparam-1, cheb=cheb)
+        _, _, cheb_func = MultiplyWithPolyToTF1(lambda x : x[0], nparam-1, cheb=cheb)
         extracted_poly = ROOT.TF1(getname('func'), cheb_func, range_low, range_high, nparam)
     for n in range(nparam):
         extracted_poly.SetParameter(n, fitfunc.GetParameter(n))
@@ -691,7 +695,7 @@ if __name__ == '__main__':
   func = HistogramToFunction(hist)
 
   print('multiply with polynomial')
-  func_with_poly = MultiplyWithPolyToTF1(func, 2)
+  func_with_poly, _, _ = MultiplyWithPolyToTF1(func, 2)
   func_with_poly.Draw()
   raw_input()
 
