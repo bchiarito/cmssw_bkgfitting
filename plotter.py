@@ -742,6 +742,7 @@ for item in plots:
                                     
                                     h_egamma_loose.SetTitle(title)
                                     h_egamma_loose.SetMaximum()
+                                    h_egamma_loose.SetMinimum(0.1)
                                     h_egamma_loose.Draw("e")
                                     loose_fit_as_hist.SetLineColor(ROOT.kRed+1)
                                     loose_fit_as_hist.Draw("same")
@@ -772,6 +773,7 @@ for item in plots:
                                             elif bins[i] < 200: h_egamma_tight.GetXaxis().SetRangeUser(0, 15)
                                             elif bins[i] < 380: h_egamma_tight.GetXaxis().SetRangeUser(0, 20)
                                             else: h_egamma_tight.GetXaxis().SetRangeUser(0, 26)
+                                            h_egamma_tight.SetMinimum(0.1)
                                             h_egamma_tight.Draw("e")
                                             if FTEST: tight_stat.Draw()
                                             tight_fit_w_constant.SetLineColor(ROOT.kBlue)
