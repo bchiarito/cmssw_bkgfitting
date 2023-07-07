@@ -305,7 +305,6 @@ for item in plots:
                         # Rarely any "bulk" region, i.e. few bins with more than 1000 entries
                         if region == "iso_sym" or region == "iso_asym": 
                             old_method = True
-                            guesses = None
 
                         # Iso-Sym Guesses
                         if region == "iso_sym":
@@ -393,10 +392,10 @@ for item in plots:
                                     guesses = [475.8, 1.65, 0.4243, -0.5718, -1.198, 1.825, 0.8539]
                                 if bins[i] == 460:
                                     guesses = [195.5, 1.389, 0.2903, -0.0001153, -0.7601, -0.9159, 1.305, 0.8198, 0.2123]
-
+                        
                         # Iso-Asym Guesses
                         if region == "iso_asym":
-                            if region == "barrel":
+                            if eta_reg == "barrel":
                                 if bins[i] == 20:
                                     nExp -= 1
                                     guesses = [246.5, 0.8312, 0.1213, -4.7, -10, 0.875, 0.4371]
@@ -405,7 +404,7 @@ for item in plots:
                                     guesses = [422.5, 0.9891, 0.1768, -4.297, 1.116]
                                 if bins[i] == 300:
                                     guesses = [1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, 4.5, 4, 2] 
-                            elif region == "endcap":
+                            elif eta_reg == "endcap":
                                 if bins[i] == 20:
                                     nExp -= 1
                                     guesses = [299.9, 0.7635, 0.1048, -7.313, -10, 0.9439, 0.2901]
