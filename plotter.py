@@ -751,7 +751,6 @@ for item in plots:
                                     if old_method:
                                         title += ", full fit (" + str(nLandau) + " land " + str(nExp) + " exp)"
 
-                                    
                                     # Legend creation
                                     if old_method: legend1 = ROOT.TLegend(0.35, 0.78, 0.6, 0.88)
                                     else: legend1 = ROOT.TLegend(0.62, 0.27, 0.9, 0.37)
@@ -825,7 +824,7 @@ for item in plots:
                                             overlay.SetFrameLineWidth(0)
                                             overlay.Draw()
                                             overlay.cd()
-                                            empty = ROOT.TH1F('empty', '', 100, 0, 50)
+                                            empty = ROOT.TH1F(util.getname('empty'), '', 100, 0, 50)
                                             empty.SetLineColor(ROOT.kRed)
                                             if bins[i] < 60: empty.GetXaxis().SetRangeUser(0, 5)
                                             elif bins[i] < 120: empty.GetXaxis().SetRangeUser(0, 10)
