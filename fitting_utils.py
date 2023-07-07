@@ -408,6 +408,41 @@ def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, i
     tf1.SetParLimits(3, -10, 0)
     tf1.SetParLimits(4, 0, range_high/2.0)
     tf1.SetParLimits(5, -10, 0)
+  
+  elif function == 'full' and N == 11: 
+    def python_func(x, p):
+        norm1 = p[0]
+        mpv1 = p[1]
+        sigma1 = p[2]
+        C1 = p[3]
+        bound1 = p[4]
+
+        if bound1 < 0: bound1 = 0
+
+        land1 = norm1 * ROOT.TMath.Landau(x[0], mpv1, sigma1)
+      
+        y11=norm1*ROOT.TMath.Landau(bound1, mpv1, sigma1)
+        y12=ROOT.TMath.Exp(C1*bound1)
+        if y12 == 0: exp1 = ROOT.TMath.Exp(C1*x[0])*y11
+        else: exp1 = ROOT.TMath.Exp(C1*x[0])*y11/y12
+         
+        if x[0] < bound1: return land1
+        else: return exp1
+
+    NPAR = 5 
+    if not initial_guesses:
+        nEntries = hist.GetEntries()
+        mean = hist.GetMean()
+        initial_guesses = [
+            nEntries, mean, 0.2, -3,
+            mean]
+    if not len(initial_guesses) == NPAR:
+        raise AssertionError('Length of initial guesses list must be '+str(NPAR)+"!")
+    tf1 = ROOT.TF1(getname('func'), python_func, range_low, range_high, NPAR)
+    tf1.SetParNames("Constant1","MPV1","Sigma1","C1","Boundary1")
+    for i, guess in enumerate(initial_guesses): tf1.SetParameter(i, guess)
+    tf1.SetParLimits(3, -10, 0)
+    tf1.SetParLimits(4, 0, 25)
 
   elif function == 'full' and N == 12: 
     def python_func(x, p):
