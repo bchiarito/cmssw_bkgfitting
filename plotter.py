@@ -316,21 +316,26 @@ for item in plots:
                                     guesses = None
 
                                 # Iso-Sym Guesses
-                                if region == "iso_sym" and eta_reg == "barrel" and bins[i] == 20:
-                                    nExp -= 1
-                                    guesses = [1313, 0.7032, 0.1068, -5.47, -10, 1.014, 0.6314]
-                                if region == "iso_sym" and eta_reg == "barrel" and bins[i] == 200:
-                                    guesses = [5458, 1.394, 0.3427, -1.012, -1.784, -0.5, 2, 2, 1]
-                                if region == "iso_sym" and eta_reg == "barrel" and bins[i] == 240:
-                                    old_method = False
-                                    landau_guess = [5458, 1.394, 0.3427]
-                                    exp_guess = [5458, -1.012, 1.678, -1.784, 0.5775, -1]
+                                if region == "iso_sym":
+                                    if eta_reg == "barrel":
+                                        if bins[i] == 20:
+                                            nExp -= 1
+                                            guesses = [1313, 0.7032, 0.1068, -5.47, -10, 1.014, 0.6314]
+                                        if bins[i] == 200:
+                                            guesses = [5458, 1.394, 0.3427, -1.012, -1.784, -0.5, 2, 2, 1]
+                                        if bins[i] == 240:
+                                            old_method = False
+                                            landau_guess = [5458, 1.394, 0.3427]
+                                            exp_guess = [5458, -1.012, 1.678, -1.784, 0.5775, -1]
+                                    elif eta_reg == "endcap":
+                                        if bins[i] == 460:
+                                            guesses = [195.5, 1.389, 0.2903, -0.0001153, -0.7601, -0.9159, 1.305, 0.8198, 0.2123]
 
-                                # Iso-Asym Guesses
-                                if region == "iso_asym" and eta_reg == "barrel" and bins[i] == 300:
-                                    guesses = [1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, 4.5, 4, 2] 
-                                if region == "iso_asym" and eta_reg == "endcap" and bins[i] == 380:
-                                    guesses = [793.4, 2.157, 0.5491, -0.0171, -0.9465, -0.5988, 2.046, 0.9019, 4.627]
+                                    # Iso-Asym Guesses
+                                    if region == "iso_asym" and eta_reg == "barrel" and bins[i] == 300:
+                                        guesses = [1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, 4.5, 4, 2] 
+                                    if region == "iso_asym" and eta_reg == "endcap" and bins[i] == 380:
+                                        guesses = [793.4, 2.157, 0.5491, -0.0171, -0.9465, -0.5988, 2.046, 0.9019, 4.627]
 
                                 # NonIso-Sym Guesses
                                 if region == "noniso_sym":
