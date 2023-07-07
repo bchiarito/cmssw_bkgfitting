@@ -400,11 +400,20 @@ for item in plots:
                                 if bins[i] == 20:
                                     nExp -= 1
                                     guesses = [246.5, 0.8312, 0.1213, -4.7, -10, 0.875, 0.4371]
+                                if bins[i] == 40:
+                                    nExp -= 2
+                                    guesses = [422.5, 0.9891, 0.1768, -4.297, 1.116]
                                 if bins[i] == 300:
                                     guesses = [1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, 4.5, 4, 2] 
                             elif region == "endcap":
+                                if bins[i] == 20:
+                                    nExp -= 1
+                                    guesses = [299.9, 0.7635, 0.1048, -7.313, -10, 0.9439, 0.2901]
+                                if bins[i] == 40:
+                                    nExp -= 2
+                                    guesses = [546.6, 0.8803, 0.1328, -4.339, 1.089]
                                 if bins[i] == 380:
-                                    guesses = [793.4, 2.157, 0.5491, -0.0171, -0.9465, -0.5988, 2.046, 0.9019, 4.627]
+                                    guesses = [500, 2.301, 0.6017, -1.264, -1.592, -0.8502, 2.804, 0.971, 0.9496]
 
                         # NonIso-Sym Guesses
                         if region == "noniso_sym":
@@ -892,7 +901,7 @@ for item in plots:
                                     tight_fit_w_constant.Draw('same')
                                     h_egamma_tight.Draw("e same")
                                     ROOT.gPad.Update()
-<<<<<<< HEAD
+                                    
                                     legend2.Draw("same")
                                     overlay = ROOT.TPad("overlay","",0, 0.06, 1, 0.5)
                                     overlay.SetFillStyle(4000)
@@ -912,7 +921,6 @@ for item in plots:
                                     empty.Draw('AH')
                                     just_poly.SetTitle("")
                                     just_poly.Draw("AI L same")
-=======
                                     
                                     if not args.fit:
                                         if not region == "iso_sym":
@@ -1014,7 +1022,6 @@ for item in plots:
                                             h_tight_pullc.SetMarkerSize(0.25)
                                             h_tight_pullc.Draw('pe same')
                                     
->>>>>>> a518da21bd7156c031a7ae32e0ee591453a73612
                                     ROOT.gPad.Update()
                                     rightaxis = ROOT.TGaxis(ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUymax(), 510, "L+")
                                     rightaxis.SetLineColor(ROOT.kRed);
