@@ -432,6 +432,8 @@ for item in plots:
                                     guesses = [1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, 4.5, 4, 2] 
                                 if bins[i] == 380:
                                     guesses = [1096, 2.116, 0.5494, -0.4469, -1.293, -0.8872, 2.428, 0.4568, 2.857]
+                                if bins[i] == 460:
+                                    guesses = [793.4, 2.157, 0.5492, -0.01715, -0.9391, -0.5238, 2.047, 0.8956, 5.37]
                             elif eta_reg == "endcap":
                                 if bins[i] == 20:
                                     nExp -= 1
@@ -469,215 +471,209 @@ for item in plots:
                                     guesses = [1606, 1.895, 0.4265, -0.7, -1.483, -1, 2, 0.5, 2.5]
                                 if bins[i] == 380:
                                     guesses = [500, 2.301, 0.6017, -1.264, -1.592, -0.8502, 2.804, 0.971, 0.9496]
+                                if bins[i] == 460:
+                                    nExp -= 1
+                                    guesses = [270.3, 2.457, 0.6263, -0.9771, -0.5, 3.075, 5]
 
                         # NonIso-Sym Guesses
                         if region == "noniso_sym":
                             if eta_reg == "barrel":
                                 if bins[i] == 20:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [3.491e+06, 0.8838, 0.145] 
-                                        exp_guess = [8.593e+05, -4.278, 1.595, -7.263, 0.3, -8]
+                                    landau_guess = [3.491e+06, 0.8838, 0.145] 
+                                    exp_guess = [8.593e+05, -4.278, 1.595, -7.263, 0.3, -8]
                                 if bins[i] == 40:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.705e+04, 1.33, 0.205]
-                                        exp_guess = [3.636e+05, -2.809, 2.176, -4.8, 0.6, -1.807]
+                                    landau_guess = [1.705e+04, 1.33, 0.205]
+                                    exp_guess = [3.636e+05, -2.809, 2.176, -4.8, 0.6, -1.807]
+                                if bins[i] == 60:
+                                    nExp -= 1
+                                    landau_guess = [2.212e+04, 0.6783, 0.09052]
+                                    exp_guess = [4.467e+05, -2.789, 2.974, -5.139]
                                 if bins[i] == 70:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.857e+04, 0.682, 0.09099]
-                                        exp_guess = [1.349e+04, -1.075, 2.269, -2.444, 1.235, -5.598]
+                                    landau_guess = [1.857e+04, 0.682, 0.09099]
+                                    exp_guess = [1.349e+04, -1.075, 2.269, -2.444, 1.235, -5.598]
                                 if bins[i] == 80:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.826e+04, 0.6239, 0.07162]
-                                        exp_guess = [1.506e+04, -0.9609, 2.4, -2.24, 2.2, -0.4279]
+                                    landau_guess = [1.826e+04, 0.6239, 0.07162]
+                                    exp_guess = [1.506e+04, -0.9609, 2.4, -2.24, 2.2, -0.4279]
                                 if bins[i] == 100:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.705e+04, 0.6496, 0.0804] 
-                                        exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
+                                    landau_guess = [1.705e+04, 0.6496, 0.0804] 
+                                    exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
                                 if bins[i] == 120:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.705e+04, 0.6496, 0.3] 
-                                        exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
+                                    landau_guess = [1.705e+04, 0.6496, 0.3] 
+                                    exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
                                 if bins[i] == 140:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [8972, 0.8638, 0.1507]
-                                        exp_guess = [9448, -1.041, 3.2, -1.423, 3, -3]
+                                    landau_guess = [8972, 0.8638, 0.1507]
+                                    exp_guess = [9448, -1.041, 3.2, -1.423, 3, -3]
                                 if bins[i] == 160:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [9535, 0.6861, 0.08948]
-                                        exp_guess = [5.971e+04, -1.224, 4, -3.118, 4, -4.477]
+                                    landau_guess = [9535, 0.6861, 0.08948]
+                                    exp_guess = [5.971e+04, -1.224, 4, -3.118, 4, -4.477]
                                 if bins[i] == 180:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.183e+04, 0.7977, 0.1293]
-                                        exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
+                                    landau_guess = [1.183e+04, 0.7977, 0.1293]
+                                    exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
                                 if bins[i] == 200:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.204e+04, 0.7742, 0.1196]
-                                        exp_guess = [4.491e+04, -1.059, 5.5, -3.574, 4.5, -2.234]
+                                    nExp -= 1
+                                    landau_guess = [1.204e+04, 0.7742, 0.1196]
+                                    exp_guess = [2.194e+05, -1.407, 5.087, -0.8335]
+                                if bins[i] == 240:
+                                    landau_guess = [8717, 0.8303, 0.1381]
+                                    exp_guess = [9.701e+04, -1.193, 6.173, -0.6467, 6.452, -2.239]
                                 if bins[i] == 300:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1145, 1.149, 0.2453]
-                                        exp_guess = [3.14e+04, -1.023, 6.75, -0.5922, 1.25, -1]
+                                    landau_guess = [1145, 1.149, 0.2453]
+                                    exp_guess = [3.14e+04, -1.023, 6.75, -0.5922, 1.25, -1]
                                 if bins[i] == 380:
                                     old_method = True
-                                    if nLandau == 1 and nExp == 3:
-                                        guesses = [4848, 1.63, 0.4089, -3.553e-13, -0.6753, -0.8161, 0.5, 1.404, 0.5423]
+                                    guesses = [4848, 1.63, 0.4089, -3.553e-13, -0.6753, -0.8161, 0.5, 1.404, 0.5423]
                                 if bins[i] == 460:
                                     old_method = True
-                                    if nLandau == 1 and nExp == 3:
-                                        guesses = [2487, 1.731, 0.4342, -0.08184, -0.6556, -0.6027, 0.5, 1.187, 0.5]
+                                    guesses = [2487, 1.731, 0.4342, -0.08184, -0.6556, -0.6027, 0.5, 1.187, 0.5]
                             elif eta_reg == "endcap":
                                 if bins[i] == 20:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.705e+04, 1.108, 0.1949] 
-                                        exp_guess = [4182, -0.9553, 1.4, -5.89, 0.5, -1]
+                                    landau_guess = [1.705e+04, 1.108, 0.1949] 
+                                    exp_guess = [4182, -0.9553, 1.4, -5.89, 0.5, -1]
                                 if bins[i] == 40:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.123e+05, 0.875, 0.1524]
-                                        exp_guess = [4.549e+04, -2.09, 1.915, -3.572, 0.6484, -6.328]
+                                    landau_guess = [1.123e+05, 0.875, 0.1524]
+                                    exp_guess = [4.549e+04, -2.09, 1.915, -3.572, 0.6484, -6.328]
                                 if bins[i] == 60:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.021e+04, 0.7237, 0.107]
-                                        exp_guess = [5970, -0.9294, 1.702, -2.435, 1.262, -5.012]
+                                    landau_guess = [1.021e+04, 0.7237, 0.107]
+                                    exp_guess = [5970, -0.9294, 1.702, -2.435, 1.262, -5.012]
                                 if bins[i] == 70:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.163e+04, 0.7851, 0.1258]
-                                        exp_guess = [1.045e+04, -1.111, 1.645, -2.263, 1.974, -6.166]
+                                    landau_guess = [1.163e+04, 0.7851, 0.1258]
+                                    exp_guess = [1.045e+04, -1.111, 1.645, -2.263, 1.974, -6.166]
                                 if bins[i] == 80:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.826e+04, 0.6239, 0.07162]
-                                        exp_guess = [1.506e+04, -0.9609, 2.4, -2.24, 2.2, -0.4279]
+                                    landau_guess = [1.826e+04, 0.6239, 0.07162]
+                                    exp_guess = [1.506e+04, -0.9609, 2.4, -2.24, 2.2, -0.4279]
                                 if bins[i] == 100:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.705e+04, 0.6496, 0.2]
-                                        exp_guess = [1.755e+04, -0.92, 2.4, -1.706, 2.6, -1]
+                                    landau_guess = [1.705e+04, 0.6496, 0.2]
+                                    exp_guess = [1.755e+04, -0.92, 2.4, -1.706, 2.6, -1]
                                 if bins[i] == 120:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.705e+04, 0.6496, 0.3] 
-                                        exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
+                                    landau_guess = [1.705e+04, 0.6496, 0.3] 
+                                    exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
                                 if bins[i] == 140:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.761e+04, 0.7322, 0.1067]
-                                        exp_guess = [9448, -1.041, 3.2, -1.423, 3, -3]
+                                    landau_guess = [1.761e+04, 0.7322, 0.1067]
+                                    exp_guess = [9448, -1.041, 3.2, -1.423, 3, -3]
                                 if bins[i] == 160:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [7468, 0.9087, 0.1663]
-                                        exp_guess = [1.107e+04, -1.035, 3, -1.572, 2, -7.523]
+                                    landau_guess = [7468, 0.9087, 0.1663]
+                                    exp_guess = [1.107e+04, -1.035, 3, -1.572, 2, -7.523]
                                 if bins[i] == 180:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [7031, 1.004, 0.1965]
-                                        exp_guess = [1.742e+04, -1.198, 3.5, -3.296, 2.5, -1.366]
+                                    landau_guess = [7031, 1.004, 0.1965]
+                                    exp_guess = [1.742e+04, -1.198, 3.5, -3.296, 2.5, -1.366]
                                 if bins[i] == 200:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.204e+04, 0.7742, 0.1196]
-                                        exp_guess = [4.491e+04, -1.059, 5.5, -3.574, 4.5, -2.234]
+                                    landau_guess = [1.204e+04, 0.7742, 0.1196]
+                                    exp_guess = [4.491e+04, -1.059, 5.5, -3.574, 4.5, -2.234]
                                 if bins[i] == 240:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [7937, 1.269, 0.2811]
-                                        exp_guess = [4.457e+04, -2, 5, -1, 1.8, -0.5]
+                                    landau_guess = [7937, 1.269, 0.2811]
+                                    exp_guess = [4.457e+04, -2, 5, -1, 1.8, -0.5]
                                 if bins[i] == 300:
                                     old_method = True
-                                    if nLandau == 1 and nExp == 3:
-                                        guesses = [1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, 0.5, 0.8, 0.5]  
+                                    guesses = [1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, 0.5, 0.8, 0.5]  
                                 if bins[i] == 380:
                                     old_method = True
-                                    if nLandau == 1 and nExp == 3:
-                                        #guesses = [890.4, 1.723, 0.4403, -1.441, -0.9773, -0.5518, 0.5, 4.1, 0.5]
-                                        guesses = [890.4, 1.723, 0.4403, -1.441, -0.9773, -0.5518, 2.5, 2.5, 5]
+                                    guesses = [890.4, 1.723, 0.4403, -1.441, -0.9773, -0.2518, 2.5, 2.5, 5]
                                 if bins[i] == 460:
                                     old_method = True
-                                    if nLandau == 1 and nExp == 3:
-                                        guesses = [301.3, 1.842, 0.482, -1.031, -0.5918, -1.591, 0.5, 3.275, 0.8257]
+                                    guesses = [301.3, 1.842, 0.482, -1.031, -0.5918, -1.591, 0.5, 3.275, 0.8257]
                                
-                        # NONISO_ASYM GUESSES   
+                        # NonIso_Asym Guesses   
                         if region == "noniso_asym":
                             if eta_reg == "barrel":
+                                if bins[i] == 20:
+                                    landau_guess = [9.069e+04, 0.9345, 0.1463]
+                                    exp_guess = [4.834e+04, -3.378, 1.206, -8.486, 0.7373, -4.555]
+                                if bins[i] == 40:
+                                    nExp -= 1
+                                    landau_guess = [2.459e+04, 0.8719, 0.1261]
+                                    exp_guess = [9328, -1.29, 1.599, -5.368]
                                 if bins[i] == 60:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.021e+04, 0.7237, 0.107]
-                                        exp_guess = [5970, -0.9294, 1.702, -2.435, 1.262, -5.012]
-                                if bins[i] == 100:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.705e+04, 0.6496, 0.0804] 
-                                        exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
-                                if bins[i] == 120:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.705e+04, 0.6496, 0.3] 
-                                        exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
-                                if bins[i] == 160:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [9535, 0.6861, 0.08948]
-                                        exp_guess = [5.971e+04, -1.224, 4, -3.118, 4, -4.477]
-                                if bins[i] == 180:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.183e+04, 0.7977, 0.1293]
-                                        exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
-                                if bins[i] == 200:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.204e+04, 0.7742, 0.1196]
-                                        exp_guess = [4.491e+04, -1.059, 3, -1, 3, -2.234]
-                                if bins[i] == 240:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [8442, 1.149, 0.2453]
-                                        exp_guess = [3.14e+04, -1.023, 5, -0.5922, 3, -2]
-                                if bins[i] == 300:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [8442, 1.149, 0.2453]
-                                        exp_guess = [3.14e+04, -1.023, 6.75, -0.5922, 1.25, -1]
-                                if bins[i] == 380:
-                                    if nLandau == 1 and nExp == 3:
-                                        old_method = True
-                                        guesses = [1430, 2.107, 0.5122, -0.04034, -1.359, -0.5, 3, 3, 2]
-                                if bins[i] == 460:
-                                    if nLandau == 1 and nExp == 3:
-                                        old_method = True
-                                        guesses = [345.4, 2.06, 0.485, -2, -1, -0.5, 3, 2, 1]
-                            elif eta_reg == "endcap":
-                                if bins[i] == 60:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.021e+04, 0.7237, 0.107]
-                                        exp_guess = [5970, -0.9294, 1.702, -2.435, 1.262, -5.012]
+                                    landau_guess = [1.021e+04, 0.7237, 0.107]
+                                    exp_guess = [5970, -0.9294, 1.702, -2.435, 1.262, -5.012]
+                                if bins[i] == 70:
+                                    nExp -= 1
+                                    landau_guess = [1.262e+04, 1.14, 0.2139]
+                                    exp_guess = [7.614e+04, -2.433, 2.075, -3.571]
                                 if bins[i] == 80:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.826e+04, 0.6239, 0.07162]
-                                        exp_guess = [1.506e+04, -0.9609, 2.4, -2.24, 2.2, -0.4279]
+                                    landau_guess = [1.474e+04, 1.084, 0.1992]
+                                    exp_guess = [7428, -0.8801, 2.325, -2.899, 1.044, -2.326]
                                 if bins[i] == 100:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.705e+04, 0.6496, 0.2]
-                                        exp_guess = [1.755e+04, -0.92, 2.4, -1.706, 2.6, -1]
+                                    landau_guess = [1.705e+04, 0.6496, 0.0804] 
+                                    exp_guess = [1.986e+04, -0.8552, 2.8, -2.188, 1.2, -1.68]
                                 if bins[i] == 120:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.705e+04, 0.6496, 0.3]
-                                        exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
+                                    landau_guess = [1.705e+04, 0.6496, 0.3] 
+                                    exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
                                 if bins[i] == 140:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.761e+04, 0.7322, 0.1067]
-                                        exp_guess = [9448, -1.041, 3.2, -1.423, 3, -3]
+                                    landau_guess = [8211, 1.16, 0.2245] 
+                                    exp_guess = [3.881e+04, -1.409, 3.225, -1.699, 2.5, -1.078]
                                 if bins[i] == 160:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [7468, 0.9087, 0.1663]
-                                        exp_guess = [1.107e+04, -1.035, 3, -1.572, 2, -7.523]
+                                    landau_guess = [8663, 1.297, 0.2693]
+                                    exp_guess = [2.436e+04, -1.231, 2.659, -1.467, 3.5, -1]
                                 if bins[i] == 180:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [7031, 1.004, 0.1965]
-                                        exp_guess = [1.742e+04, -1.198, 3, -3.296, 3, -1.366]
+                                    landau_guess = [1.183e+04, 0.7977, 0.1293]
+                                    exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
                                 if bins[i] == 200:
-                                    if nLandau == 1 and nExp == 3:
-                                        landau_guess = [1.204e+04, 0.7742, 0.1196]
-                                        exp_guess = [4.491e+04, -1.059, 5.5, -3.574, 4.5, -2.234]
+                                    landau_guess = [1.204e+04, 0.7742, 0.1196]
+                                    exp_guess = [4.491e+04, -1.059, 3, -1, 3, -2.234]
                                 if bins[i] == 240:
+                                    landau_guess = [8442, 1.149, 0.2453]
+                                    exp_guess = [3.14e+04, -1.023, 5, -0.5922, 3, -2]
+                                if bins[i] == 300:
+                                    nExp -= 1
+                                    landau_guess = [5089, 2.157, 0.5678]
+                                    exp_guess = [1.148e+04, -1.051, 6.125, -0.5868]
+                                if bins[i] == 380:
                                     old_method = True
-                                    guesses = None
+                                    guesses = [1430, 2.107, 0.5122, -0.04034, -1.359, -0.5, 3, 3, 2]
+                                if bins[i] == 460:
+                                    nExp -= 1
+                                    old_method = True
+                                    guesses = [775.1, 2.767, 0.7776, -0.7585, -0.3751, 3.079, 5.396]
+                            elif eta_reg == "endcap":
+                                if bins[i] == 20:
+                                    nExp -= 1
+                                    landau_guess = [6045, 0.7751, 0.1028]
+                                    exp_guess = [7331, -3.713, 1.18, -7.362]
+                                if bins[i] == 40:
+                                    landau_guess = [1e+04, 0.9233, 0.1527]
+                                    exp_guess = [3937, -0.4774, 0.9104, -2.799, 0.7293, -4.712]
+                                if bins[i] == 60:
+                                    landau_guess = [1.021e+04, 0.7237, 0.107]
+                                    exp_guess = [5970, -0.9294, 1.702, -2.435, 1.262, -5.012]
+                                if bins[i] == 70:
+                                    nExp -= 1
+                                    landau_guess = [5725, 1.131, 0.2179]
+                                    exp_guess = [9440, -1.938, 1.9, -2.955]
+                                if bins[i] == 80:
+                                    landau_guess = [1.826e+04, 0.6239, 0.07162]
+                                    exp_guess = [1.506e+04, -0.9609, 2.4, -2.24, 2.2, -0.4279]
+                                if bins[i] == 100:
+                                    landau_guess = [1.705e+04, 0.6496, 0.2]
+                                    exp_guess = [1.755e+04, -0.92, 2.4, -1.706, 2.6, -1]
+                                if bins[i] == 120:
+                                    landau_guess = [1.705e+04, 0.6496, 0.3]
+                                    exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
+                                if bins[i] == 140:
+                                    landau_guess = [6416, 1.397, 0.3019]
+                                    exp_guess = [8019, -1.101, 1.875, -1.559, 3.2, -1.032]
+                                if bins[i] == 160:
+                                    landau_guess = [5895, 1.577, 0.3635]
+                                    exp_guess = [8294, -1.077, 1.691, -1.543, 1.484, -1.361]
+                                if bins[i] == 180:
+                                    landau_guess = [7031, 1.004, 0.1965]
+                                    exp_guess = [1.742e+04, -1.198, 3, -3.296, 3, -1.366]
+                                if bins[i] == 200:
+                                    nExp -= 1
+                                    landau_guess = [5881, 1.694, 0.3963]
+                                    exp_guess = [2.347e+04, -1.451, 3.478, -1.168]
+                                if bins[i] == 240:
+                                    nExp -= 1
+                                    old_method = True
+                                    guesses = [4657, 2.046, 0.5207, -1.225, -0.7, 2.5, 3.5]
                                 if bins[i] == 300:
                                     old_method = True
                                     guesses = [1470, 1.687, 0.3483, -2, -1, -1, 3, 2, 1.5]
                                 if bins[i] == 380:
-                                    if nLandau == 1 and nExp == 3:
-                                        old_method = True
-                                        guesses = [1430, 2.107, 0.5122, -0.04034, -1.359, -0.5, 3, 3, 2]
+                                    old_method = True
+                                    guesses = [1430, 2.107, 0.5122, -0.04034, -1.359, -0.5, 3, 3, 2]
                                 if bins[i] == 460:
-                                    if nLandau == 1 and nExp == 3:
-                                        old_method = True
-                                        guesses = [345.4, 2.06, 0.485, -2, -1, -0.5, 3, 2, 1]
+                                    old_method = True
+                                    guesses = [345.4, 2.06, 0.485, -2, -1, -0.5, 3, 2, 1]
                       
                         if old_method:
                             N = str(nLandau) + str(nExp)
