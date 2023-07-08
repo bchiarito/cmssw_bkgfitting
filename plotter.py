@@ -53,7 +53,7 @@ else: plots = main_plots
 eta_regions = ["all", "barrel", "endcap"]
 regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
 
-if args.testBin is None: test_regions = ["noniso_sym"] 
+if args.testBin is None: test_regions = ["iso_asym"] 
 elif "noniso_asym" in args.testBin: test_regions = ["noniso_asym"]
 elif "noniso_sym" in args.testBin: test_regions = ["noniso_sym"]
 elif "iso_asym" in args.testBin: test_regions = ["iso_asym"]
@@ -261,6 +261,7 @@ for item in plots:
                         ROOT.gPad.Update()
                         c1.Print(args.name + ".pdf")
                     else:
+                        if i == 0: print("====================== " + region.upper() + " =====================")
                         if i == len(bins) - 1: print("############### PT BIN: " + str(bins[i]) + "+, " + eta_reg.upper() + " ###############")
                         else: print("############### PT BIN: " + str(bins[i]) + "-" + str(bins[i+1]) + ", " + eta_reg.upper() + " ###############")
                         
