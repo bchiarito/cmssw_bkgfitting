@@ -714,16 +714,16 @@ for item in plots:
                                     loose_fit_as_hist.SetBinContent(b+1, 0)
                 
                         fitted_func = util.HistogramToFunction(loose_fit_as_hist)
-                        fitted_func_times_constant, _, _ = util.MultiplyWithPolyToTF1(fitted_func, 0, cheb=0)
+                        fitted_func_times_constant, _, _ = util.MultiplyWithPolyToTF1(fitted_func, 0, poly=0)
                         h_egamma_tight.Fit(fitted_func_times_constant, '0L' if not args.integral else '0LI')
                         tight_fit_w_constant = util.TemplateToHistogram(fitted_func_times_constant, 1000, 0, 50)
 
                         FTEST = True if args.ftest else False
                         NUM_PLOTS = 1
                         if not FTEST:
-                            CHEB_TYPE = 1
+                            POLY_TYPE = 3
                             DEGREE = 1
-                            func_with_poly, _, _ = util.MultiplyWithPolyToTF1(fitted_func, DEGREE, cheb=CHEB_TYPE)
+                            func_with_poly, _, _ = util.MultiplyWithPolyToTF1(fitted_func, DEGREE, poly=POLY_TYPE)
                             h_egamma_tight.Fit(func_with_poly, '0L' if not args.integral else '0LI')
                             tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
                         
@@ -731,12 +731,12 @@ for item in plots:
                             parse = args.ftest.split()
                             NUM_DEGREES = int(parse[1])
                             if args.printFtest and args.testBin is not None: NUM_PLOTS = NUM_DEGREES+1
-                            CHEB_TYPE = int(parse[0])
+                            POLY_TYPE = int(parse[0])
                             fitfuncs = []
                             fitresults = []
                             statboxes = []
                             for degree in range(NUM_DEGREES+1):
-                                func_with_poly, _, _ = util.MultiplyWithPolyToTF1(fitted_func, degree, cheb=CHEB_TYPE)
+                                func_with_poly, _, _ = util.MultiplyWithPolyToTF1(fitted_func, degree, poly=POLY_TYPE)
                                 fitresult = h_egamma_tight.Fit(func_with_poly, '0SL' if not args.integral else '0SLI')
                                 tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
 
@@ -769,7 +769,7 @@ for item in plots:
                                 tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
                                 tight_stat = statboxes[plot]
 
-                            just_poly = util.ExtractPolyFromTightFit(func_with_poly, cheb=CHEB_TYPE)
+                            just_poly = util.ExtractPolyFromTightFit(func_with_poly, poly=POLY_TYPE)
                             tlast_bin = h_egamma_tight.GetNbinsX() + 1
                             for b in reversed(range(h_egamma_tight.GetNbinsX())):
                               if h_egamma_tight.GetBinContent(b+1)==0: continue
@@ -1129,7 +1129,7 @@ for item in plots:
                                     h_tight_pullc.Draw('pe same')
                             
                             ROOT.gPad.Update()
-                            if args.testBin is not None and not args.printFtest: raw_input()
+                            if args.testBin is not None and not args.printFtest: input()
                             c1.Print(args.name + ".pdf")
                                 
     c1.Print(args.name + ".pdf]")

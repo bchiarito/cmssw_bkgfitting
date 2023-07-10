@@ -9,6 +9,11 @@ except ImportError:
 # global counters
 NAME_COUNT = 0
 
+def fact(n):
+    f = 1
+    for i in range(1, n+1): f *= i
+    return f
+
 def cheb_fn(x, degree, kind):
   if kind == 1:
     if degree == 0:
@@ -37,6 +42,10 @@ def cheb_fn(x, degree, kind):
             u_minus_1 = current_term
         return current_term
   else: raise ValueError('"kind" argument must be 1 or 2.')
+
+def bern_fn(x, n_degree, i_degree):
+    if i_degree < 0 or i_degree > n_degree: return 0
+    else: return fact(n_degree)/(fact(i_degree)*fact(n_degree - i_degree)) * (x/25)**i_degree * (1 - (x/25))**(n_degree - i_degree)
 
 def getname(prefix='obj'):
   '''
@@ -100,98 +109,98 @@ def HistogramToFunction(hist):
     return hist.GetBinContent(hist.FindBin(x[0])) 
   return histfunc
 
-def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, cheb=0, parameters=None):
+def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, poly=0, parameters=None):
   '''
   Takes a python function
 
   Returns a TF1 object representing the input function times a polynomial, and the returns associated python function as well
 
-  when cheb=0 (default) use regular polynomials (1, x^2, x^3, etc)
-  when cheb=1 use Chebyshev polynomials of the first kind
-  when cheb=2 use Chebyshev polynomials of the second kind
+  when poly=0 (default) use regular polynomials (1, x^2, x^3, etc)
+  when poly=1 use Chebyshev polynomials of the first kind
+  when poly=2 use Chebyshev polynomials of the second kind
   '''
-  if degree == 0 and cheb == 0:
+  if degree == 0 and poly == 0:
     def polynomial(x, p):
       return (p[0])
-  if degree == 1 and cheb == 0:
+  if degree == 1 and poly == 0:
     def polynomial(x, p):
       return (p[0] + p[1]*x[0])
-  if degree == 2 and cheb == 0:
+  if degree == 2 and poly == 0:
     def polynomial(x, p):
       return (p[0] + p[1]*x[0] + p[2]*(x[0]**2))
-  if degree == 3 and cheb == 0:
+  if degree == 3 and poly == 0:
     def polynomial(x, p):
       return (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3))
-  if degree == 4 and cheb == 0:
+  if degree == 4 and poly == 0:
     def polynomial(x, p):
       return (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
                         + p[4]*(x[0]**4))
-  if degree == 5 and cheb == 0:
+  if degree == 5 and poly == 0:
     def polynomial(x, p):
       return (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
                         + p[4]*(x[0]**4) + p[5]*x[0]**5)
-  if degree == 6 and cheb == 0:
+  if degree == 6 and poly == 0:
     def polynomial(x, p):
       return (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
                         + p[4]*(x[0]**4) + p[5]*x[0]**5 + p[6]*x[0]**6)
-  if degree == 7 and cheb == 0:
+  if degree == 7 and poly == 0:
     def polynomial(x, p):
       return (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3)
                         + p[4]*(x[0]**4) + p[5]*x[0]**5 + p[6]*x[0]**6 + p[7]*x[0]**7)
-  if degree == 8 and cheb == 0:
+  if degree == 8 and poly == 0:
     def polynomial(x, p):
       return (p[0] + p[1]*x[0] + p[2]*(x[0]**2) + p[3]*(x[0]**3) 
                         + p[4]*(x[0]**4) + p[5]*x[0]**5 + p[6]*x[0]**6 + p[7]*x[0]**7
                         + p[8]*x[0]**8)
 
-  if degree == 0 and cheb == 1:
+  if degree == 0 and poly == 1:
     def polynomial(x, p):
       return (p[0])
-  if degree == 1 and cheb == 1:
+  if degree == 1 and poly == 1:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 1))
-  if degree == 2 and cheb == 1:
+  if degree == 2 and poly == 1:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1))
-  if degree == 3 and cheb == 1:
+  if degree == 3 and poly == 1:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
                         + p[3]*cheb_fn(X, 3, 1))
-  if degree == 4 and cheb == 1:
+  if degree == 4 and poly == 1:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
                         + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1))
-  if degree == 5 and cheb == 1:
+  if degree == 5 and poly == 1:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
                         + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
                         + p[5]*cheb_fn(X, 5, 1))
-  if degree == 6 and cheb == 1:
+  if degree == 6 and poly == 1:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
                         + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
                         + p[5]*cheb_fn(X, 5, 1) + p[6]*cheb_fn(X, 6, 1))
-  if degree == 7 and cheb == 1:
+  if degree == 7 and poly == 1:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
                         + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
                         + p[5]*cheb_fn(X, 5, 1) + p[6]*cheb_fn(X, 6, 1)
                         + p[7]*cheb_fn(X, 7, 1))
-  if degree == 7 and cheb == 1:
+  if degree == 7 and poly == 1:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
                         + p[3]*cheb_fn(X, 3, 1) + p[4]*cheb_fn(X, 4, 1)
                         + p[5]*cheb_fn(X, 5, 1) + p[6]*cheb_fn(X, 6, 1)
                         + p[7]*cheb_fn(X, 7, 1) + p[6]*cheb_fn(X, 8, 1))
-  if degree == 8 and cheb == 1:
+  if degree == 8 and poly == 1:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 1) + p[2]*cheb_fn(X, 2, 1)
@@ -200,54 +209,54 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, cheb=0, para
                         + p[7]*cheb_fn(X, 7, 1) + p[6]*cheb_fn(X, 8, 1)
                         + p[8]*cheb_fn(X, 8, 1))
 
-  if degree == 0 and cheb == 2:
+  if degree == 0 and poly == 2:
     def polynomial(x, p):
       return (p[0])
-  if degree == 1 and cheb == 2:
+  if degree == 1 and poly == 2:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 2))
-  if degree == 2 and cheb == 2:
+  if degree == 2 and poly == 2:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2))
-  if degree == 3 and cheb == 2:
+  if degree == 3 and poly == 2:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
                         + p[3]*cheb_fn(X, 3, 2))
-  if degree == 4 and cheb == 2:
+  if degree == 4 and poly == 2:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
                         + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2))
-  if degree == 5 and cheb == 2:
+  if degree == 5 and poly == 2:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
                         + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
                         + p[5]*cheb_fn(X, 5, 2))
-  if degree == 6 and cheb == 2:
+  if degree == 6 and poly == 2:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
                         + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
                         + p[5]*cheb_fn(X, 5, 2) + p[6]*cheb_fn(X, 6, 2))
-  if degree == 7 and cheb == 2:
+  if degree == 7 and poly == 2:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
                         + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
                         + p[5]*cheb_fn(X, 5, 2) + p[6]*cheb_fn(X, 6, 2)
                         + p[7]*cheb_fn(X, 7, 2))
-  if degree == 7 and cheb == 2:
+  if degree == 7 and poly == 2:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
                         + p[3]*cheb_fn(X, 3, 2) + p[4]*cheb_fn(X, 4, 2)
                         + p[5]*cheb_fn(X, 5, 2) + p[6]*cheb_fn(X, 6, 2)
                         + p[7]*cheb_fn(X, 7, 2) + p[6]*cheb_fn(X, 8, 2))
-  if degree == 8 and cheb == 2:
+  if degree == 8 and poly == 2:
     def polynomial(x, p):
       X = x[0]
       return (p[0] + p[1]*cheb_fn(X, 1, 2) + p[2]*cheb_fn(X, 2, 2)
@@ -255,6 +264,13 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, cheb=0, para
                         + p[5]*cheb_fn(X, 5, 2) + p[6]*cheb_fn(X, 6, 2)
                         + p[7]*cheb_fn(X, 7, 2) + p[6]*cheb_fn(X, 8, 2)
                         + p[8]*cheb_fn(X, 8, 2))
+  
+  if poly == 3:
+     def polynomial(x, p):
+         if degree == 0: return (p[0])
+         X = x[0]
+         if degree == 1: return p[0] + p[1]*bern_fn(X, 1, 0)
+        
 
   def func_after_mult(x, p):
     return func(x) * polynomial(x, p)
@@ -263,15 +279,15 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, cheb=0, para
   globals()[getname('func')] = func_after_mult
   tf1 = ROOT.TF1(getname(), func_after_mult, range_low, range_high, degree+1)
 
-  if degree>=0: tf1.SetParName(0, 'Constant') if cheb==0 else tf1.SetParName(0, 'Zero')
-  if degree>=1: tf1.SetParName(1, 'Linear') if cheb==0 else tf1.SetParName(1, 'One')
-  if degree>=2: tf1.SetParName(2, 'Quadratic') if cheb==0 else tf1.SetParName(2, 'Two')
-  if degree>=3: tf1.SetParName(3, 'Cubic') if cheb==0 else tf1.SetParName(3, 'Three')
-  if degree>=4: tf1.SetParName(4, 'Quartic') if cheb==0 else tf1.SetParName(4, 'Four')
-  if degree>=5: tf1.SetParName(5, 'Quintic') if cheb==0 else tf1.SetParName(5, 'Five')
-  if degree>=6: tf1.SetParName(6, 'Sextic') if cheb==0 else tf1.SetParName(6, 'Six')
-  if degree>=7: tf1.SetParName(7, 'Septic') if cheb==0 else tf1.SetParName(7, 'Seven')
-  if degree>=8: tf1.SetParName(8, 'Octic') if cheb==0 else tf1.SetParName(8, 'Eight')
+  if degree>=0: tf1.SetParName(0, 'Constant') if poly==0 else tf1.SetParName(0, 'Zero')
+  if degree>=1: tf1.SetParName(1, 'Linear') if poly==0 else tf1.SetParName(1, 'One')
+  if degree>=2: tf1.SetParName(2, 'Quadratic') if poly==0 else tf1.SetParName(2, 'Two')
+  if degree>=3: tf1.SetParName(3, 'Cubic') if poly==0 else tf1.SetParName(3, 'Three')
+  if degree>=4: tf1.SetParName(4, 'Quartic') if poly==0 else tf1.SetParName(4, 'Four')
+  if degree>=5: tf1.SetParName(5, 'Quintic') if poly==0 else tf1.SetParName(5, 'Five')
+  if degree>=6: tf1.SetParName(6, 'Sextic') if poly==0 else tf1.SetParName(6, 'Six')
+  if degree>=7: tf1.SetParName(7, 'Septic') if poly==0 else tf1.SetParName(7, 'Seven')
+  if degree>=8: tf1.SetParName(8, 'Octic') if poly==0 else tf1.SetParName(8, 'Eight')
 
   if not parameters:
     for i in range(degree+1): tf1.SetParameter(i, 0.1**i)
@@ -279,10 +295,10 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, cheb=0, para
     tf1.SetParameters(*parameters)
   return tf1, func_after_mult, polynomial
 
-def ExtractPolyFromTightFit(fitfunc, range_low=0, range_high=50, cheb=0, debug=False):
+def ExtractPolyFromTightFit(fitfunc, range_low=0, range_high=50, poly=0, debug=False):
     nparam = fitfunc.GetNpar()
-    _, _, cheb_func = MultiplyWithPolyToTF1(lambda x : x[0], nparam-1, cheb=cheb)
-    extracted_poly = ROOT.TF1(getname('func'), cheb_func, range_low, range_high, nparam)
+    _, _, poly_func = MultiplyWithPolyToTF1(lambda x : x[0], nparam-1, poly=poly)
+    extracted_poly = ROOT.TF1(getname('func'), poly_func, range_low, range_high, nparam)
     for n in range(nparam):
         extracted_poly.SetParameter(n, fitfunc.GetParameter(n))
         if debug: print(n, fitfunc.GetParameter(n))
