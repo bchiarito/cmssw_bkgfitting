@@ -53,7 +53,7 @@ else: plots = main_plots
 eta_regions = ["all", "barrel", "endcap"]
 regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
 
-if args.testBin is None: test_regions = ["iso_asym"] 
+if args.testBin is None: test_regions = ["noniso_sym"] 
 elif "noniso_asym" in args.testBin: test_regions = ["noniso_asym"]
 elif "noniso_sym" in args.testBin: test_regions = ["noniso_sym"]
 elif "iso_asym" in args.testBin: test_regions = ["iso_asym"]
@@ -722,7 +722,7 @@ for item in plots:
                         NUM_PLOTS = 1
                         if not FTEST:
                             POLY_TYPE = 3
-                            DEGREE = 1
+                            DEGREE = 6 
                             func_with_poly, _, _ = util.MultiplyWithPolyToTF1(fitted_func, DEGREE, poly=POLY_TYPE)
                             h_egamma_tight.Fit(func_with_poly, '0L' if not args.integral else '0LI')
                             tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)

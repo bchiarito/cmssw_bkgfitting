@@ -269,8 +269,17 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, poly=0, para
      def polynomial(x, p):
          if degree == 0: return (p[0])
          X = x[0]
-         if degree == 1: return p[0] + p[1]*bern_fn(X, 1, 0)
-        
+         if degree == 1: return p[0] + p[1]*bern_fn(X, 1, 0) + p[2]*bern_fn(X, 1, 1)
+         if degree == 2: return p[0] + p[1]*bern_fn(X, 2, 0) + p[2]*bern_fn(X, 2, 1) + p[3]*bern_fn(X, 2, 2)
+         if degree == 3: return p[0] + p[1]*bern_fn(X, 3, 0) + p[2]*bern_fn(X, 3, 1) + p[3]*bern_fn(X, 3, 2) + p[4]*bern_fn(X, 3, 3)
+         if degree == 4: return p[0] + p[1]*bern_fn(X, 4, 0) + p[2]*bern_fn(X, 4, 1) + p[3]*bern_fn(X, 4, 2) + p[4]*bern_fn(X, 4, 3) + p[5]*bern_fn(X, 4, 4)
+         if degree == 5: return p[0] + p[1]*bern_fn(X, 5, 0) + p[2]*bern_fn(X, 5, 1) + p[3]*bern_fn(X, 5, 2) + p[4]*bern_fn(X, 5, 3) + p[5]*bern_fn(X, 5, 4) + p[6]*bern_fn(X, 5, 5)
+         if degree == 6: return (p[0] + p[1]*bern_fn(X, 6, 0) + p[2]*bern_fn(X, 6, 1) + p[3]*bern_fn(X, 6, 2) + p[4]*bern_fn(X, 6, 3) + p[5]*bern_fn(X, 6, 4) + p[6]*bern_fn(X, 6, 5)
+                                      + p[7]*bern_fn(X, 6, 6))
+         if degree == 7: return (p[0] + p[1]*bern_fn(X, 7, 0) + p[2]*bern_fn(X, 7, 1) + p[3]*bern_fn(X, 7, 2) + p[4]*bern_fn(X, 7, 3) + p[5]*bern_fn(X, 7, 4) + p[6]*bern_fn(X, 7, 5)                
+                                      + p[7]*bern_fn(X, 7, 6) + p[8]*bern_fn(X, 7, 7))
+         if degree == 8: return (p[0] + p[1]*bern_fn(X, 8, 0) + p[2]*bern_fn(X, 8, 1) + p[3]*bern_fn(X, 8, 2) + p[4]*bern_fn(X, 8, 3) + p[5]*bern_fn(X, 8, 4) + p[6]*bern_fn(X, 8, 5)                
+                                      + p[7]*bern_fn(X, 8, 6) + p[8]*bern_fn(X, 8, 7) + p[9]*bern_fn(X, 8, 8))
 
   def func_after_mult(x, p):
     return func(x) * polynomial(x, p)
