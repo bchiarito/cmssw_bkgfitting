@@ -659,7 +659,7 @@ def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, i
   fit_result = hist.Fit(tf1, fit_string, "", range_low, range_high)
   return tf1, fit_result
 
-def RSS(func, hist, bound=-1, error=0, integral=False, chi2=False):
+def RSS(func, hist, bound=-1, error=0, integral=False, chi2=False, cutoff=None):
   '''
   helper for ftest()
   '''
@@ -673,7 +673,7 @@ def RSS(func, hist, bound=-1, error=0, integral=False, chi2=False):
       fit_val = (func.Integral(hist.GetBinLowEdge(i+1), hist.GetBinLowEdge(i+1) + hist.GetBinWidth(i+1)))/hist.GetBinWidth(i+1)
     else:
       fit_val = func.Eval(hist.GetBinCenter(i+1))
-
+    if cutoff and fit_val < cutoff: continue
     if chi2:
         if hist_val > fit_val: hist_error = hist.GetBinErrorLow(i+1)
         else: hist_error = hist.GetBinErrorUp(i+1)
