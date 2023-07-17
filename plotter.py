@@ -13,12 +13,6 @@ def binConverter(test_bin):
     bin_list = test_bin.split(" ")
     return bin_list
 
-def hist_to_numpy(hist):
-    array = np.zeros(int(hist.GetNbinsX()))
-    for j in range(hist.GetNbinsX()):
-        array[j] = hist.GetBinContent(j+1)
-    return array
-
 # command line options
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("input", metavar="INPUT", help="input root file")
@@ -730,7 +724,7 @@ for item in plots:
                         if not FTEST:
                             POLY_TYPE = 1
                             DEGREE = 4 
-                            func_with_poly, _, _ = util.MultiplyWithPolyToTF1(fitted_func, DEGREE, poly=POLY_TYPE)
+                            func_with_poly, func_with_ploy_py, _ = util.MultiplyWithPolyToTF1(fitted_func, DEGREE, poly=POLY_TYPE)
                             h_egamma_tight.Fit(func_with_poly, '0L' if not args.integral else '0LI')
                             tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
                         
@@ -743,7 +737,7 @@ for item in plots:
                             fitresults = []
                             statboxes = []
                             for degree in range(NUM_DEGREES+1):
-                                func_with_poly, _, _ = util.MultiplyWithPolyToTF1(fitted_func, degree, poly=POLY_TYPE)
+                                func_with_poly, func_with_poly_py, _ = util.MultiplyWithPolyToTF1(fitted_func, degree, poly=POLY_TYPE)
                                 fitresult = h_egamma_tight.Fit(func_with_poly, '0SL' if not args.integral else '0SLI')
                                 tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
 
@@ -809,11 +803,6 @@ for item in plots:
                             chi2_mod, num_bins = util.RSS(fit, hist, error=0, integral=integral, chi2=True, cutoff=5)
                             chi2_mod_ndof = chi2_mod / len(num_bins)
                             #print(chi2_mod, len(num_bins), chi2_mod_ndof)
-
-                            sample1 = hist_to_numpy(tight_fit_as_hist)
-                            sample2 = hist_to_numpy(h_egamma_tight)
-                            kstest = stats.kstest(sample1, sample2)
-                            print(kstest)
 
                             h_loose_pull_num = h_egamma_loose.Clone()
                             h_loose_pull_num.Reset()
@@ -896,7 +885,6 @@ for item in plots:
                             legend2.AddEntry('', 'Chi2/Ndof: {:.3f}'.format(chi2_ndof), '')
                             legend2.AddEntry('', 'Chi2_mod/Ndof: {:.3f}'.format(chi2_mod_ndof), '')
                             legend2.AddEntry('', 'Bin Error: {:.1%}'.format(bin_bin_error), '')
-                            legend2.AddEntry('', 'KS test p-value: {:.5f}'.format(kstest.pvalue), '')
 
                             # Draw plots
                             if args.fit: c1.cd(1)
