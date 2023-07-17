@@ -26,6 +26,7 @@ parser.add_argument("--name", default="plots", help="create name for plots pdf")
 parser.add_argument("--ftest", default=None, help="format: '<CHEB_TYPE> <MAXDEGREE>', default is no f-test")
 parser.add_argument("--integral", default=False, action="store_true", help="add I to tight fit")
 parser.add_argument("--printFtest", "--printftest", default=False, action="store_true", help="for a fixed test bin, create a pdf of all possible ftest fits")
+parser.add_argument("--saveFitHist", default=False, action="store_true", help="save loose fit in a separate file to be used elsewhere (e.g. combine)")
 
 # parse args
 args = parser.parse_args()
@@ -712,7 +713,19 @@ for item in plots:
                                     loose_fit_as_hist.SetBinContent(b+1, falling_fit_as_hist.GetBinContent(b+1))
                                 else:
                                     loose_fit_as_hist.SetBinContent(b+1, 0)
-                
+                        
+                        # Save the loose fits in a separate file
+                        if args.saveFitHist:
+                            if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_loose"
+                            else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_loose" 
+                            outfile = ROOT.TFile(title + ".root", "RECREATE")
+                            outfile.cd()
+                            loose_hist = ROOT.TH1F(title, title, 1000, 0, 50) 
+                            for b in range(loose_fit_as_hist.GetNbinsX()): loose_hist.SetBinContent(b+1,loose_fit_as_hist.GetBinContent(b+1))
+                            loose_hist.SetName(title)
+                            loose_hist.Write()
+                            outfile.Close()
+                        
                         fitted_func = util.HistogramToFunction(loose_fit_as_hist)
                         fitted_func_times_constant, _, _ = util.MultiplyWithPolyToTF1(fitted_func, 0, poly=0)
                         h_egamma_tight.Fit(fitted_func_times_constant, '0L' if not args.integral else '0LI')
@@ -721,8 +734,8 @@ for item in plots:
                         FTEST = True if args.ftest else False
                         NUM_PLOTS = 1
                         if not FTEST:
-                            POLY_TYPE = 3
-                            DEGREE = 6 
+                            POLY_TYPE = 0
+                            DEGREE = 0 
                             func_with_poly, _, _ = util.MultiplyWithPolyToTF1(fitted_func, DEGREE, poly=POLY_TYPE)
                             h_egamma_tight.Fit(func_with_poly, '0L' if not args.integral else '0LI')
                             tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
