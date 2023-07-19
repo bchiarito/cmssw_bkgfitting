@@ -884,8 +884,12 @@ for item in plots:
                             if POLY_TYPE == 1: legend2.AddEntry('', 'Chebyshev 1st kind', '')
                             if POLY_TYPE == 2: legend2.AddEntry('', 'Chebyshev 2nd kind', '')
                             if POLY_TYPE == 3: legend2.AddEntry('', 'Bernstein', '')
-                            if FTEST: legend2.AddEntry(tight_fit_as_hist, "Fit w f-test (Degree "+str(func_with_poly.GetNpar()-1)+")", "l")
-                            else: legend2.AddEntry(tight_fit_as_hist, "Fit (Degree "+str(func_with_poly.GetNpar()-1)+")", "l")
+                            func_n_par = func_with_poly.GetNpar()
+                            if POLY_TYPE == 3 and func_n_par == 1: fit_degree = 0
+                            elif POLY_TYPE == 3 and func_n_par > 1: fit_degree = func_n_par - 2
+                            elif POLY_TYPE < 3: fit_degree = func_n_par - 1
+                            if FTEST: legend2.AddEntry(tight_fit_as_hist, "Fit w f-test (Degree "+str(fit_degree)+")", "l")
+                            else: legend2.AddEntry(tight_fit_as_hist, "Fit (Degree "+str(fit_degree)+")", "l")
                             legend2.AddEntry(tight_fit_w_constant, "Constant fit p0 = {:.4}".format(fitted_func_times_constant.GetParameter(0)), "l")
                             legend2.AddEntry('', 'Chi2/Ndof: {:.3f}'.format(chi2_ndof), '')
                             legend2.AddEntry('', 'Chi2_mod/Ndof: {:.3f}'.format(chi2_mod_ndof), '')
@@ -1019,6 +1023,7 @@ for item in plots:
                                     h_tight_pullc.SetMarkerStyle(8)
                                     h_tight_pullc.SetMarkerSize(0.25)
                                     h_tight_pullc.Draw('pe same')
+                                    ROOT.gPad.Update()
 
                             ROOT.gPad.Update()
                             if args.testBin is not None and not args.printFtest: input()
