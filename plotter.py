@@ -704,16 +704,12 @@ for item in plots:
                             loose_fit_as_hist = h_egamma_loose.Clone()
                             loose_fit_as_hist.Reset()
                             for b in range(h_egamma_loose.GetNbinsX()):
-                                if b < first_bin:
-                                    loose_fit_as_hist.SetBinContent(b+1, 0)
-                                elif b < left_bin:
+                                if b < left_bin:
                                     loose_fit_as_hist.SetBinContent(b+1, rising_fit_as_hist.GetBinContent(b+1))
                                 elif b <= right_bin:
                                     loose_fit_as_hist.SetBinContent(b+1, h_egamma_loose.GetBinContent(b+1))
-                                elif b <= last_bin:
-                                    loose_fit_as_hist.SetBinContent(b+1, falling_fit_as_hist.GetBinContent(b+1))
                                 else:
-                                    loose_fit_as_hist.SetBinContent(b+1, 0)
+                                    loose_fit_as_hist.SetBinContent(b+1, falling_fit_as_hist.GetBinContent(b+1))
                         
                         # Save the loose fits in a separate file
                         if args.saveFitHist:
@@ -722,7 +718,8 @@ for item in plots:
                             outfile = ROOT.TFile(title + ".root", "RECREATE")
                             outfile.cd()
                             loose_hist = ROOT.TH1F(title, title, 1000, 0, 50) 
-                            for b in range(loose_fit_as_hist.GetNbinsX()): loose_hist.SetBinContent(b+1,loose_fit_as_hist.GetBinContent(b+1))
+                            for b in range(loose_fit_as_hist.GetNbinsX()):
+                                loose_hist.SetBinContent(b+1,loose_fit_as_hist.GetBinContent(b+1))
                             loose_hist.SetName(title)
                             loose_hist.Write()
                             outfile.Close()
