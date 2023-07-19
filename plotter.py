@@ -781,7 +781,7 @@ for item in plots:
                             just_poly.SetRange(0,rightmost_tightdata)
 
                             # determine bin-by-bin error
-                            STEP_SIZE = 0.001
+                            STEP_SIZE = 0.005
                             integral = False
                             hist = h_egamma_tight
                             fit = func_with_poly
@@ -791,7 +791,7 @@ for item in plots:
                             chi2_ndof = chi2 / ndof
                             error = 0.00
                             #print('initial')
-                            print('chi2', chi2, 'ndof', ndof, 'chi2_ndof', chi2_ndof)
+                            #print('chi2', chi2, 'ndof', ndof, 'chi2_ndof', chi2_ndof)
                             while chi2_ndof > 1.0:
                                 error += STEP_SIZE
                                 #print('trying', error)
@@ -800,8 +800,10 @@ for item in plots:
                                 #print('  ', 'chi2', chi2, 'chi2/ndof', chi2_ndof)
                             bin_bin_error = error
 
-                            chi2_mod, num_bins = util.RSS(fit, hist, error=0, integral=integral, chi2=True, cutoff=5)
-                            chi2_mod_ndof = chi2_mod / len(num_bins)
+                            chi2_mod, mod_bins = util.RSS(fit, hist, error=0, integral=integral, chi2=True, cutoff=5)
+                            num_bins = len(mod_bins)
+                            if not num_bins == 0: chi2_mod_ndof = chi2_mod / num_bins
+                            else: chi2_mod_ndof = chi2_mod
                             #print(chi2_mod, len(num_bins), chi2_mod_ndof)
 
                             h_loose_pull_num = h_egamma_loose.Clone()
