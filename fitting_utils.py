@@ -5,7 +5,7 @@ import numpy as np
 import scipy
 try:
     from scipy.stats import f
-except: ImportError
+except ImportError:
     pass
 
 BERN_UPPER_RANGE = 25
