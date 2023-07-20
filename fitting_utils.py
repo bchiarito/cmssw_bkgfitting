@@ -3,8 +3,10 @@ import sys
 import math
 import numpy as np
 import scipy
-from scipy.stats import f
-from scipy.integrate import quad
+try:
+    from scipy.stats import f
+except: ImportError
+    pass
 
 BERN_UPPER_RANGE = 25
 NAME_COUNT = 0 # global counter
