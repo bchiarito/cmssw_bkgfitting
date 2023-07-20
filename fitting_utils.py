@@ -3,7 +3,6 @@ import sys
 import math
 import numpy as np
 import scipy
-import matplotlib.pyplot as plt
 from scipy.stats import f
 from scipy.integrate import quad
 
@@ -781,14 +780,6 @@ def ftest(hist, func2, fit2, func1, fit1, sig=0.1, integral=False):
     return decision, F, target, rss1, rss2, dof1, dof2
 
 if __name__ == '__main__':
-    x = np.linspace(0, 25, 100)
-    y1 = np.vectorize(bern_fn)(x, 1, 0)
-    y2 = np.vectorize(bern_fn)(x, 1, 1)
-
-    plt.plot(x, y1)
-    plt.plot(x, y2)
-    plt.show()
-
     RANGE_LOW = 0 
     RANGE_HIGH = 20
     BINS = 20
