@@ -43,7 +43,8 @@ def cheb_fn(x, degree, kind):
 def bern_fn(x, n_degree, i_degree):
     x_adj = x / BERN_UPPER_RANGE
     if i_degree < 0 or i_degree > n_degree: return 0
-    return scipy.special.comb(n_degree, i_degree) * x_adj**i_degree * (1 - x_adj)**(n_degree - i_degree)
+    #return scipy.special.comb(n_degree, i_degree) * x_adj**i_degree * (1 - x_adj)**(n_degree - i_degree)
+    return (math.factorial(n_degree))/(math.factorial(i_degree)*math.factorial(n_degree - i_degree)) * x_adj**i_degree * (1 - x_adj)**(n_degree - i_degree)
 
 def getname(prefix='obj'):
   '''
