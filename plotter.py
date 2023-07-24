@@ -6,8 +6,7 @@ import os
 import argparse
 import array
 import fitting_utils as util
-import scipy.stats as stats
-import numpy as np
+import scipy
 
 def binConverter(test_bin):
     bin_list = test_bin.split(" ")
@@ -207,6 +206,8 @@ for item in plots:
                     # Get the histograms from the input file
                     h_egamma_tight = infile1.Get(egamma_tight_plots)
                     h_egamma_loose = infile1.Get(egamma_loose_plots)
+
+                    print(egamma_tight_plots)
                     
                     # Set Poisson errors for tight histogram
                     h_egamma_tight.SetBinErrorOption(ROOT.TH1.kPoisson)

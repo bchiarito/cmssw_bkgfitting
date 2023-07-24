@@ -2,9 +2,9 @@ import ROOT
 import sys
 import math
 import numpy as np
-import scipy
+
 try:
-    from scipy.stats import f
+    from scipy.stats import f 
 except ImportError:
     pass
 
