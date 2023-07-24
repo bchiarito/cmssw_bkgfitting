@@ -28,6 +28,7 @@ parser.add_argument("--ftest", default=None, help="format: '<CHEB_TYPE> <MAXDEGR
 parser.add_argument("--integral", default=False, action="store_true", help="add I to tight fit")
 parser.add_argument("--printFtest", "--printftest", default=False, action="store_true", help="for a fixed test bin, create a pdf of all possible ftest fits")
 parser.add_argument("--saveFitHist", default=False, action="store_true", help="save loose fit in a separate file to be used elsewhere (e.g. combine)")
+parser.add_argument("--plotBernstein", default=False, action="store_true", help="plot bernstein polynomials")
 
 # parse args
 args = parser.parse_args()
@@ -267,8 +268,8 @@ for item in plots:
                         c1.Print(args.name + ".pdf")
                     else:
                         if i == 0: print("====================== " + region.upper() + " =====================")
-                        if i == len(bins) - 1: print("############### PT BIN: " + str(bins[i]) + "+, " + eta_reg.upper() + " ###############")
-                        else: print("############### PT BIN: " + str(bins[i]) + "-" + str(bins[i+1]) + ", " + eta_reg.upper() + " ###############")
+                        if i == len(bins) - 1: print("############### " + region.upper() + " " + eta_reg.upper() + " " + str(bins[i]) + "+ ###############")
+                        else: print("############### " + region.upper() + " " + eta_reg.upper() + " " + str(bins[i]) + "-" + str(bins[i+1]) + " ###############")
                         
                         ### new idea, fit only rising and falling ###
 
@@ -443,7 +444,7 @@ for item in plots:
                             elif eta_reg == "endcap":
                                 if bins[i] == 20:
                                     nExp -= 1
-                                    guesses = [299.9, 0.7635, 0.1048, -7.313, -10, 0.9439, 0.2901]
+                                    guesses = [246.5, 0.8312, 0.1213, -4.7, -10, 0.875, 0.4371]
                                 if bins[i] == 40:
                                     nExp -= 2
                                     guesses = [546.6, 0.8803, 0.1328, -4.339, 1.089]
