@@ -7,6 +7,7 @@ import argparse
 import array
 import fitting_utils as util
 import scipy
+import scipy.stats as stats
 
 def binConverter(test_bin):
     bin_list = test_bin.split(" ")
@@ -174,6 +175,7 @@ for item in plots:
     elif item == "pi0_bins":
         if args.ratio: ROOT.TPad.Divide(c1, 1, 2)
         if args.testBin is not None: test_bin = binConverter(args.testBin)
+        chi2_pvalues = []
         for region in regions:  # loop through twoprong sideband regions
             if args.printFtest and args.testBin is None:
                 print("EMPTY PDF: Must have --testBin option when using --printFtest")
@@ -813,8 +815,12 @@ for item in plots:
 
                             chi2_mod, mod_bins = util.RSS(fit, hist, error=0, integral=integral, chi2=True, cutoff=5)
                             num_bins = len(mod_bins)
-                            if not num_bins == 0: chi2_mod_ndof = chi2_mod / num_bins
-                            else: chi2_mod_ndof = chi2_mod
+                            if not num_bins == 0:
+                                chi2_mod_ndof = chi2_mod / (num_bins-fit.GetNpar())
+                                chi2_pvalues.append(scipy.stats.chi2.sf(chi2_mod, num_bins-fit.GetNpar()))
+                            else:
+                                chi2_mod_ndof = chi2_mod
+                                chi2_pvalues.append(-1)
                             #print(chi2_mod, len(num_bins), chi2_mod_ndof)
 
                             h_loose_pull_num = h_egamma_loose.Clone()
@@ -1039,6 +1045,12 @@ for item in plots:
                             ROOT.gPad.Update()
                             if args.testBin is not None and not args.printFtest: input()
                             c1.Print(args.name + ".pdf")
+
+    pvals = ROOT.TH1D('pvals', 'pvals', 100, 0, 1)
+    for val in chi2_pvalues:
+        #print(val)
+        pvals.Fill(val)
+    #pvals.Draw()
 
     c1.Print(args.name + ".pdf]")
     infile1.Close()
