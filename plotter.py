@@ -28,7 +28,8 @@ parser.add_argument("--ftest", default=None, help="format: '<CHEB_TYPE> <MAXDEGR
 parser.add_argument("--integral", default=False, action="store_true", help="add I to tight fit")
 parser.add_argument("--printFtest", "--printftest", default=False, action="store_true", help="for a fixed test bin, create a pdf of all possible ftest fits")
 parser.add_argument("--saveFitHist", default=False, action="store_true", help="save loose fit in a separate file to be used elsewhere (e.g. combine)")
-parser.add_argument("--plotBernstein", default=False, action="store_true", help="plot bernstein polynomials")
+parser.add_argument("--bernsteinCorrection", default=False, action="store_true", help="use Bernstein correction code instead of ftest")
+parser.add_argument("--binning", default="uniform", choices=["old","new","uniform"], help="choose which pt binning to use")
 
 # parse args
 args = parser.parse_args()
@@ -64,8 +65,10 @@ elif "iso_sym" in args.testBin: test_regions = ["iso_sym"]
 
 if args.test: regions = test_regions
 photon_regions = ["tight", "loose"]
-bins = [20,40,60,70,80,100,120,140,160,180,200,240,300,380,460]
-
+# MAKE SURE TO CHANGE WHEN USING NEW BINNING !
+if args.binning == "uniform": bins = [20,40,60,80,100,140,180,220,300,380]
+elif args.binning == "new": bins = [20,40,60,70,100,140,180,200,300,380]
+elif args.binning == "old": bins = [20,40,60,70,80,100,120,140,160,180,200,240,300,380,460]
 
 for item in plots:
     if item == "pfRelIso03_chg" or item == "sieie" or item == "hoe" or item == "hadTow":  # sanity plots
@@ -210,8 +213,6 @@ for item in plots:
                     h_egamma_tight = infile1.Get(egamma_tight_plots)
                     h_egamma_loose = infile1.Get(egamma_loose_plots)
 
-                    print(egamma_tight_plots)
-                    
                     # Set Poisson errors for tight histogram
                     h_egamma_tight.SetBinErrorOption(ROOT.TH1.kPoisson)
 
@@ -332,7 +333,8 @@ for item in plots:
                                     nExp -= 1
                                     guesses = [1648, 1.205, 0.2847, -1.647, -3.407, 1.275, 0.321]
                                 if bins[i] == 100:
-                                    guesses = [1703, 1.241, 0.2967, -1.365, -2.817, -0.5, 1.375, 0.3328, 1.4] 
+                                    nExp -= 1
+                                    guesses = [3000, 1.5, 0.3, -1.3, -2.6, 1.2, 0.2375]
                                 if bins[i] == 120:
                                     nExp -= 1
                                     guesses = [1776, 1.28, 0.3121, -1.098, -2.588, 1.425, 0.3672] 
@@ -346,6 +348,10 @@ for item in plots:
                                     guesses = [2380, 1.361, 0.3352, -1.189, -2.023, -0.05, 1.775, 0.4189, 1.5]
                                 if bins[i] == 200:
                                     guesses = [5458, 1.394, 0.3427, -1.012, -1.784, -0.5, 2, 2, 1]
+                                if bins[i] == 220:
+                                    old_method = False
+                                    landau_guess = [5458, 1.394, 0.3427]
+                                    exp_guess = [5458, -1.012, 1.678, -1.784, 0.5775, -1]
                                 if bins[i] == 240:
                                     old_method = False
                                     landau_guess = [5458, 1.394, 0.3427]
@@ -390,6 +396,8 @@ for item in plots:
                                 if bins[i] == 200:
                                     nExp -= 1
                                     guesses = [3150, 1.473, 0.3669, -1.522, -0.5, 2, 2.5]
+                                if bins[i] == 220:
+                                    guesses = [3040, 1.432, 0.3386, -0.1704, -1.026, -1.618, 1.405, 0.4994, 0.6806]
                                 if bins[i] == 240:
                                     guesses = [3040, 1.432, 0.3386, -0.1704, -1.026, -1.618, 1.405, 0.4994, 0.6806]
                                 if bins[i] == 300:
@@ -433,6 +441,8 @@ for item in plots:
                                     guesses = [1236, 1.713, 0.4136, -1.181, -1.847, 1.674, 0.3422]
                                 if bins[i] == 200:
                                     guesses = [3034, 1.763, 0.431, -0.7333, -1.646, -1.62, 1.813, 0.2465, 1.083]
+                                if bins[i] == 220:
+                                    guesses = [3956, 1.879, 0.4745, -1.248, -1.578, -0.7454, 2.209, 0.2557, 3.601]
                                 if bins[i] == 240:
                                     guesses = [3956, 1.879, 0.4745, -1.248, -1.578, -0.7454, 2.209, 0.2557, 3.601]
                                 if bins[i] == 300:
@@ -471,6 +481,8 @@ for item in plots:
                                     guesses = [1041, 1.725, 0.4141, -1.863, -1.999, -0.9901, 1.807, 0.3725, 2.195]
                                 if bins[i] == 200:
                                     guesses = [2319, 1.77, 0.4112, -1.939, -1.37, -1.744, 2.033, 1.962, 1.919]
+                                if bins[i] == 220:
+                                    guesses = [2679, 2.01, 0.505, -1.64, -1.099, -1.108, 2.146, 2.514, 2.416]
                                 if bins[i] == 240:
                                     guesses = [2679, 2.01, 0.505, -1.64, -1.099, -1.108, 2.146, 2.514, 2.416]
                                 if bins[i] == 300:
@@ -516,9 +528,16 @@ for item in plots:
                                     landau_guess = [1.183e+04, 0.7977, 0.1293]
                                     exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
                                 if bins[i] == 200:
-                                    nExp -= 1
-                                    landau_guess = [1.204e+04, 0.7742, 0.1196]
-                                    exp_guess = [2.194e+05, -1.407, 5.087, -0.8335]
+                                    if args.binning == "new":
+                                        landau_guess = [1.204e+04, 0.7742, 0.1196]
+                                        exp_guess = [4.491e+04, -1.059, 5.5, -3.574, 4.5, -2.234]
+                                    elif args.binning == "old":
+                                        nExp -= 1
+                                        landau_guess = [1.204e+04, 0.7742, 0.1196]
+                                        exp_guess = [2.194e+05, -1.407, 5.087, -0.8335]
+                                if bins[i] == 220:
+                                    landau_guess = [8717, 0.8303, 0.1381]
+                                    exp_guess = [9.701e+04, -1.193, 6.173, -0.6467, 6.452, -2.239]
                                 if bins[i] == 240:
                                     landau_guess = [8717, 0.8303, 0.1381]
                                     exp_guess = [9.701e+04, -1.193, 6.173, -0.6467, 6.452, -2.239]
@@ -526,8 +545,12 @@ for item in plots:
                                     landau_guess = [1145, 1.149, 0.2453]
                                     exp_guess = [3.14e+04, -1.023, 6.75, -0.5922, 1.25, -1]
                                 if bins[i] == 380:
-                                    old_method = True
-                                    guesses = [4848, 1.63, 0.4089, -3.553e-13, -0.6753, -0.8161, 0.5, 1.404, 0.5423]
+                                    if args.binning == "new":
+                                        landau_guess = [1145, 1.149, 0.2453]
+                                        exp_guess = [3.14e+04, -1.023, 6.75, -0.5922, 1.25, -1]
+                                    elif args.binning == "old":
+                                        old_method = True
+                                        guesses = [4848, 1.63, 0.4089, -3.553e-13, -0.6753, -0.8161, 0.5, 1.404, 0.5423]
                                 if bins[i] == 460:
                                     old_method = True
                                     guesses = [2487, 1.731, 0.4342, -0.08184, -0.6556, -0.6027, 0.5, 1.187, 0.5]
@@ -560,11 +583,18 @@ for item in plots:
                                     landau_guess = [7468, 0.9087, 0.1663]
                                     exp_guess = [1.107e+04, -1.035, 3, -1.572, 2, -7.523]
                                 if bins[i] == 180:
-                                    landau_guess = [7031, 1.004, 0.1965]
-                                    exp_guess = [1.742e+04, -1.198, 3.5, -3.296, 2.5, -1.366]
+                                    if args.binning == "uniform": 
+                                        landau_guess = [1.183e+04, 0.7977, 0.1293]
+                                        exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
+                                    else:
+                                        landau_guess = [7031, 1.004, 0.1965]
+                                        exp_guess = [1.742e+04, -1.198, 3.5, -3.296, 2.5, -1.366]
                                 if bins[i] == 200:
                                     landau_guess = [1.204e+04, 0.7742, 0.1196]
                                     exp_guess = [4.491e+04, -1.059, 5.5, -3.574, 4.5, -2.234]
+                                if bins[i] == 220:
+                                    landau_guess = [7937, 1.269, 0.2811]
+                                    exp_guess = [4.457e+04, -1.4, 2.6, -1.9, 1.4, -1]
                                 if bins[i] == 240:
                                     landau_guess = [7937, 1.269, 0.2811]
                                     exp_guess = [4.457e+04, -2, 5, -1, 1.8, -0.5]
@@ -616,13 +646,19 @@ for item in plots:
                                 if bins[i] == 200:
                                     landau_guess = [1.204e+04, 0.7742, 0.1196]
                                     exp_guess = [4.491e+04, -1.059, 3, -1, 3, -2.234]
+                                if bins[i] == 220:
+                                    landau_guess = [8442, 1.149, 0.2453]
+                                    exp_guess = [3.14e+04, -1.023, 5, -0.5922, 3, -2]
                                 if bins[i] == 240:
                                     landau_guess = [8442, 1.149, 0.2453]
                                     exp_guess = [3.14e+04, -1.023, 5, -0.5922, 3, -2]
                                 if bins[i] == 300:
+                                    old_method = True
                                     nExp -= 1
-                                    landau_guess = [5089, 2.157, 0.5678]
-                                    exp_guess = [1.148e+04, -1.051, 6.125, -0.5868]
+                                    guesses = [5089, 2.157, 0.5678, 2, 6, -1.051, -0.58]
+                                    #nExp -= 1
+                                    #landau_guess = [5089, 2.157, 0.5678]
+                                    #exp_guess = [1.148e+04, -1.051, 6.125, -0.5868]
                                 if bins[i] == 380:
                                     old_method = True
                                     guesses = [1430, 2.107, 0.5122, -0.04034, -1.359, -0.5, 3, 3, 2]
@@ -633,8 +669,8 @@ for item in plots:
                             elif eta_reg == "endcap":
                                 if bins[i] == 20:
                                     nExp -= 1
-                                    landau_guess = [6045, 0.7751, 0.1028]
-                                    exp_guess = [7331, -3.713, 1.18, -7.362]
+                                    landau_guess = [5000, 2, 0.3]
+                                    exp_guess = [4.834e+04, -3.378, 1.206, -7.486] 
                                 if bins[i] == 40:
                                     landau_guess = [1e+04, 0.9233, 0.1527]
                                     exp_guess = [3937, -0.4774, 0.9104, -2.799, 0.7293, -4.712]
@@ -667,6 +703,10 @@ for item in plots:
                                     nExp -= 1
                                     landau_guess = [5881, 1.694, 0.3963]
                                     exp_guess = [2.347e+04, -1.451, 3.478, -1.168]
+                                if bins[i] == 220:
+                                    nExp -= 1
+                                    old_method = True
+                                    guesses = [4657, 2.046, 0.5207, -1.225, -0.7, 2.5, 3.5]
                                 if bins[i] == 240:
                                     nExp -= 1
                                     old_method = True
@@ -777,6 +817,24 @@ for item in plots:
                             func_with_poly = fitfuncs[best_d]
                             tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
                             tight_stat = statboxes[best_d]
+                        elif args.bernsteinCorrection:
+                            # Create RooWorkspace with loose hist RooHistPdf, tight hist RooAbsData, and RooRealVar for x-binning
+                            mpi0 = ROOT.RooRealVar("Twoprong_massPi0", "Twoprong_massPi0", 0, 50)
+                            mpi0.setBins(1000)
+                            
+                            tight_hist = ROOT.RooDataHist("tight_hist", "tight_hist", ROOT.RooArgList(mpi0), h_egamma_tight)
+                            
+                            loose_hist = ROOT.RooDataHist("loose_hist", "loose_hist", ROOT.RooArgList(mpi0), loose_fit_as_hist)
+                            loose_pdf = ROOT.RooHistPdf("loose_pdf", "loose_pdf", ROOT.RooArgSet(mpi0), loose_hist)
+
+                            # Save in workspace
+                            wspace = ROOT.RooWorkspace("wspace", "wspace")
+                            getattr(wspace, "import")(mpi0)
+                            getattr(wspace, "import")(tight_hist)
+                            getattr(wspace, "import")(loose_pdf)
+
+                            bern_corr = ROOT.RooStats.BernsteinCorrection(0.05)
+                            bern_corr.ImportCorrectedPdf(wspace, "loose_pdf", "Twoprong_massPi0", "tight_hist")
 
                         for plot in range(NUM_PLOTS):
                             if args.printFtest and args.testBin:
