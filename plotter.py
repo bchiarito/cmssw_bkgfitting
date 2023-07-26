@@ -962,7 +962,7 @@ for item in plots:
                             if POLY_TYPE == 3: legend2.AddEntry('', 'Bernstein', '')
                             func_n_par = func_with_poly.GetNpar()
                             if POLY_TYPE == 3 and func_n_par == 1: fit_degree = 0
-                            elif POLY_TYPE == 3 and func_n_par > 1: fit_degree = func_n_par - 2
+                            elif POLY_TYPE == 3 and func_n_par > 1: fit_degree = func_n_par - 1
                             elif POLY_TYPE < 3: fit_degree = func_n_par - 1
                             if FTEST: legend2.AddEntry(tight_fit_as_hist, "Fit w f-test (Degree "+str(fit_degree)+")", "l")
                             else: legend2.AddEntry(tight_fit_as_hist, "Fit (Degree "+str(fit_degree)+")", "l")

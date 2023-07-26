@@ -264,47 +264,47 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, poly=0, para
         elif degree == 1:
             def polynomial(x, p):
                 X = x[0]
-                return p[0] + p[1]*bern_fn(X, 1, 0) + p[2]*bern_fn(X, 1, 1)
+                return p[0]*bern_fn(X, 1, 0) + p[1]*bern_fn(X, 1, 1)
         elif degree == 2:
             def polynomial(x, p):
                 X = x[0]
-                return p[0] + p[1]*bern_fn(X, 2, 0) + p[2]*bern_fn(X, 2, 1) \
-                       + p[3]*bern_fn(X, 2, 2)
+                return p[0]*bern_fn(X, 2, 0) + p[1]*bern_fn(X, 2, 1) \
+                       + p[2]*bern_fn(X, 2, 2)
         elif degree == 3:
             def polynomial(x, p):
                 X = x[0]
-                return p[0] + p[1]*bern_fn(X, 3, 0) + p[2]*bern_fn(X, 3, 1) \
-                       + p[3]*bern_fn(X, 3, 2) + p[4]*bern_fn(X, 3, 3)
+                return p[0]*bern_fn(X, 3, 0) + p[1]*bern_fn(X, 3, 1) \
+                       + p[2]*bern_fn(X, 3, 2) + p[3]*bern_fn(X, 3, 3)
         elif degree == 4:
             def polynomial(x, p):
                 X = x[0]
-                return p[0] + p[1]*bern_fn(X, 4, 0) + p[2]*bern_fn(X, 4, 1) \
-                       + p[3]*bern_fn(X, 4, 2) + p[4]*bern_fn(X, 4, 3) + p[5]*bern_fn(X, 4, 4)
+                return p[0]*bern_fn(X, 4, 0) + p[1]*bern_fn(X, 4, 1) \
+                       + p[2]*bern_fn(X, 4, 2) + p[3]*bern_fn(X, 4, 3) + p[4]*bern_fn(X, 4, 4)
         elif degree == 5:
             def polynomial(x, p):
                 X = x[0]
-                return p[0] + p[1]*bern_fn(X, 5, 0) + p[2]*bern_fn(X, 5, 1) \
-                       + p[3]*bern_fn(X, 5, 2) + p[4]*bern_fn(X, 5, 3) + p[5]*bern_fn(X, 5, 4) \
-                       + p[6]*bern_fn(X, 5, 5)
+                return p[0]*bern_fn(X, 5, 0) + p[1]*bern_fn(X, 5, 1) \
+                       + p[2]*bern_fn(X, 5, 2) + p[3]*bern_fn(X, 5, 3) + p[4]*bern_fn(X, 5, 4) \
+                       + p[5]*bern_fn(X, 5, 5)
         elif degree == 6:
             def polynomial(x, p):
                 X = x[0]
-                return p[0] + p[1]*bern_fn(X, 6, 0) + p[2]*bern_fn(X, 6, 1) \
-                       + p[3]*bern_fn(X, 6, 2) + p[4]*bern_fn(X, 6, 3) + p[5]*bern_fn(X, 6, 4) \
-                       + p[6]*bern_fn(X, 6, 5) + p[7]*bern_fn(X, 6, 6)
+                return p[0]*bern_fn(X, 6, 0) + p[1]*bern_fn(X, 6, 1) \
+                       + p[2]*bern_fn(X, 6, 2) + p[3]*bern_fn(X, 6, 3) + p[4]*bern_fn(X, 6, 4) \
+                       + p[5]*bern_fn(X, 6, 5) + p[6]*bern_fn(X, 6, 6)
         elif degree == 7:
             def polynomial(x, p):
                 X = x[0]
-                return p[0] + p[1]*bern_fn(X, 7, 0) + p[2]*bern_fn(X, 7, 1) \
-                       + p[3]*bern_fn(X, 7, 2) + p[4]*bern_fn(X, 7, 3) + p[5]*bern_fn(X, 7, 4) \
-                       + p[6]*bern_fn(X, 7, 5) + p[7]*bern_fn(X, 7, 6) + p[8]*bern_fn(X, 7, 7)
+                return p[0]*bern_fn(X, 7, 0) + p[1]*bern_fn(X, 7, 1) \
+                       + p[2]*bern_fn(X, 7, 2) + p[3]*bern_fn(X, 7, 3) + p[4]*bern_fn(X, 7, 4) \
+                       + p[5]*bern_fn(X, 7, 5) + p[6]*bern_fn(X, 7, 6) + p[7]*bern_fn(X, 7, 7)
         elif degree == 8:
             def polynomial(x, p):
                 X = x[0]
-                return p[0] + p[1]*bern_fn(X, 8, 0) + p[2]*bern_fn(X, 8, 1) \
-                       + p[3]*bern_fn(X, 8, 2) + p[4]*bern_fn(X, 8, 3) + p[5]*bern_fn(X, 8, 4) \
-                       + p[6]*bern_fn(X, 8, 5) + p[7]*bern_fn(X, 8, 6) + p[8]*bern_fn(X, 8, 7) \
-                       + p[9]*bern_fn(X, 8, 8)
+                return p[0]*bern_fn(X, 8, 0) + p[1]*bern_fn(X, 8, 1) \
+                       + p[2]*bern_fn(X, 8, 2) + p[3]*bern_fn(X, 8, 3) + p[4]*bern_fn(X, 8, 4) \
+                       + p[5]*bern_fn(X, 8, 5) + p[6]*bern_fn(X, 8, 6) + p[7]*bern_fn(X, 8, 7) \
+                       + p[8]*bern_fn(X, 8, 8)
         else:
             raise ValueError('Got degree {} for poly type {}. Not Implemented!'.format(degree, poly))
 
@@ -322,7 +322,7 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, poly=0, para
     if poly == 3 and degree == 0:
         num_param = 1
     if poly == 3 and degree > 0:
-        num_param = degree + 2
+        num_param = degree + 1
 
     tf1 = ROOT.TF1(getname(), func_after_mult, range_low, range_high, num_param)
 
@@ -733,7 +733,7 @@ def ExtractPolyFromTightFit(fitfunc, range_low=0, range_high=50, poly=0, debug=F
     nparam = fitfunc.GetNpar()
     if poly == 0 or poly == 1 or poly == 2: poly_degree = nparam - 1
     elif poly == 3 and nparam == 1: poly_degree = 0
-    elif poly == 3 and nparam > 1: poly_degree = nparam - 2
+    elif poly == 3 and nparam > 1: poly_degree = nparam - 1
     _, _, poly_func = MultiplyWithPolyToTF1(lambda x : x[0], poly_degree, poly=poly)
     extracted_poly = ROOT.TF1(getname('func'), poly_func, range_low, range_high, nparam)
     for n in range(nparam):
