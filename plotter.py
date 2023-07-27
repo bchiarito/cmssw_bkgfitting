@@ -240,14 +240,10 @@ for item in plots:
                     h_egamma_tight.SetLineColor(ROOT.kBlack)
                     h_egamma_loose.SetLineColor(ROOT.kBlack)
 
-                    if args.scaleToSignal:
+                    if args.scaleToSignal and "noniso" in region:
                         sig_tight_plot = egamma_tight_plots.replace(region, "iso_sym")
                         h_sig_tight = infile1.Get(sig_tight_plot)
-
-                        print("Bkg Integral BEFORE REMOVAL: " + str(h_egamma_tight.Integral()))
                         removeEntries(h_egamma_tight, h_sig_tight)
-                        print("Sig Integral: " + str(h_sig_tight.Integral()))
-                        print("Bkg Integral: " + str(h_egamma_tight.Integral()))
 
                     if args.ratio:  # create unfitted ratio plots between tight and loose photons
                         if not h_egamma_tight.Integral() == 0: h_egamma_tight.Scale(1.0/h_egamma_tight.Integral())
