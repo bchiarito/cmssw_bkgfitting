@@ -9,9 +9,28 @@ import fitting_utils as util
 import scipy
 import scipy.stats as stats
 
+
+# Create TRandom3 object
+rand = ROOT.TRandom3()
+
+
 def binConverter(test_bin):
     bin_list = test_bin.split(" ")
     return bin_list
+
+
+def removeEntries(bkg_hist, sig_hist):
+    # Set removal probability as ratio between sig and bkg hist integrals
+    removal_prob = sig_hist.Integral() / bkg_hist.Integral()
+
+    if removal_prob < 1:
+        for i in range(1, bkg_hist.GetNbinsX()+1):
+            content = bkg_hist.GetBinContent(i)
+            for event in range(int(content)):
+                if rand.Rndm() > removal_prob:
+                    content -= 1
+                    bkg_hist.SetBinContent(i, content)
+
 
 # command line options
 parser = argparse.ArgumentParser(description="")
@@ -30,6 +49,7 @@ parser.add_argument("--printFtest", "--printftest", default=False, action="store
 parser.add_argument("--saveFitHist", default=False, action="store_true", help="save loose fit in a separate file to be used elsewhere (e.g. combine)")
 parser.add_argument("--bernsteinCorrection", default=False, action="store_true", help="use Bernstein correction code instead of ftest")
 parser.add_argument("--binning", default="uniform", choices=["old","new","uniform"], help="choose which pt binning to use")
+parser.add_argument("--scaleToSignal", "--scale", default=False, action="store_true", help="scale nonisolated sideband (with more statistics) to signal region integral")
 
 # parse args
 args = parser.parse_args()
@@ -219,6 +239,15 @@ for item in plots:
                     # Configure display options
                     h_egamma_tight.SetLineColor(ROOT.kBlack)
                     h_egamma_loose.SetLineColor(ROOT.kBlack)
+
+                    if args.scaleToSignal:
+                        sig_tight_plot = egamma_tight_plots.replace(region, "iso_sym")
+                        h_sig_tight = infile1.Get(sig_tight_plot)
+
+                        print("Bkg Integral BEFORE REMOVAL: " + str(h_egamma_tight.Integral()))
+                        removeEntries(h_egamma_tight, h_sig_tight)
+                        print("Sig Integral: " + str(h_sig_tight.Integral()))
+                        print("Bkg Integral: " + str(h_egamma_tight.Integral()))
 
                     if args.ratio:  # create unfitted ratio plots between tight and loose photons
                         if not h_egamma_tight.Integral() == 0: h_egamma_tight.Scale(1.0/h_egamma_tight.Integral())
@@ -1113,3 +1142,7 @@ for item in plots:
 
     c1.Print(args.name + ".pdf]")
     infile1.Close()
+
+
+
+
