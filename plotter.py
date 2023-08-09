@@ -10,8 +10,9 @@ import scipy
 import scipy.stats as stats
 
 
-# Create TRandom3 object
+# Create TRandom object
 rand = ROOT.TRandom3()
+rand.SetSeed(0)
 
 
 def binConverter(test_bin):
@@ -20,16 +21,19 @@ def binConverter(test_bin):
 
 
 def removeEntries(bkg_hist, sig_hist):
-    # Set removal probability as ratio between sig and bkg hist integrals
-    removal_prob = sig_hist.Integral() / bkg_hist.Integral()
-
+    if not bkg_hist.Integral() == 0: removal_prob = sig_hist.Integral() / bkg_hist.Integral()
+    else: return True
+    
     if removal_prob < 1:
         for i in range(1, bkg_hist.GetNbinsX()+1):
-            content = bkg_hist.GetBinContent(i)
-            for event in range(int(content)):
-                if rand.Rndm() > removal_prob:
-                    content -= 1
-                    bkg_hist.SetBinContent(i, content)
+            N = round(bkg_hist.GetBinContent(i))
+            p = removal_prob  # probability of removing entry
+            if N < 100: bkg_hist.SetBinContent(i, round(rand.Binomial(N, p)))
+            else: 
+                content = rand.Gaus(N*p, (N*p*(1-p))**0.5)
+                if content < 0: bkg_hist.SetBinContent(i, 0) 
+                else: bkg_hist.SetBinContent(i, round(content))
+    return True
 
 
 # command line options
@@ -47,9 +51,8 @@ parser.add_argument("--ftest", default=None, help="format: '<CHEB_TYPE> <MAXDEGR
 parser.add_argument("--integral", default=False, action="store_true", help="add I to tight fit")
 parser.add_argument("--printFtest", "--printftest", default=False, action="store_true", help="for a fixed test bin, create a pdf of all possible ftest fits")
 parser.add_argument("--saveFitHist", default=False, action="store_true", help="save loose fit in a separate file to be used elsewhere (e.g. combine)")
-parser.add_argument("--bernsteinCorrection", default=False, action="store_true", help="use Bernstein correction code instead of ftest")
-parser.add_argument("--binning", default="uniform", choices=["old","new","uniform"], help="choose which pt binning to use")
 parser.add_argument("--scaleToSignal", "--scale", default=False, action="store_true", help="scale nonisolated sideband (with more statistics) to signal region integral")
+parser.add_argument("--massSelection", default="high", choices=["low","high"], help="specify which mass selection to use")
 
 # parse args
 args = parser.parse_args()
@@ -77,7 +80,7 @@ else: plots = main_plots
 eta_regions = ["all", "barrel", "endcap"]
 regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
 
-if args.testBin is None: test_regions = ["noniso_sym"] 
+if args.testBin is None: test_regions = ["noniso_asym"] 
 elif "noniso_asym" in args.testBin: test_regions = ["noniso_asym"]
 elif "noniso_sym" in args.testBin: test_regions = ["noniso_sym"]
 elif "iso_asym" in args.testBin: test_regions = ["iso_asym"]
@@ -86,9 +89,9 @@ elif "iso_sym" in args.testBin: test_regions = ["iso_sym"]
 if args.test: regions = test_regions
 photon_regions = ["tight", "loose"]
 # MAKE SURE TO CHANGE WHEN USING NEW BINNING !
-if args.binning == "uniform": bins = [20,40,60,80,100,140,180,220,300,380]
-elif args.binning == "new": bins = [20,40,60,70,100,140,180,200,300,380]
-elif args.binning == "old": bins = [20,40,60,70,80,100,120,140,160,180,200,240,300,380,460]
+
+if args.massSelection == "high": bins = [20,40,60,80,100,140,180,220,300,380]
+else: bins = [40,60,80,100,140,180,220]
 
 for item in plots:
     if item == "pfRelIso03_chg" or item == "sieie" or item == "hoe" or item == "hadTow":  # sanity plots
@@ -240,7 +243,7 @@ for item in plots:
                     h_egamma_tight.SetLineColor(ROOT.kBlack)
                     h_egamma_loose.SetLineColor(ROOT.kBlack)
 
-                    if args.scaleToSignal and "noniso" in region:
+                    if args.scaleToSignal and not region == "iso_sym":
                         sig_tight_plot = egamma_tight_plots.replace(region, "iso_sym")
                         h_sig_tight = infile1.Get(sig_tight_plot)
                         removeEntries(h_egamma_tight, h_sig_tight)
@@ -347,83 +350,55 @@ for item in plots:
                                     guesses = [1313, 0.7032, 0.1068, -5.47, -10, 1.014, 0.6314]
                                 if bins[i] == 40:
                                     nExp -= 2
-                                    guesses = [1523, 0.9313, 0.1856, -3.766, 1.024]
+                                    guesses = [1500, 0.9313, 0.1856, -3.766, 1.024]
                                 if bins[i] == 60:
                                     nExp -= 2
                                     guesses = [785.9, 1.117, 0.2567, -3.498, 1.184]
-                                if bins[i] == 70:
-                                    nExp -= 1
-                                    guesses = [759.8, 1.11, 0.2469, -0.6545, -3.363, 1.025, 0.3268]
                                 if bins[i] == 80:
                                     nExp -= 1
                                     guesses = [1648, 1.205, 0.2847, -1.647, -3.407, 1.275, 0.321]
                                 if bins[i] == 100:
                                     nExp -= 1
                                     guesses = [3000, 1.5, 0.3, -1.3, -2.6, 1.2, 0.2375]
-                                if bins[i] == 120:
-                                    nExp -= 1
-                                    guesses = [1776, 1.28, 0.3121, -1.098, -2.588, 1.425, 0.3672] 
                                 if bins[i] == 140:
                                     nExp -= 1
                                     guesses = [1887, 1.314, 0.3242, -1.142, -2.368, 1.674, 0.2515]
-                                if bins[i] == 160:
-                                    nExp -= 1
-                                    guesses = [2088, 1.366, 0.3423, -1.125, -2.096, 1.625, 0.4]
                                 if bins[i] == 180:
                                     guesses = [2380, 1.361, 0.3352, -1.189, -2.023, -0.05, 1.775, 0.4189, 1.5]
-                                if bins[i] == 200:
-                                    guesses = [5458, 1.394, 0.3427, -1.012, -1.784, -0.5, 2, 2, 1]
                                 if bins[i] == 220:
-                                    old_method = False
-                                    landau_guess = [5458, 1.394, 0.3427]
-                                    exp_guess = [5458, -1.012, 1.678, -1.784, 0.5775, -1]
-                                if bins[i] == 240:
-                                    old_method = False
-                                    landau_guess = [5458, 1.394, 0.3427]
-                                    exp_guess = [5458, -1.012, 1.678, -1.784, 0.5775, -1]
+                                    if args.massSelection == "low":
+                                        guesses = [2380, 1.361, 0.3352, -1.189, -2.023, -0.05, 1.775, 0.4189, 1.5]
+                                    else:
+                                        old_method = False
+                                        landau_guess = [5458, 1.394, 0.3427]
+                                        exp_guess = [5458, -1.012, 1.678, -1.784, 0.5775, -1]
                                 if bins[i] == 300:
                                     guesses = [4131, 1.451, 0.3552, -0.0001324, -1.054, -1.36, 1.369, 0.3256, 1.168]
                                 if bins[i] == 380:
                                     guesses = [1559, 1.54, 0.3837, -0.08148, -0.882, -1.123, 1.591, 0.2366, 0.337]
-                                if bins[i] == 460:
-                                    guesses = [1143, 1.676, 0.4336, -0.3109, -0.9949, -0.5755, 1.561, 0.574, 4.59]
                             elif eta_reg == "endcap":
                                 if bins[i] == 20:
                                     nExp -= 1
                                     guesses = [2198, 0.6681, 0.09261, -5.133, -10, 0.854, 0.721]
                                 if bins[i] == 40:
                                     nExp -= 2 
-                                    guesses = [1944, 0.8865, 0.1719, -3.938, 1.001]
+                                    guesses = [1000, 0.8865, 0.1719, -3.938, 1]
                                 if bins[i] == 60:
                                     nExp -= 1 
                                     guesses = [961.9, 1.039, 0.219, -0.06295, -3.632, 0.925, 0.2]
-                                if bins[i] == 70:
-                                    nExp -= 2
-                                    guesses = [885.3, 1.086, 0.2314, -3.771, 1.3]
                                 if bins[i] == 80:
                                     nExp -= 1
                                     guesses = [1590, 1.129, 0.2523, -1.411, -3.112, 1.251, 0.2239]
                                 if bins[i] == 100:
                                     nExp -= 1
                                     guesses = [1480, 1.228, 0.2869, -1.143, -2.683, 1.387, 0.2375]
-                                if bins[i] == 120:
-                                    nExp -= 1
-                                    guesses = [1444, 1.277, 0.3012, -0.837, -2.624, 1.56, 0.2]
                                 if bins[i] == 140:
                                     nExp -= 1
                                     guesses = [1424, 1.296, 0.3049, -0.458, -2.143, 1.348, 0.4153]
-                                if bins[i] == 160:
-                                    nExp -= 1
-                                    guesses = [1480, 1.321, 0.3095, -0.5116, -2.012, 1.375, 0.513]
                                 if bins[i] == 180:
                                     nExp -= 1
                                     guesses = [1559, 1.436, 0.3578, -0.8864, -2.058, 1.525, 0.6868]
-                                if bins[i] == 200:
-                                    nExp -= 1
-                                    guesses = [3150, 1.473, 0.3669, -1.522, -0.5, 2, 2.5]
                                 if bins[i] == 220:
-                                    guesses = [3040, 1.432, 0.3386, -0.1704, -1.026, -1.618, 1.405, 0.4994, 0.6806]
-                                if bins[i] == 240:
                                     guesses = [3040, 1.432, 0.3386, -0.1704, -1.026, -1.618, 1.405, 0.4994, 0.6806]
                                 if bins[i] == 300:
                                     guesses = [1596, 1.523, 0.3731, -0.07532, -0.9641, -1.38, 1.405, 0.4691, 1.187]
@@ -445,31 +420,24 @@ for item in plots:
                                 if bins[i] == 60:
                                     nExp -= 1
                                     guesses = [224.5, 1.061, 0.193, -2.913, -5.832, 1.141, 1.184]
-                                if bins[i] == 70:
-                                    nExp -= 1
-                                    guesses = [266.6, 1.228, 0.266, -1.351, -5.152, 1.029, 0.8208]
                                 if bins[i] == 80:
                                     nExp -= 1
                                     guesses = [532.3, 1.19, 0.2404, -0.1541, -2.411, 1.075, 0.2]
                                 if bins[i] == 100:
                                     nExp -= 1
                                     guesses = [585.1, 1.328, 0.2896, -1.456, -2.425, 1.362, 0.2857]
-                                if bins[i] == 120:
-                                    guesses = [683.6, 1.396, 0.3051, -1.74, -2.069, -4.83, 1.462, 0.4043, 1.386]
                                 if bins[i] == 140:
                                     guesses = [772.1, 1.426, 0.3213, -0.09985, -2.09, -10, 1.379, 0.3031, 2.843]
-                                if bins[i] == 160:
-                                    nExp -= 1
-                                    guesses = [955.5, 1.547, 0.3559, -1.125, -2.009, 1.725, 0.25]
                                 if bins[i] == 180:
                                     nExp -= 1
                                     guesses = [1236, 1.713, 0.4136, -1.181, -1.847, 1.674, 0.3422]
-                                if bins[i] == 200:
-                                    guesses = [3034, 1.763, 0.431, -0.7333, -1.646, -1.62, 1.813, 0.2465, 1.083]
                                 if bins[i] == 220:
-                                    guesses = [3956, 1.879, 0.4745, -1.248, -1.578, -0.7454, 2.209, 0.2557, 3.601]
-                                if bins[i] == 240:
-                                    guesses = [3956, 1.879, 0.4745, -1.248, -1.578, -0.7454, 2.209, 0.2557, 3.601]
+                                    if args.massSelection == "low":
+                                        guesses = [3956, 1.879, 0.4745, -1.248, -1.578, -0.7454, 2.209, 0.2557, 3.601]
+                                    else:
+                                        old_method = False
+                                        landau_guess = [3956, 1.6, 0.3]
+                                        exp_guess = [2000, -0.7, 2.2, -1.487, 4, -0.8996]
                                 if bins[i] == 300:
                                     guesses = [1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, 4.5, 4, 2] 
                                 if bins[i] == 380:
@@ -486,37 +454,22 @@ for item in plots:
                                 if bins[i] == 60:
                                     nExp -= 2
                                     guesses = [346.3, 1.128, 0.2239, -3.488, 0.9861]
-                                if bins[i] == 70:
-                                    nExp -= 1
-                                    guesses = [290.3, 1.008, 0.1734, -3.002, -9.928, 1.331, 1.363]
                                 if bins[i] == 80:
                                     guesses = [787.1, 1.41, 0.3193, -0.9958, -2.985, -2.563, 1.049, 0.3013, 0.9245]
                                 if bins[i] == 100:
                                     nExp -= 1
                                     guesses = [678.8, 1.319, 0.2715, -2.841e-10, -2.461, 1.08, 0.2679]
-                                if bins[i] == 120:
-                                    guesses = [646.3, 1.374, 0.2959, -1.153, -2.426, -9.998, 1.394, 0.2735, 2.457]
                                 if bins[i] == 140:
                                     nExp -= 1
                                     guesses = [713.7, 1.365, 0.2823, -2.554e-11, -2.152, 1.299, 0.3368]
-                                if bins[i] == 160:
-                                    nExp -= 1
-                                    guesses = [851.9, 1.539, 0.3443, -1.333, -2.108, 1.625, 0.391]
                                 if bins[i] == 180:
                                     guesses = [1041, 1.725, 0.4141, -1.863, -1.999, -0.9901, 1.807, 0.3725, 2.195]
-                                if bins[i] == 200:
-                                    guesses = [2319, 1.77, 0.4112, -1.939, -1.37, -1.744, 2.033, 1.962, 1.919]
                                 if bins[i] == 220:
-                                    guesses = [2679, 2.01, 0.505, -1.64, -1.099, -1.108, 2.146, 2.514, 2.416]
-                                if bins[i] == 240:
                                     guesses = [2679, 2.01, 0.505, -1.64, -1.099, -1.108, 2.146, 2.514, 2.416]
                                 if bins[i] == 300:
                                     guesses = [1606, 1.895, 0.4265, -0.7, -1.483, -1, 2, 0.5, 2.5]
                                 if bins[i] == 380:
                                     guesses = [500, 2.301, 0.6017, -1.264, -1.592, -0.8502, 2.804, 0.971, 0.9496]
-                                if bins[i] == 460:
-                                    nExp -= 1
-                                    guesses = [270.3, 2.457, 0.6263, -0.9771, -0.5, 3.075, 5]
 
                         # NonIso-Sym Guesses
                         if region == "noniso_sym":
@@ -531,54 +484,49 @@ for item in plots:
                                     nExp -= 1
                                     landau_guess = [2.212e+04, 0.6783, 0.09052]
                                     exp_guess = [4.467e+05, -2.789, 2.974, -5.139]
-                                if bins[i] == 70:
-                                    landau_guess = [1.857e+04, 0.682, 0.09099]
-                                    exp_guess = [1.349e+04, -1.075, 2.269, -2.444, 1.235, -5.598]
                                 if bins[i] == 80:
                                     landau_guess = [1.826e+04, 0.6239, 0.07162]
                                     exp_guess = [1.506e+04, -0.9609, 2.4, -2.24, 2.2, -0.4279]
                                 if bins[i] == 100:
                                     landau_guess = [1.705e+04, 0.6496, 0.0804] 
                                     exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
-                                if bins[i] == 120:
-                                    landau_guess = [1.705e+04, 0.6496, 0.3] 
-                                    exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
                                 if bins[i] == 140:
-                                    landau_guess = [8972, 0.8638, 0.1507]
-                                    exp_guess = [9448, -1.041, 3.2, -1.423, 3, -3]
-                                if bins[i] == 160:
-                                    landau_guess = [9535, 0.6861, 0.08948]
-                                    exp_guess = [5.971e+04, -1.224, 4, -3.118, 4, -4.477]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        guesses = [1.826e+04, 0.6239, 0.07162, -0.9609, -2.24, -0.4279, 2.4, 2.2, 1]
+                                    else:
+                                        landau_guess = [8972, 0.8638, 0.1507]
+                                        exp_guess = [9448, -1.041, 3.2, -1.423, 3, -3]
                                 if bins[i] == 180:
-                                    landau_guess = [1.183e+04, 0.7977, 0.1293]
-                                    exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
-                                if bins[i] == 200:
-                                    if args.binning == "new":
-                                        landau_guess = [1.204e+04, 0.7742, 0.1196]
-                                        exp_guess = [4.491e+04, -1.059, 5.5, -3.574, 4.5, -2.234]
-                                    elif args.binning == "old":
-                                        nExp -= 1
-                                        landau_guess = [1.204e+04, 0.7742, 0.1196]
-                                        exp_guess = [2.194e+05, -1.407, 5.087, -0.8335]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        guesses = [1.826e+04, 0.6239, 0.07162, -0.9609, -2.24, -0.4279, 2.4, 2.2, 1]
+                                    else:
+                                        landau_guess = [1.183e+04, 0.7977, 0.1293]
+                                        exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
                                 if bins[i] == 220:
-                                    landau_guess = [8717, 0.8303, 0.1381]
-                                    exp_guess = [9.701e+04, -1.193, 6.173, -0.6467, 6.452, -2.239]
-                                if bins[i] == 240:
-                                    landau_guess = [8717, 0.8303, 0.1381]
-                                    exp_guess = [9.701e+04, -1.193, 6.173, -0.6467, 6.452, -2.239]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        guesses = [1.826e+04, 0.6239, 0.07162, -0.9609, -2.24, -0.4279, 2.4, 2.2, 1]
+                                    else:
+                                        landau_guess = [8717, 0.8303, 0.1381]
+                                        exp_guess = [9.701e+04, -1.193, 6.173, -0.6467, 6.452, -2.239]
                                 if bins[i] == 300:
-                                    landau_guess = [1145, 1.149, 0.2453]
-                                    exp_guess = [3.14e+04, -1.023, 6.75, -0.5922, 1.25, -1]
-                                if bins[i] == 380:
-                                    if args.binning == "new":
+                                    if args.massSelection == "low":
+                                        nExp -= 1
+                                        old_method = True
+                                        guesses = [500, 0.6239, 0.2, -0.9609, -2.24, 2.4, 2.2]
+                                    else:
                                         landau_guess = [1145, 1.149, 0.2453]
                                         exp_guess = [3.14e+04, -1.023, 6.75, -0.5922, 1.25, -1]
-                                    elif args.binning == "old":
+                                if bins[i] == 380:
+                                    if args.massSelection == "low":
+                                        nExp -= 2
+                                        old_method = True
+                                        guesses = [500, 0.6239, 0.2, -2, 2]
+                                    else:
                                         old_method = True
                                         guesses = [4848, 1.63, 0.4089, -3.553e-13, -0.6753, -0.8161, 0.5, 1.404, 0.5423]
-                                if bins[i] == 460:
-                                    old_method = True
-                                    guesses = [2487, 1.731, 0.4342, -0.08184, -0.6556, -0.6027, 0.5, 1.187, 0.5]
                             elif eta_reg == "endcap":
                                 if bins[i] == 20:
                                     landau_guess = [1.705e+04, 1.108, 0.1949] 
@@ -589,49 +537,60 @@ for item in plots:
                                 if bins[i] == 60:
                                     landau_guess = [1.021e+04, 0.7237, 0.107]
                                     exp_guess = [5970, -0.9294, 1.702, -2.435, 1.262, -5.012]
-                                if bins[i] == 70:
-                                    landau_guess = [1.163e+04, 0.7851, 0.1258]
-                                    exp_guess = [1.045e+04, -1.111, 1.645, -2.263, 1.974, -6.166]
                                 if bins[i] == 80:
-                                    landau_guess = [1.826e+04, 0.6239, 0.07162]
-                                    exp_guess = [1.506e+04, -0.9609, 2.4, -2.24, 2.2, -0.4279]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        guesses = [1.826e+04, 0.6239, 0.07162, -0.9609, -2.24, -0.4279, 2.4, 2.2, 1]
+                                    else:
+                                        landau_guess = [1.826e+04, 0.6239, 0.07162]
+                                        exp_guess = [1.506e+04, -0.9609, 2.4, -2.24, 2.2, -0.4279]
                                 if bins[i] == 100:
-                                    landau_guess = [1.705e+04, 0.6496, 0.2]
-                                    exp_guess = [1.755e+04, -0.92, 2.4, -1.706, 2.6, -1]
-                                if bins[i] == 120:
-                                    landau_guess = [1.705e+04, 0.6496, 0.3] 
-                                    exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        nExp -= 1
+                                        guesses = [1.826e+04, 0.6239, 0.07162, -2.24, -0.4279, 1.6, 2]
+                                    else:
+                                        landau_guess = [1.705e+04, 0.6496, 0.2]
+                                        exp_guess = [1.755e+04, -0.92, 2.4, -1.706, 2.6, -1]
                                 if bins[i] == 140:
-                                    landau_guess = [1.761e+04, 0.7322, 0.1067]
-                                    exp_guess = [9448, -1.041, 3.2, -1.423, 3, -3]
-                                if bins[i] == 160:
-                                    landau_guess = [7468, 0.9087, 0.1663]
-                                    exp_guess = [1.107e+04, -1.035, 3, -1.572, 2, -7.523]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        guesses = [1.826e+04, 0.6239, 0.07162, -0.9609, -2.24, -0.4279, 2.4, 2.2, 1]
+                                    else:
+                                        landau_guess = [1.761e+04, 0.7322, 0.1067]
+                                        exp_guess = [9448, -1.041, 3.2, -1.423, 3, -3]
                                 if bins[i] == 180:
-                                    if args.binning == "uniform": 
+                                    if args.massSelection == "low":
+                                        nExp -= 1
+                                        old_method = True
+                                        guesses = [500, 0.6239, 0.2, -0.9609, -2.24, 2.4, 2.2]
+                                    else:
                                         landau_guess = [1.183e+04, 0.7977, 0.1293]
                                         exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
-                                    else:
-                                        landau_guess = [7031, 1.004, 0.1965]
-                                        exp_guess = [1.742e+04, -1.198, 3.5, -3.296, 2.5, -1.366]
-                                if bins[i] == 200:
-                                    landau_guess = [1.204e+04, 0.7742, 0.1196]
-                                    exp_guess = [4.491e+04, -1.059, 5.5, -3.574, 4.5, -2.234]
                                 if bins[i] == 220:
-                                    landau_guess = [7937, 1.269, 0.2811]
-                                    exp_guess = [4.457e+04, -1.4, 2.6, -1.9, 1.4, -1]
-                                if bins[i] == 240:
-                                    landau_guess = [7937, 1.269, 0.2811]
-                                    exp_guess = [4.457e+04, -2, 5, -1, 1.8, -0.5]
+                                    if args.massSelection == "low":
+                                        nExp -= 1
+                                        old_method = True
+                                        guesses = [500, 0.6239, 0.2, -0.9609, -2.24, 2.4, 2.2]
+                                    else:
+                                        landau_guess = [7937, 1.269, 0.2811]
+                                        exp_guess = [4.457e+04, -1.4, 2.6, -1.9, 1.4, -1]
                                 if bins[i] == 300:
-                                    old_method = True
-                                    guesses = [1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, 0.5, 0.8, 0.5]  
+                                    if args.massSelection == "low":
+                                        nExp -= 1
+                                        old_method = True
+                                        guesses = [500, 0.6239, 0.2, -0.9609, -2.24, 2,1]
+                                    else:
+                                        old_method = True
+                                        guesses = [1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, 0.5, 0.8, 0.5]  
                                 if bins[i] == 380:
-                                    old_method = True
-                                    guesses = [890.4, 1.723, 0.4403, -1.441, -0.9773, -0.2518, 2.5, 2.5, 5]
-                                if bins[i] == 460:
-                                    old_method = True
-                                    guesses = [301.3, 1.842, 0.482, -1.031, -0.5918, -1.591, 0.5, 3.275, 0.8257]
+                                    if args.massSelection == "low":
+                                        nExp -= 2
+                                        old_method = True
+                                        guesses = [100, 0.6239, 0.1, -2, 1.5]
+                                    else:
+                                        old_method = True
+                                        guesses = [890.4, 1.723, 0.4403, -1.441, -0.9773, -0.2518, 2.5, 2.5, 5]
                                
                         # NonIso_Asym Guesses   
                         if region == "noniso_asym":
@@ -640,111 +599,136 @@ for item in plots:
                                     landau_guess = [9.069e+04, 0.9345, 0.1463]
                                     exp_guess = [4.834e+04, -3.378, 1.206, -8.486, 0.7373, -4.555]
                                 if bins[i] == 40:
-                                    nExp -= 1
-                                    landau_guess = [2.459e+04, 0.8719, 0.1261]
-                                    exp_guess = [9328, -1.29, 1.599, -5.368]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        nExp -= 1
+                                        guesses = [2.459e+04, 0.8719, 0.1261, -1.29, -5.368, 1, 0.6]
+                                    else:
+                                        nExp -= 1
+                                        landau_guess = [2.459e+04, 0.8719, 0.1261]
+                                        exp_guess = [9328, -1.29, 1.599, -5.368]
                                 if bins[i] == 60:
-                                    landau_guess = [1.021e+04, 0.7237, 0.107]
-                                    exp_guess = [5970, -0.9294, 1.702, -2.435, 1.262, -5.012]
-                                if bins[i] == 70:
-                                    nExp -= 1
-                                    landau_guess = [1.262e+04, 1.14, 0.2139]
-                                    exp_guess = [7.614e+04, -2.433, 2.075, -3.571]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        guesses = [800, 0.8719, 0.1261, -1.29, -3, -5.368, 1, 0.2, 0.5]
+                                    else:
+                                        landau_guess = [1.021e+04, 0.7237, 0.107]
+                                        exp_guess = [5970, -0.9294, 1.702, -2.435, 1.262, -5.012]
                                 if bins[i] == 80:
-                                    landau_guess = [1.474e+04, 1.084, 0.1992]
-                                    exp_guess = [7428, -0.8801, 2.325, -2.899, 1.044, -2.326]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        nExp -= 1
+                                        guesses = [2.459e+04, 0.8719, 0.1261, -1.29, -5.368, 1, 0.6]
+                                    else:
+                                        landau_guess = [1.474e+04, 1.084, 0.1992]
+                                        exp_guess = [7428, -0.8801, 2.325, -2.899, 1.044, -2.326]
                                 if bins[i] == 100:
-                                    landau_guess = [1.705e+04, 0.6496, 0.0804] 
-                                    exp_guess = [1.986e+04, -0.8552, 2.8, -2.188, 1.2, -1.68]
-                                if bins[i] == 120:
-                                    landau_guess = [1.705e+04, 0.6496, 0.3] 
-                                    exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        nExp -= 1
+                                        guesses = [2000, 0.8719, 0.1261, -1.29, -5.368, 1.4, 0.6]
+                                    else:
+                                        landau_guess = [1.705e+04, 0.6496, 0.0804] 
+                                        exp_guess = [1.986e+04, -0.8552, 2.8, -2.188, 1.2, -1.68]
                                 if bins[i] == 140:
-                                    landau_guess = [8211, 1.16, 0.2245] 
-                                    exp_guess = [3.881e+04, -1.409, 3.225, -1.699, 2.5, -1.078]
-                                if bins[i] == 160:
-                                    landau_guess = [8663, 1.297, 0.2693]
-                                    exp_guess = [2.436e+04, -1.231, 2.659, -1.467, 3.5, -1]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        nExp -= 1
+                                        guesses = [2000, 0.8719, 0.1261, -1.29, -5.368, 1.4, 0.6]
+                                    else:
+                                        landau_guess = [8211, 1.16, 0.2245] 
+                                        exp_guess = [3.881e+04, -1.409, 3.225, -1.699, 2.5, -1.078]
                                 if bins[i] == 180:
-                                    landau_guess = [1.183e+04, 0.7977, 0.1293]
-                                    exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
-                                if bins[i] == 200:
-                                    landau_guess = [1.204e+04, 0.7742, 0.1196]
-                                    exp_guess = [4.491e+04, -1.059, 3, -1, 3, -2.234]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        nExp -= 1
+                                        guesses = [2000, 0.8719, 0.1261, -1.29, -5.368, 1.4, 0.6]
+                                    else:
+                                        landau_guess = [1.183e+04, 0.7977, 0.1293]
+                                        exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
                                 if bins[i] == 220:
-                                    landau_guess = [8442, 1.149, 0.2453]
-                                    exp_guess = [3.14e+04, -1.023, 5, -0.5922, 3, -2]
-                                if bins[i] == 240:
-                                    landau_guess = [8442, 1.149, 0.2453]
-                                    exp_guess = [3.14e+04, -1.023, 5, -0.5922, 3, -2]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        nExp -= 1
+                                        guesses = [2000, 0.8719, 0.1261, -1.29, -5.368, 1.4, 0.6]
+                                    else:
+                                        landau_guess = [8442, 1.149, 0.2453]
+                                        exp_guess = [3.14e+04, -1.023, 5, -0.5922, 3, -2]
                                 if bins[i] == 300:
                                     old_method = True
                                     nExp -= 1
-                                    guesses = [5089, 2.157, 0.5678, 2, 6, -1.051, -0.58]
-                                    #nExp -= 1
-                                    #landau_guess = [5089, 2.157, 0.5678]
-                                    #exp_guess = [1.148e+04, -1.051, 6.125, -0.5868]
+                                    guesses = [3000, 2.157, 0.5678, -1.051, -0.58, 2, 6]
                                 if bins[i] == 380:
                                     old_method = True
                                     guesses = [1430, 2.107, 0.5122, -0.04034, -1.359, -0.5, 3, 3, 2]
-                                if bins[i] == 460:
-                                    nExp -= 1
-                                    old_method = True
-                                    guesses = [775.1, 2.767, 0.7776, -0.7585, -0.3751, 3.079, 5.396]
                             elif eta_reg == "endcap":
                                 if bins[i] == 20:
                                     nExp -= 1
                                     landau_guess = [5000, 2, 0.3]
                                     exp_guess = [4.834e+04, -3.378, 1.206, -7.486] 
                                 if bins[i] == 40:
-                                    landau_guess = [1e+04, 0.9233, 0.1527]
-                                    exp_guess = [3937, -0.4774, 0.9104, -2.799, 0.7293, -4.712]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        nExp -= 1
+                                        guesses = [1000, 0.8719, 0.1261, -1.29, -5.368, 1.2, 0.4]
+                                    else:
+                                        landau_guess = [1e+04, 0.9233, 0.1527]
+                                        exp_guess = [3937, -0.4774, 0.9104, -2.799, 0.7293, -4.712]
                                 if bins[i] == 60:
-                                    landau_guess = [1.021e+04, 0.7237, 0.107]
-                                    exp_guess = [5970, -0.9294, 1.702, -2.435, 1.262, -5.012]
-                                if bins[i] == 70:
-                                    nExp -= 1
-                                    landau_guess = [5725, 1.131, 0.2179]
-                                    exp_guess = [9440, -1.938, 1.9, -2.955]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        guesses = [1500, 0.8719, 0.1261, -0.5, -1.29, -5.368, 1.1, 0.2, 0.6]
+                                    else:
+                                        landau_guess = [1.021e+04, 0.7237, 0.107]
+                                        exp_guess = [5970, -0.9294, 1.702, -2.435, 1.262, -5.012]
                                 if bins[i] == 80:
-                                    landau_guess = [1.826e+04, 0.6239, 0.07162]
-                                    exp_guess = [1.506e+04, -0.9609, 2.4, -2.24, 2.2, -0.4279]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        nExp -= 1
+                                        guesses = [2000, 0.8719, 0.1261, -1.29, -5.368, 1.4, 0.6]
+                                    else:
+                                        landau_guess = [1.826e+04, 0.6239, 0.07162]
+                                        exp_guess = [1.506e+04, -0.9609, 2.4, -2.24, 2.2, -0.4279]
                                 if bins[i] == 100:
-                                    landau_guess = [1.705e+04, 0.6496, 0.2]
-                                    exp_guess = [1.755e+04, -0.92, 2.4, -1.706, 2.6, -1]
-                                if bins[i] == 120:
-                                    landau_guess = [1.705e+04, 0.6496, 0.3]
-                                    exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        nExp -= 1
+                                        guesses = [2000, 0.8719, 0.1261, -1.29, -5.368, 1, 0.7]
+                                    else:
+                                        landau_guess = [1.705e+04, 0.6496, 0.2]
+                                        exp_guess = [1.755e+04, -0.92, 2.4, -1.706, 2.6, -1]
                                 if bins[i] == 140:
-                                    landau_guess = [6416, 1.397, 0.3019]
-                                    exp_guess = [8019, -1.101, 1.875, -1.559, 3.2, -1.032]
-                                if bins[i] == 160:
-                                    landau_guess = [5895, 1.577, 0.3635]
-                                    exp_guess = [8294, -1.077, 1.691, -1.543, 1.484, -1.361]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        nExp -= 1
+                                        guesses = [1000, 0.8719, 0.1261, -1.29, -5.368, 1.4, 0.6]
+                                    else:
+                                        landau_guess = [6416, 1.397, 0.3019]
+                                        exp_guess = [8019, -1.101, 1.875, -1.559, 3.2, -1.032]
                                 if bins[i] == 180:
-                                    landau_guess = [7031, 1.004, 0.1965]
-                                    exp_guess = [1.742e+04, -1.198, 3, -3.296, 3, -1.366]
-                                if bins[i] == 200:
-                                    nExp -= 1
-                                    landau_guess = [5881, 1.694, 0.3963]
-                                    exp_guess = [2.347e+04, -1.451, 3.478, -1.168]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        nExp -= 1
+                                        guesses = [2000, 0.8719, 0.1261, -1.29, -5.368, 1.4, 0.6]
+                                    else:
+                                        landau_guess = [7031, 1.004, 0.1965]
+                                        exp_guess = [1.742e+04, -1.198, 3, -3.296, 3, -1.366]
                                 if bins[i] == 220:
-                                    nExp -= 1
-                                    old_method = True
-                                    guesses = [4657, 2.046, 0.5207, -1.225, -0.7, 2.5, 3.5]
-                                if bins[i] == 240:
                                     nExp -= 1
                                     old_method = True
                                     guesses = [4657, 2.046, 0.5207, -1.225, -0.7, 2.5, 3.5]
                                 if bins[i] == 300:
                                     old_method = True
-                                    guesses = [1470, 1.687, 0.3483, -2, -1, -1, 3, 2, 1.5]
+                                    nExp -= 2 
+                                    guesses = [1470, 1.687, 0.3483, -2, 2]
                                 if bins[i] == 380:
-                                    old_method = True
-                                    guesses = [1430, 2.107, 0.5122, -0.04034, -1.359, -0.5, 3, 3, 2]
-                                if bins[i] == 460:
-                                    old_method = True
-                                    guesses = [345.4, 2.06, 0.485, -2, -1, -0.5, 3, 2, 1]
+                                    if args.massSelection == "low":
+                                        old_method = True
+                                        nExp -= 1
+                                        guesses = [2000, 0.8719, 0.1261, -1.29, -5.368, 1.4, 0.6]
+                                    else:
+                                        old_method = True
+                                        guesses = [1430, 2.107, 0.5122, -0.04034, -1.359, -0.5, 3, 3, 2]
                       
                         if old_method:
                             N = str(nLandau) + str(nExp)
@@ -842,24 +826,6 @@ for item in plots:
                             func_with_poly = fitfuncs[best_d]
                             tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
                             tight_stat = statboxes[best_d]
-                        elif args.bernsteinCorrection:
-                            # Create RooWorkspace with loose hist RooHistPdf, tight hist RooAbsData, and RooRealVar for x-binning
-                            mpi0 = ROOT.RooRealVar("Twoprong_massPi0", "Twoprong_massPi0", 0, 50)
-                            mpi0.setBins(1000)
-                            
-                            tight_hist = ROOT.RooDataHist("tight_hist", "tight_hist", ROOT.RooArgList(mpi0), h_egamma_tight)
-                            
-                            loose_hist = ROOT.RooDataHist("loose_hist", "loose_hist", ROOT.RooArgList(mpi0), loose_fit_as_hist)
-                            loose_pdf = ROOT.RooHistPdf("loose_pdf", "loose_pdf", ROOT.RooArgSet(mpi0), loose_hist)
-
-                            # Save in workspace
-                            wspace = ROOT.RooWorkspace("wspace", "wspace")
-                            getattr(wspace, "import")(mpi0)
-                            getattr(wspace, "import")(tight_hist)
-                            getattr(wspace, "import")(loose_pdf)
-
-                            bern_corr = ROOT.RooStats.BernsteinCorrection(0.05)
-                            bern_corr.ImportCorrectedPdf(wspace, "loose_pdf", "Twoprong_massPi0", "tight_hist")
 
                         for plot in range(NUM_PLOTS):
                             if args.printFtest and args.testBin:
@@ -978,6 +944,7 @@ for item in plots:
                             if old_method: legend1 = ROOT.TLegend(0.35, 0.78, 0.6, 0.88)
                             else: legend1 = ROOT.TLegend(0.62, 0.27, 0.9, 0.37)
                             legend1.AddEntry(h_egamma_loose, "Loose Photon, " + str(h_egamma_loose.GetEntries()), "l")
+                            if region == "iso_sym": legend1.AddEntry(h_egamma_tight, "Tight Photon, " + str(h_egamma_tight.GetEntries()), "l")
                             #if not args.ratio: legend1.AddEntry(0, "Chi2/NDF: " + str(chi2 / ndf), "")
                             legend2 = ROOT.TLegend(0.29, 0.70, 0.62, 0.89)
                             legend2.AddEntry(h_egamma_tight, "Tight Photon, " + str(h_egamma_tight.GetEntries()), "l")
@@ -995,6 +962,9 @@ for item in plots:
                             legend2.AddEntry('', 'Chi2/Ndof: {:.3f}'.format(chi2_ndof), '')
                             legend2.AddEntry('', 'Chi2_mod/Ndof: {:.3f}'.format(chi2_mod_ndof), '')
                             legend2.AddEntry('', 'Bin Error: {:.1%}'.format(bin_bin_error), '')
+                            if args.scaleToSignal and not region == "iso_sym": 
+                                legend2.AddEntry('', 'Signal Integral: ' + str(h_sig_tight.Integral()), '')
+                                legend2.AddEntry('', 'Scaled Bkg Integral: ' + str(int(h_egamma_tight.Integral())), '')
 
                             # Draw plots
                             if args.fit: c1.cd(1)
@@ -1049,6 +1019,7 @@ for item in plots:
                                     tight_fit_as_hist.Draw("same hist")
                                     tight_fit_w_constant.Draw('same')
                                     h_egamma_tight.Draw("e same")
+                                    h_egamma_tight.GetYaxis().SetRangeUser(0.1, h_egamma_tight.GetMaximum()+50)
                                     ROOT.gPad.Update()
 
                                     legend2.Draw("same")
