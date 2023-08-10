@@ -12,7 +12,7 @@ import scipy.stats as stats
 
 # Create TRandom object
 rand = ROOT.TRandom3()
-rand.SetSeed(0)
+rand.SetSeed(12345)
 
 
 def binConverter(test_bin):
@@ -36,6 +36,27 @@ def removeEntries(bkg_hist, sig_hist):
     return True
 
 
+def checkPullHist(pull_hist, nBins, sigma):
+    bad_pull = False
+    for i in range(1, pull_hist.GetNbinsX()+1):
+        if i == pull_hist.GetNbinsX() - 6: break
+        if pull_hist.GetBinContent(i) > sigma:
+            bad_pull = True
+            for j in range(i+1, i+nBins):
+                if pull_hist.GetBinContent(j) > sigma: continue
+                else: 
+                    bad_pull = False
+                    break
+        if pull_hist.GetBinContent(i) < -sigma:
+            bad_pull = True
+            for j in range(i+1, i+nBins):
+                if pull_hist.GetBinContent(j) < -sigma: continue
+                else:
+                    bad_pull = False
+                    break
+    return bad_pull
+
+
 # command line options
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("input", metavar="INPUT", help="input root file")
@@ -50,9 +71,10 @@ parser.add_argument("--name", default="plots", help="create name for plots pdf")
 parser.add_argument("--ftest", default=None, help="format: '<CHEB_TYPE> <MAXDEGREE>', default is no f-test")
 parser.add_argument("--integral", default=False, action="store_true", help="add I to tight fit")
 parser.add_argument("--printFtest", "--printftest", default=False, action="store_true", help="for a fixed test bin, create a pdf of all possible ftest fits")
-parser.add_argument("--saveFitHist", default=False, action="store_true", help="save loose fit in a separate file to be used elsewhere (e.g. combine)")
 parser.add_argument("--scaleToSignal", "--scale", default=False, action="store_true", help="scale nonisolated sideband (with more statistics) to signal region integral")
 parser.add_argument("--massSelection", default="high", choices=["low","high"], help="specify which mass selection to use")
+parser.add_argument("--createLooseFits", default=False, action="store_true", help="create loose fits initially and save to file")
+parser.add_argument("--checkPull", default=False, action="store_true", help="print on legend if there are four consecutive pull bins greater than 1.5 sigma")
 
 # parse args
 args = parser.parse_args()
@@ -80,7 +102,7 @@ else: plots = main_plots
 eta_regions = ["all", "barrel", "endcap"]
 regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
 
-if args.testBin is None: test_regions = ["noniso_asym"] 
+if args.testBin is None: test_regions = ["noniso_sym"] 
 elif "noniso_asym" in args.testBin: test_regions = ["noniso_asym"]
 elif "noniso_sym" in args.testBin: test_regions = ["noniso_sym"]
 elif "iso_asym" in args.testBin: test_regions = ["iso_asym"]
@@ -88,7 +110,6 @@ elif "iso_sym" in args.testBin: test_regions = ["iso_sym"]
 
 if args.test: regions = test_regions
 photon_regions = ["tight", "loose"]
-# MAKE SURE TO CHANGE WHEN USING NEW BINNING !
 
 if args.massSelection == "high": bins = [20,40,60,80,100,140,180,220,300,380]
 else: bins = [40,60,80,100,140,180,220]
@@ -203,6 +224,9 @@ for item in plots:
         if args.ratio: ROOT.TPad.Divide(c1, 1, 2)
         if args.testBin is not None: test_bin = binConverter(args.testBin)
         chi2_pvalues = []
+        if args.createLooseFits: 
+            os.mkdir("/Users/jaredfraticelli/bkgfitting/loose_fit_hists")
+            os.chdir("/Users/jaredfraticelli/bkgfitting/loose_fit_hists")
         for region in regions:  # loop through twoprong sideband regions
             if args.printFtest and args.testBin is None:
                 print("EMPTY PDF: Must have --testBin option when using --printFtest")
@@ -296,7 +320,7 @@ for item in plots:
                         ROOT.gPad.Update()
                         c1.Print(args.name + ".pdf")
                     else:
-                        if i == 0: print("====================== " + region.upper() + " =====================")
+                        if i == 0 and eta_reg == "barrel": print("====================== " + region.upper() + " =====================")
                         if i == len(bins) - 1: print("############### " + region.upper() + " " + eta_reg.upper() + " " + str(bins[i]) + "+ ###############")
                         else: print("############### " + region.upper() + " " + eta_reg.upper() + " " + str(bins[i]) + "-" + str(bins[i+1]) + " ###############")
                         
@@ -358,8 +382,10 @@ for item in plots:
                                     nExp -= 1
                                     guesses = [1648, 1.205, 0.2847, -1.647, -3.407, 1.275, 0.321]
                                 if bins[i] == 100:
-                                    nExp -= 1
-                                    guesses = [3000, 1.5, 0.3, -1.3, -2.6, 1.2, 0.2375]
+                                    nLandau += 1 
+                                    nExp -= 2 
+                                    #guesses = [2000, 0.5, 0.1, -0.5, -1.3, 1.1, 0.6]
+                                    guesses = [2000, 0.5, 0.05, 1000, 1, 0.6, -1.7, 1.1, 0.6]
                                 if bins[i] == 140:
                                     nExp -= 1
                                     guesses = [1887, 1.314, 0.3242, -1.142, -2.368, 1.674, 0.2515]
@@ -730,42 +756,42 @@ for item in plots:
                                         old_method = True
                                         guesses = [1430, 2.107, 0.5122, -0.04034, -1.359, -0.5, 3, 3, 2]
                       
-                        if old_method:
-                            N = str(nLandau) + str(nExp)
-                            func_full, fitresult_full = util.fit_hist(h_egamma_loose, 'full', 0, 50, int(N), initial_guesses=guesses)
-                            loose_fit_as_hist = util.TemplateToHistogram(func_full, 1000, 0, 50)
-                        else:
-                            func_rising, fitresult_rising = util.fit_hist(h_egamma_loose, 'landau', first, left, N=nLandau, initial_guesses=landau_guess)
-                            rising_fit_as_hist = util.TemplateToHistogram(func_rising, 1000, 0, 50)
-                            h_egamma_loose.Draw()
-                            c1.Update()
-                            stats1 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats1")
-                            c1.Clear()
-                            c1.Update()
-                            stats1.SetY1NDC(.4)
-                            stats1.SetY2NDC(.6)
+                        if args.createLooseFits:
+                            if old_method:
+                                N = str(nLandau) + str(nExp)
+                                func_full, fitresult_full = util.fit_hist(h_egamma_loose, 'full', 0, 50, int(N), initial_guesses=guesses)
+                                loose_fit_as_hist = util.TemplateToHistogram(func_full, 1000, 0, 50)
+                            else:
+                                func_rising, fitresult_rising = util.fit_hist(h_egamma_loose, 'landau', first, left, N=nLandau, initial_guesses=landau_guess)
+                                rising_fit_as_hist = util.TemplateToHistogram(func_rising, 1000, 0, 50)
+                                h_egamma_loose.Draw()
+                                c1.Update()
+                                stats1 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats1")
+                                c1.Clear()
+                                c1.Update()
+                                stats1.SetY1NDC(.4)
+                                stats1.SetY2NDC(.6)
 
-                            func_falling, fitresult_falling = util.fit_hist(h_egamma_loose, 'exp', right, last, N=nExp, initial_guesses=exp_guess)
-                            falling_fit_as_hist = util.TemplateToHistogram(func_falling, 1000, 0, 50)
-                            h_egamma_loose.Draw()
-                            c1.Update()
-                            stats2 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats2")
-                            c1.Clear()
-                            c1.Update()
+                                func_falling, fitresult_falling = util.fit_hist(h_egamma_loose, 'exp', right, last, N=nExp, initial_guesses=exp_guess)
+                                falling_fit_as_hist = util.TemplateToHistogram(func_falling, 1000, 0, 50)
+                                h_egamma_loose.Draw()
+                                c1.Update()
+                                stats2 = h_egamma_loose.GetListOfFunctions().FindObject("stats").Clone("stats2")
+                                c1.Clear()
+                                c1.Update()
 
-                            # create overall fitted histogram as: rising - bulk - falling
-                            loose_fit_as_hist = h_egamma_loose.Clone()
-                            loose_fit_as_hist.Reset()
-                            for b in range(h_egamma_loose.GetNbinsX()):
-                                if b < left_bin:
-                                    loose_fit_as_hist.SetBinContent(b+1, rising_fit_as_hist.GetBinContent(b+1))
-                                elif b <= right_bin:
-                                    loose_fit_as_hist.SetBinContent(b+1, h_egamma_loose.GetBinContent(b+1))
-                                else:
-                                    loose_fit_as_hist.SetBinContent(b+1, falling_fit_as_hist.GetBinContent(b+1))
-                        
-                        # Save the loose fits in a separate file
-                        if args.saveFitHist:
+                                # create overall fitted histogram as: rising - bulk - falling
+                                loose_fit_as_hist = h_egamma_loose.Clone()
+                                loose_fit_as_hist.Reset()
+                                for b in range(h_egamma_loose.GetNbinsX()):
+                                    if b < left_bin:
+                                        loose_fit_as_hist.SetBinContent(b+1, rising_fit_as_hist.GetBinContent(b+1))
+                                    elif b <= right_bin:
+                                        loose_fit_as_hist.SetBinContent(b+1, h_egamma_loose.GetBinContent(b+1))
+                                    else:
+                                        loose_fit_as_hist.SetBinContent(b+1, falling_fit_as_hist.GetBinContent(b+1))
+                            
+                            # Save the loose fits in a separate file
                             if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_loose"
                             else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_loose" 
                             outfile = ROOT.TFile(title + ".root", "RECREATE")
@@ -776,7 +802,13 @@ for item in plots:
                             loose_hist.SetName(title)
                             loose_hist.Write()
                             outfile.Close()
-                        
+                            continue
+                            
+                        if i == len(bins) - 1: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "+_loose"
+                        else: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_loose" 
+                        loose_fit_file = ROOT.TFile("/Users/jaredfraticelli/bkgfitting/loose_fit_hists/" + hist_name + ".root")
+                        loose_fit_as_hist = loose_fit_file.Get(hist_name)
+                    
                         fitted_func = util.HistogramToFunction(loose_fit_as_hist)
                         fitted_func_times_constant, _, _ = util.MultiplyWithPolyToTF1(fitted_func, 0, poly=0)
                         h_egamma_tight.Fit(fitted_func_times_constant, '0L' if not args.integral else '0LI')
@@ -941,10 +973,11 @@ for item in plots:
                                 title += ", full fit (" + str(nLandau) + " land " + str(nExp) + " exp)"
 
                             # Legend creation
-                            if old_method: legend1 = ROOT.TLegend(0.35, 0.78, 0.6, 0.88)
-                            else: legend1 = ROOT.TLegend(0.62, 0.27, 0.9, 0.37)
-                            legend1.AddEntry(h_egamma_loose, "Loose Photon, " + str(h_egamma_loose.GetEntries()), "l")
-                            if region == "iso_sym": legend1.AddEntry(h_egamma_tight, "Tight Photon, " + str(h_egamma_tight.GetEntries()), "l")
+                            #if old_method: 
+                            legend1 = ROOT.TLegend(0.35, 0.78, 0.65, 0.9)
+                            #else: legend1 = ROOT.TLegend(0.62, 0.27, 0.9, 0.37)
+                            legend1.AddEntry(h_egamma_loose, "Loose Photon, " + str(round(h_egamma_loose.GetEntries())), "l")
+                            if region == "iso_sym": legend1.AddEntry(h_egamma_tight, "Tight Photon, " + str(round(h_egamma_tight.GetEntries())), "l")
                             #if not args.ratio: legend1.AddEntry(0, "Chi2/NDF: " + str(chi2 / ndf), "")
                             legend2 = ROOT.TLegend(0.29, 0.70, 0.62, 0.89)
                             legend2.AddEntry(h_egamma_tight, "Tight Photon, " + str(h_egamma_tight.GetEntries()), "l")
@@ -965,6 +998,11 @@ for item in plots:
                             if args.scaleToSignal and not region == "iso_sym": 
                                 legend2.AddEntry('', 'Signal Integral: ' + str(h_sig_tight.Integral()), '')
                                 legend2.AddEntry('', 'Scaled Bkg Integral: ' + str(int(h_egamma_tight.Integral())), '')
+                            if args.checkPull:
+                                legend2.AddEntry('', '3 Consecutive Bins > 2 sigma: ' + str(checkPullHist(h_tight_pull, 3, 2)), '')
+                                legend2.AddEntry('', '4 Consecutive Bins > 1.5 sigma: ' + str(checkPullHist(h_tight_pull, 4, 1.5)), '')
+                                legend2.AddEntry('', '5 Consecutive Bins > 1 sigma: ' + str(checkPullHist(h_tight_pull, 5, 1)), '')
+
 
                             # Draw plots
                             if args.fit: c1.cd(1)
