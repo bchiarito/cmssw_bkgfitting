@@ -7,7 +7,7 @@ try:
 except ImportError:
     pass
 
-BERN_UPPER_RANGE = 25
+BERN_UPPER_RANGE = 3 
 NAME_COUNT = 0 # global counter
 
 def cheb_fn(x, degree, kind):
@@ -609,6 +609,51 @@ def fit_hist(hist, function, range_low, range_high, N=1, initial_guesses=None, i
     tf1.SetParLimits(7, 0.2, 7)
     tf1.SetParLimits(8, 0.2, 7)
 
+  elif function == 'full' and N == 21:
+    def python_func(x, p):
+        norm1 = p[0]
+        mpv1 = p[1]
+        sigma1 = p[2]
+        norm2 = p[3]
+        mpv2 = p[4]
+        sigma2 = p[5]
+        C1 = p[6]
+        bound1 = p[7]
+        b12 = p[8]
+
+        if bound1 < 0: bound1 = 0
+        bound2 = bound1 + b12
+        
+        land1 = norm1 * ROOT.TMath.Landau(x[0], mpv1, sigma1)
+      
+        y11=norm1*ROOT.TMath.Landau(bound1, mpv1, sigma1)
+        y12=norm2*ROOT.TMath.Landau(bound1, mpv2, sigma2)
+        if y12 == 0: land2 = norm2*ROOT.TMath.Landau(x[0], mpv2, sigma2)*y11
+        else: land2 = norm2*ROOT.TMath.Landau(x[0], mpv2, sigma2)*y11/y12
+         
+        if y12 == 0: y21=norm2*ROOT.TMath.Landau(bound2, mpv2, sigma2)*y11
+        else: y21=norm2*ROOT.TMath.Landau(bound2, mpv2, sigma2)*y11/y12
+        y22=ROOT.TMath.Exp(C1*bound2)
+        exp1=ROOT.TMath.Exp(C1*x[0])*y21/y22
+
+        if x[0] < bound1: return land1
+        elif x[0] < bound2: return land2
+        else: return exp1
+    NPAR = 9
+    if not initial_guesses:
+        nEntries = hist.GetEntries()
+        mean = hist.GetMean()
+        initial_guesses = [
+            nEntries, mean, 0.5, nEntries, mean, 0.5, -3, mean, mean/2]
+    if not len(initial_guesses) == NPAR:
+        raise AssertionError('Length of initial guesses list must be '+str(NPAR)+"!")
+    tf1 = ROOT.TF1(getname('func'), python_func, range_low, range_high, NPAR)
+    tf1.SetParNames("Constant1","MPV1","Sigma1","Constant2","MPV2","Sigma2","C1","Boundary1","BoundDiff12")
+    for i, guess in enumerate(initial_guesses): tf1.SetParameter(i, guess)
+    tf1.SetParLimits(6, -10, 0)
+    tf1.SetParLimits(7, 0, 25)
+    tf1.SetParLimits(8, 0.2, 7)
+  
   elif function == 'full' and N == 24:
     def python_func(x, p):
         norm1 = p[0]
