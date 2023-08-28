@@ -12,7 +12,7 @@ import scipy.stats as stats
 
 # Create TRandom object
 rand = ROOT.TRandom3()
-rand.SetSeed(12345)
+rand.SetSeed(12445)
 
 
 def binConverter(test_bin):
@@ -75,6 +75,7 @@ parser.add_argument("--scaleToSignal", "--scale", default=False, action="store_t
 parser.add_argument("--massSelection", default="high", choices=["low","high"], help="specify which mass selection to use")
 parser.add_argument("--createLooseFits", default=False, action="store_true", help="create loose fits initially and save to file")
 parser.add_argument("--checkPull", default=False, action="store_true", help="print on legend if there are four consecutive pull bins greater than 1.5 sigma")
+parser.add_argument("--saveScaledTightHists", default=False, action="store_true", help="save scaled-to-signal tight hists in a separate directory")
 
 # parse args
 args = parser.parse_args()
@@ -227,6 +228,9 @@ for item in plots:
         if args.createLooseFits: 
             os.mkdir("/Users/jaredfraticelli/bkgfitting/loose_fit_hists")
             os.chdir("/Users/jaredfraticelli/bkgfitting/loose_fit_hists")
+        if args.saveScaledTightHists:
+            os.mkdir("/Users/jaredfraticelli/bkgfitting/scaled_tight_hists")
+            os.chdir("/Users/jaredfraticelli/bkgfitting/scaled_tight_hists")
         loose_fit_files = []
         file_counter = 0
         for region in regions:  # loop through twoprong sideband regions
@@ -273,6 +277,20 @@ for item in plots:
                         sig_tight_plot = egamma_tight_plots.replace(region, "iso_sym")
                         h_sig_tight = infile1.Get(sig_tight_plot)
                         removeEntries(h_egamma_tight, h_sig_tight)
+
+                    if args.saveScaledTightHists:
+                        # Save the loose fits in a separate file
+                        if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight"
+                        else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_tight" 
+                        outfile = ROOT.TFile(title + ".root", "RECREATE")
+                        outfile.cd()
+                        tight_hist = ROOT.TH1F(title, title, 1000, 0, 50) 
+                        for b in range(h_egamma_tight.GetNbinsX()):
+                            tight_hist.SetBinContent(b+1,h_egamma_tight.GetBinContent(b+1))
+                        tight_hist.SetName(title)
+                        tight_hist.Write()
+                        outfile.Close()
+                        continue
 
                     if args.ratio:  # create unfitted ratio plots between tight and loose photons
                         if not h_egamma_tight.Integral() == 0: h_egamma_tight.Scale(1.0/h_egamma_tight.Integral())
@@ -811,7 +829,7 @@ for item in plots:
                         loose_fit_files.append(ROOT.TFile("/Users/jaredfraticelli/bkgfitting/loose_fit_hists/" + hist_name + ".root"))
                         loose_fit_as_hist = loose_fit_files[file_counter].Get(hist_name)
                         file_counter += 1
-                    
+
                         fitted_func = util.HistogramToFunction(loose_fit_as_hist)
                         fitted_func_times_constant, _, _ = util.MultiplyWithPolyToTF1(fitted_func, 0, poly=0)
                         h_egamma_tight.Fit(fitted_func_times_constant, '0L' if not args.integral else '0LI')
@@ -864,9 +882,9 @@ for item in plots:
 
                         for plot in range(NUM_PLOTS):
                             if args.printFtest and args.testBin:
-                                func_with_poly = fitfuncs[plot]
+                                func_with_poly = fitfuncs[plots]
                                 tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
-                                tight_stat = statboxes[plot]
+                                tight_stat = statboxes[plots]
 
                             just_poly = util.ExtractPolyFromTightFit(func_with_poly, poly=POLY_TYPE)
                             tlast_bin = h_egamma_tight.GetNbinsX() + 1
