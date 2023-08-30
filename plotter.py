@@ -112,8 +112,8 @@ elif "iso_sym" in args.testBin: test_regions = ["iso_sym"]
 if args.test: regions = test_regions
 photon_regions = ["tight", "loose"]
 
-if args.massSelection == "high": bins = [20,40,60,80,100,140,180,220,300,380]
-else: bins = [40,60,80,100,140,180,220]
+bins = [20,40,60,80,100,140,180,220,300,380]
+#bins = [20,40,60,70,80,100,120,140,160,180,200,240,300,380,460]
 
 for item in plots:
     if item == "pfRelIso03_chg" or item == "sieie" or item == "hoe" or item == "hadTow":  # sanity plots
@@ -269,6 +269,7 @@ for item in plots:
                     # Get the histograms from the input file
                     h_egamma_tight = infile1.Get(egamma_tight_plots)
                     h_egamma_loose = infile1.Get(egamma_loose_plots)
+                    print(h_egamma_tight.Integral() / h_egamma_loose.Integral())
 
                     # Set Poisson errors for tight histogram
                     h_egamma_tight.SetBinErrorOption(ROOT.TH1.kPoisson)
@@ -843,8 +844,8 @@ for item in plots:
                         FTEST = True if args.ftest else False
                         NUM_PLOTS = 1
                         if not FTEST:
-                            POLY_TYPE = 1
-                            DEGREE = 4 
+                            POLY_TYPE = 3
+                            DEGREE = 0 
                             func_with_poly, func_with_ploy_py, _ = util.MultiplyWithPolyToTF1(fitted_func, DEGREE, poly=POLY_TYPE)
                             h_egamma_tight.Fit(func_with_poly, '0L' if not args.integral else '0LI')
                             tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
@@ -887,9 +888,9 @@ for item in plots:
 
                         for plot in range(NUM_PLOTS):
                             if args.printFtest and args.testBin:
-                                func_with_poly = fitfuncs[plots]
+                                func_with_poly = fitfuncs[plot]
                                 tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
-                                tight_stat = statboxes[plots]
+                                tight_stat = statboxes[plot]
 
                             just_poly = util.ExtractPolyFromTightFit(func_with_poly, poly=POLY_TYPE)
                             tlast_bin = h_egamma_tight.GetNbinsX() + 1
