@@ -236,7 +236,9 @@ for item in plots:
             #os.chdir("/Users/jaredfraticelli/bkgfitting/scaled_tight_hists")
             os.chdir("scaled_tight_hists")
         loose_fit_files = []
-        file_counter = 0
+        scaled_tight_files = []
+        file_counter_loose = 0
+        file_counter_tight = 0
         for region in regions:  # loop through twoprong sideband regions
             if args.printFtest and args.testBin is None:
                 print("EMPTY PDF: Must have --testBin option when using --printFtest")
@@ -269,7 +271,6 @@ for item in plots:
                     # Get the histograms from the input file
                     h_egamma_tight = infile1.Get(egamma_tight_plots)
                     h_egamma_loose = infile1.Get(egamma_loose_plots)
-                    print(h_egamma_tight.Integral() / h_egamma_loose.Integral())
 
                     # Set Poisson errors for tight histogram
                     h_egamma_tight.SetBinErrorOption(ROOT.TH1.kPoisson)
@@ -283,6 +284,8 @@ for item in plots:
                         h_sig_tight = infile1.Get(sig_tight_plot)
                         removeEntries(h_egamma_tight, h_sig_tight)
 
+                    print(h_egamma_tight.Integral() / h_egamma_loose.Integral())
+                    
                     if args.saveScaledTightHists:
                         # Save the loose fits in a separate file
                         if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight"
@@ -297,6 +300,17 @@ for item in plots:
                         outfile.Close()
                         continue
 
+                    if i == len(bins) - 1: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "+"
+                    else: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) 
+                    
+                    if args.scaleToSignal:
+                        scaled_tight_files.append(ROOT.TFile("scaled_tight_hists/" + hist_name + "_tight.root"))
+                        h_scaled_tight = scaled_tight_files[file_counter_tight].Get(hist_name+"_tight")
+                        h_egamma_tight.Reset()
+                        for b in range(h_scaled_tight.GetNbinsX()): 
+                            h_egamma_tight.SetBinContent(b+1,h_scaled_tight.GetBinContent(b+1))
+                        file_counter_tight += 1
+                    
                     if args.ratio:  # create unfitted ratio plots between tight and loose photons
                         if not h_egamma_tight.Integral() == 0: h_egamma_tight.Scale(1.0/h_egamma_tight.Integral())
                         if not h_egamma_loose.Integral() == 0: h_egamma_loose.Scale(1.0/h_egamma_loose.Integral())
@@ -829,12 +843,9 @@ for item in plots:
                             outfile.Close()
                             continue
                             
-                        if i == len(bins) - 1: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "+_loose"
-                        else: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_loose" 
-                        #loose_fit_files.append(ROOT.TFile("/Users/jaredfraticelli/bkgfitting/loose_fit_hists/" + hist_name + ".root"))
-                        loose_fit_files.append(ROOT.TFile("loose_fit_hists/" + hist_name + ".root"))
-                        loose_fit_as_hist = loose_fit_files[file_counter].Get(hist_name)
-                        file_counter += 1
+                        loose_fit_files.append(ROOT.TFile("loose_fit_hists/" + hist_name + "_loose.root"))
+                        loose_fit_as_hist = loose_fit_files[file_counter_loose].Get(hist_name+"_loose")
+                        file_counter_loose += 1
 
                         fitted_func = util.HistogramToFunction(loose_fit_as_hist)
                         fitted_func_times_constant, _, _ = util.MultiplyWithPolyToTF1(fitted_func, 0, poly=0)
