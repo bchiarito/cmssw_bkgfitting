@@ -833,8 +833,9 @@ for item in plots:
 
                         fitted_func = util.HistogramToFunction(loose_fit_as_hist)
                         fitted_func_times_constant, _, _ = util.MultiplyWithPolyToTF1(fitted_func, 0, poly=0)
-                        h_egamma_tight.Fit(fitted_func_times_constant, '0L' if not args.integral else '0LI')
+                        fit_result = h_egamma_tight.Fit(fitted_func_times_constant, '0L' if not args.integral else '0LI')
                         tight_fit_w_constant = util.TemplateToHistogram(fitted_func_times_constant, 1000, 0, 50)
+
 
                         FTEST = True if args.ftest else False
                         NUM_PLOTS = 1
@@ -876,6 +877,7 @@ for item in plots:
                                     print(d2, '>', d1, decision)
                                     print('  F={} target={}'.format(ftest, target), '({}, {}) dof'.format(dof1, dof2))
                                     if decision: best_d = d2
+
                             print('Best: ', best_d)
                             func_with_poly = fitfuncs[best_d]
                             tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
