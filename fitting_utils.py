@@ -7,7 +7,7 @@ try:
 except ImportError:
     pass
 
-BERN_UPPER_RANGE = 3 
+BERN_UPPER_RANGE = 25
 NAME_COUNT = 0 # global counter
 
 def cheb_fn(x, degree, kind):
@@ -312,7 +312,10 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, poly=0, para
         raise ValueError('Got degree {} for poly type {}. Not Implemented!'.format(degree, poly))
 
     def func_after_mult(x, p):
-        return func(x) * polynomial(x, p)
+        #return func(x) * polynomial(x, p)
+        val = func(x) * polynomial(x, p)
+        #if val < 10**-30: val = 10**-30
+        return val
 
     globals()[getname('func')] = polynomial
     globals()[getname('func')] = func_after_mult

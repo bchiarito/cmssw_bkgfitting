@@ -226,11 +226,15 @@ for item in plots:
         if args.testBin is not None: test_bin = binConverter(args.testBin)
         chi2_pvalues = []
         if args.createLooseFits: 
-            os.mkdir("/Users/jaredfraticelli/bkgfitting/loose_fit_hists")
-            os.chdir("/Users/jaredfraticelli/bkgfitting/loose_fit_hists")
+            #os.mkdir("/Users/jaredfraticelli/bkgfitting/loose_fit_hists")
+            if not os.path.exists('loose_fit_hists'): os.mkdir("loose_fit_hists")
+            #os.chdir("/Users/jaredfraticelli/bkgfitting/loose_fit_hists")
+            os.chdir("loose_fit_hists")
         if args.saveScaledTightHists:
-            os.mkdir("/Users/jaredfraticelli/bkgfitting/scaled_tight_hists")
-            os.chdir("/Users/jaredfraticelli/bkgfitting/scaled_tight_hists")
+            #os.mkdir("/Users/jaredfraticelli/bkgfitting/scaled_tight_hists")
+            if not os.path.exists('scaled_tight_hists'): os.mkdir("scaled_tight_hists")
+            #os.chdir("/Users/jaredfraticelli/bkgfitting/scaled_tight_hists")
+            os.chdir("scaled_tight_hists")
         loose_fit_files = []
         file_counter = 0
         for region in regions:  # loop through twoprong sideband regions
@@ -827,7 +831,8 @@ for item in plots:
                             
                         if i == len(bins) - 1: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "+_loose"
                         else: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_loose" 
-                        loose_fit_files.append(ROOT.TFile("/Users/jaredfraticelli/bkgfitting/loose_fit_hists/" + hist_name + ".root"))
+                        #loose_fit_files.append(ROOT.TFile("/Users/jaredfraticelli/bkgfitting/loose_fit_hists/" + hist_name + ".root"))
+                        loose_fit_files.append(ROOT.TFile("loose_fit_hists/" + hist_name + ".root"))
                         loose_fit_as_hist = loose_fit_files[file_counter].Get(hist_name)
                         file_counter += 1
 
