@@ -69,10 +69,12 @@ loose_fit_files = []
 scaled_tight_files = []
 tight_temp_files = []
 tight_deg_files = []
+tight_poly_files = []
 file_counter_loose = 0
 file_counter_tight = 0
 file_counter_temp = 0
 file_counter_deg = 0
+file_counter_poly = 0
 for region in regions:  # loop through twoprong sideband regions
     if args.testBin is not None: 
         if not region == test_bin[0]: continue
@@ -146,6 +148,17 @@ for region in regions:  # loop through twoprong sideband regions
                 tight_deg_files.append(ROOT.TFile("tight_templates/degrees/" + hist_name + "_tight_temp_deg.root"))
                 tight_deg_hist = tight_deg_files[file_counter_deg].Get(hist_name+"_tight_temp_deg")
                 file_counter_deg += 1
+                bern_deg = int(tight_deg_hist.GetBinContent(1))
+
+            # Input bern poly TF1 (to extract params)
+            if not os.path.exists('tight_templates'):
+                print("ERROR: Must create directory for scaled data Bernstein degrees as follows: tight_templates/degrees")
+            else:
+                tight_poly_files.append(ROOT.TFile("tight_templates/polys/" + hist_name + "_tight_poly.root"))
+                bern_poly = tight_poly_files[file_counter_poly].Get(hist_name+"_tight_poly") 
+                file_counter_poly += 1
+
+            # Combine bern_deg with bern_poly.GetParameter() to recreate the Bernstein polynomial for drawing
             
             fitted_func = util.HistogramToFunction(loose_fit_as_hist)
             fitted_func_times_constant, _, _ = util.MultiplyWithPolyToTF1(fitted_func, 0, poly=0)
@@ -220,26 +233,25 @@ for region in regions:  # loop through twoprong sideband regions
                 h_tight_pullc.SetBinError(j+1, 0) # no error bar
             
             # Legend creation
-            legend1 = ROOT.TLegend(0.53, 0.77, 0.88, 0.87)
-            legend1.SetX1NDC(ROOT.kTRUE)
+            legend1 = ROOT.TLegend(0.45, 0.75, 0.88, 0.87)
             legend1.AddEntry(h_egamma_loose, "Loose Photon Sideband", "l")
             legend1.AddEntry(loose_fit_as_hist, "Landau + Exponential Fit", "l")
-            legend1.SetTextSize(0.024)
+            legend1.SetTextSize(0.03)
 
             legend2 = ROOT.TLegend(0.58, 0.77, 0.93, 0.87)
             if not region == "iso_sym":
                 legend2.AddEntry(h_egamma_tight, "Full Selection", "l")
-                legend2.AddEntry(tight_fit_as_hist, 'Bernstein, Degree ' + str(int(tight_deg_hist.GetBinContent(1))), 'l')
+                legend2.AddEntry(tight_fit_as_hist, 'Bernstein, Degree ' + str(int(bern_deg)), 'l')
                 legend2.SetTextSize(0.024)
            
             # Create Title 
-            title1 = "TwoProng p_{T} " + str(bins[i])
-            if i == len(bins)-1: title1 += "+, " 
-            else: title1 += "-" + str(bins[i+1]) + ", "
-            if eta_reg == "barrel": title1 += "Barrel Photon"
-            else: title1 += "Endcap Photon"
+            title1 = "p_{T} " + str(bins[i])
+            if i == len(bins)-1: title1 += "+ GeV" 
+            else: title1 += "-" + str(bins[i+1]) + " GeV"
+            if eta_reg == "barrel": eta1 = "Barrel"
+            else: eta1 = "Endcap"
            
-            title2 = "TwoProng Control Region: "
+            title2 = "TP Control Region: "
             if region == "iso_sym": title2 += "Isolated Symmetric"
             elif region == "iso_asym": title2 += "Isolated Asymmetric"
             elif region == "noniso_sym": title2 += "Nonisolated Symmetric"
@@ -267,22 +279,36 @@ for region in regions:  # loop through twoprong sideband regions
             ROOT.gPad.SetLogy()
             # Dynamically set the x-axis range 
             h_egamma_loose.GetXaxis().SetRangeUser(0, findMaxXVal(loose_fit_as_hist)*3/5)
+            h_egamma_loose.GetYaxis().SetRangeUser(0.1, h_egamma_loose.GetMaximum()*3.5)
             legend1.Draw("same")
             # Draw CMS logo
             l1_cms = ROOT.TLatex(0.165, 0.84, "CMS")
             l1_cms.SetNDC(ROOT.kTRUE)
             l1_cms.Draw("same")
             # Draw lumi at top of plot
-            l1_lumi = ROOT.TLatex(0.63, 0.915, "137.6 fb^{-1} (13 TeV)")
+            l1_lumi = ROOT.TLatex(0.6, 0.915, "137.6 fb^{-1} (13 TeV)")
             l1_lumi.SetNDC(ROOT.kTRUE)
-            l1_lumi.SetTextSize(0.035)
+            l1_lumi.SetTextSize(0.04)
             l1_lumi.SetTextFont(42)
             l1_lumi.Draw("same")
-            # Draw plot title (first half)
-            title1_l = ROOT.TLatex(0.2, 0.96, title1)
-            title1_l.SetTextSize(0.04)
-            title1_l.SetNDC(ROOT.kTRUE)
-            title1_l.Draw("same")
+            l1_loose = ROOT.TLatex(0.15, 0.915, "Loose Photon")
+            l1_loose.SetNDC(ROOT.kTRUE)
+            l1_loose.SetTextSize(0.04)
+            l1_loose.SetTextFont(42)
+            l1_loose.Draw("same")
+            # Specify pt bin in loose plot
+            title1_bin = ROOT.TLatex(0.60, 0.71, title1)
+            title1_bin.SetTextSize(0.04)
+            title1_bin.SetNDC(ROOT.kTRUE)
+            title1_bin.Draw("same")
+            title1_eta = ROOT.TLatex(0.60, 0.66, eta1)
+            title1_eta.SetTextSize(0.04)
+            title1_eta.SetNDC(ROOT.kTRUE)
+            title1_eta.Draw("same")
+            control_reg = ROOT.TLatex(0.05, 0.96, title2)  # 0.05, 0.96
+            control_reg.SetTextSize(0.042)
+            control_reg.SetNDC(ROOT.kTRUE)
+            control_reg.Draw("")
             ROOT.gPad.Update()
             
             # TOP-RIGHT PANEL
@@ -304,20 +330,21 @@ for region in regions:  # loop through twoprong sideband regions
                 tight_fit_as_hist.SetLineWidth(1)
                 tight_fit_as_hist.Draw("same hist")
                 h_egamma_tight.Draw("e same")
-                h_egamma_tight.GetYaxis().SetRangeUser(0.1, h_egamma_tight.GetMaximum()+50)
+                h_egamma_tight.GetYaxis().SetRangeUser(0.1, h_egamma_tight.GetMaximum()*2.3)
                 l2 = ROOT.TLatex(0.12, 0.84, "CMS")
                 l2.SetNDC(ROOT.kTRUE)
                 l2.Draw("same")
-                l2_lumi = ROOT.TLatex(0.645, 0.915, "137.6 fb^{-1} (13 TeV)")
+                l2_lumi = ROOT.TLatex(0.615, 0.915, "137.6 fb^{-1} (13 TeV)")
                 l2_lumi.SetNDC(ROOT.kTRUE)
-                l2_lumi.SetTextSize(0.035)
+                l2_lumi.SetTextSize(0.04)
                 l2_lumi.SetTextFont(42)
                 l2_lumi.Draw("same")
                 legend2.Draw("same")
-                title2_l = ROOT.TLatex(0.05, 0.96, title2)
-                title2_l.SetTextSize(0.04)
-                title2_l.SetNDC(ROOT.kTRUE)
-                title2_l.Draw("")
+                l2_tight = ROOT.TLatex(0.105, 0.915, "Tight Photon")
+                l2_tight.SetNDC(ROOT.kTRUE)
+                l2_tight.SetTextSize(0.04)
+                l2_tight.SetTextFont(42)
+                l2_tight.Draw("same")
                 ROOT.gPad.Update()
             
             # BOTTOM-LEFT PANEL
@@ -336,7 +363,7 @@ for region in regions:  # loop through twoprong sideband regions
             h_loose_pull.Draw('pe')
             h_loose_pull.GetXaxis().SetLabelSize(0.07)
             h_loose_pull.GetXaxis().SetTitleSize(0.1)
-            h_loose_pull.GetXaxis().SetTitle("m_{TwoProng} (GeV)")
+            h_loose_pull.GetXaxis().SetTitle("m_{TP} (GeV)")
             h_loose_pull.SetMarkerStyle(21)
             h_loose_pull.SetMarkerSize(0.25)
             h_loose_pull.SetStats(0)
@@ -365,7 +392,7 @@ for region in regions:  # loop through twoprong sideband regions
                 h_tight_pull.GetYaxis().SetLabelSize(0.06)
                 h_tight_pull.GetXaxis().SetLabelSize(0.07)
                 h_tight_pull.GetXaxis().SetTitleSize(0.1)
-                h_tight_pull.GetXaxis().SetTitle("m_{TwoProng} (GeV)")
+                h_tight_pull.GetXaxis().SetTitle("m_{TP} (GeV)")
                 h_tight_pull.Draw('pe')
                 #h_tight_pull_error.SetLineColor(ROOT.kGray+2)
                 #h_tight_pull_error.SetFillColor(ROOT.kGray+2)
@@ -391,6 +418,10 @@ for region in regions:  # loop through twoprong sideband regions
             ROOT.gPad.Update()
             if args.testBin is not None: input()
             c1.Print(args.name + ".pdf")
+            loose_fit_files[file_counter_loose-1].Close()
+            scaled_tight_files[file_counter_tight-1].Close()
+            tight_temp_files[file_counter_temp-1].Close()
+            tight_deg_files[file_counter_deg-1].Close()
 
 c1.Print(args.name + ".pdf]")
 
