@@ -345,6 +345,10 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, poly=0, para
     if poly == 3:
         for i in range(num_param): tf1.SetParLimits(i, 0, 1e9)
 
+    # For constant function require positive constant
+    if degree == 0:
+        tf1.SetParLimits(0, 0, 1e9)
+
     # Set parameter initial guesses
     if not parameters:
         if poly == 0 or poly == 1 or poly == 2:
