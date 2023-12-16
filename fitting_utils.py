@@ -352,8 +352,9 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, poly=0, para
         if poly == 3:
             for i in range(num_param): 
                 tf1.SetParameter(i, 0.1)
-                #if i == 0: tf1.FixParameter(i, 0.150094)
-                #if i == 1: tf1.FixParameter(i, 2.67687e-7)
+                if num_param == 5:
+                    test_params = [0.0415947, 0.00761743, 0.00217256, 0.00706772, 0.0125019, 0.101876]
+                    tf1.SetParameter(i, test_params[i])
     else:
         tf1.SetParameters(*parameters)
 
