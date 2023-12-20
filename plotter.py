@@ -24,6 +24,44 @@ def binConverter(test_bin):
     return bin_list
 
 
+def bern_fn(x, n_degree, i_degree):
+    x_adj = x / 25
+    if i_degree < 0 or i_degree > n_degree: return 0
+    return (math.factorial(n_degree))/(math.factorial(i_degree)*math.factorial(n_degree - i_degree)) * x_adj**i_degree * (1 - x_adj)**(n_degree - i_degree)
+
+def bern_deg0(x, p):
+    X = x[0]
+    return p[0]
+        
+def bern_deg1(x, p):
+    X = x[0]
+    return p[0]*bern_fn(X, 1, 0) + p[1]*bern_fn(X, 1, 1)
+
+def bern_deg2(x, p):
+    X = x[0]
+    return p[0]*bern_fn(X, 2, 0) + p[1]*bern_fn(X, 2, 1) + p[2]*bern_fn(X, 2, 2)
+
+def bern_deg3(x, p):
+    X = x[0]
+    return p[0]*bern_fn(X, 3, 0) + p[1]*bern_fn(X, 3, 1) + p[2]*bern_fn(X, 3, 2) + p[3]*bern_fn(X, 3, 3)
+
+def bern_deg4(x, p):
+    X = x[0]
+    return p[0]*bern_fn(X, 4, 0) + p[1]*bern_fn(X, 4, 1) + p[2]*bern_fn(X, 4, 2) + p[3]*bern_fn(X, 4, 3) + p[4]*bern_fn(X, 4, 4)
+
+def bern_deg5(x, p):
+    X = x[0]
+    return p[0]*bern_fn(X, 5, 0) + p[1]*bern_fn(X, 5, 1) + p[2]*bern_fn(X, 5, 2) + p[3]*bern_fn(X, 5, 3) + p[4]*bern_fn(X, 5, 4) + p[5]*bern_fn(X, 5, 5)
+
+def bern_deg6(x, p):
+    X = x[0]
+    return p[0]*bern_fn(X, 6, 0) + p[1]*bern_fn(X, 6, 1) + p[2]*bern_fn(X, 6, 2) + p[3]*bern_fn(X, 6, 3) + p[4]*bern_fn(X, 6, 4) + p[5]*bern_fn(X, 6, 5) + p[6]*bern_fn(X, 6, 6)
+
+def bern_deg7(x, p):
+    X = x[0]
+    return p[0]*bern_fn(X, 7, 0) + p[1]*bern_fn(X, 7, 1) + p[2]*bern_fn(X, 7, 2) + p[3]*bern_fn(X, 7, 3) + p[4]*bern_fn(X, 7, 4) + p[5]*bern_fn(X, 7, 5) + p[6]*bern_fn(X, 7, 6) + p[7]*bern_fn(X, 7, 7)
+
+
 # command line options
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("input", metavar="INPUT", help="input root file")
@@ -64,17 +102,20 @@ if args.test: regions = test_regions
 bins = [20,40,60,80,100,140,180,220,300,380]
 
 if args.testBin is not None: test_bin = binConverter(args.testBin)
-chi2_pvalues = []
+
 loose_fit_files = []
 scaled_tight_files = []
 tight_temp_files = []
 tight_deg_files = []
+tight_chi2_files = []
 tight_poly_files = []
 file_counter_loose = 0
 file_counter_tight = 0
 file_counter_temp = 0
 file_counter_deg = 0
+file_counter_chi2 = 0
 file_counter_poly = 0
+
 for region in regions:  # loop through twoprong sideband regions
     if args.testBin is not None: 
         if not region == test_bin[0]: continue
@@ -84,7 +125,7 @@ for region in regions:  # loop through twoprong sideband regions
         for eta_reg in eta_regions:  # loop through eta regions for fixed pt-bin and fixed twoprong sideband
             if args.testBin is not None: 
                 if not eta_reg == test_bin[1]: continue
-
+           
             # Generate correct plots names to access from summed histogram files
             egamma_loose_plots = "plots/twoprong_masspi0_" + region + "_" + eta_reg
 
@@ -141,7 +182,7 @@ for region in regions:  # loop through twoprong sideband regions
                 tight_fit_as_hist = tight_temp_files[file_counter_temp].Get(hist_name+"_tight_temp")
                 file_counter_temp += 1
 
-            # Input tight template
+            # Input tight degrees
             if not os.path.exists('tight_templates'):
                 print("ERROR: Must create directory for scaled data Bernstein degrees as follows: tight_templates/degrees")
             else:
@@ -149,6 +190,15 @@ for region in regions:  # loop through twoprong sideband regions
                 tight_deg_hist = tight_deg_files[file_counter_deg].Get(hist_name+"_tight_temp_deg")
                 file_counter_deg += 1
                 bern_deg = int(tight_deg_hist.GetBinContent(1))
+
+            # Input chi2 values
+            if not os.path.exists('tight_templates'):
+                print("ERROR: Must create directory for scaled data Bernstein degrees as follows: tight_templates/degrees")
+            else:
+                tight_chi2_files.append(ROOT.TFile("tight_templates/chi2s/" + hist_name + "_tight_temp_chi2.root"))
+                tight_chi2_hist = tight_chi2_files[file_counter_chi2].Get(hist_name+"_tight_temp_chi2")
+                file_counter_chi2 += 1
+                chi2_val = round(tight_chi2_hist.GetBinContent(1), 4)
 
             # Input bern poly TF1 (to extract params)
             if not os.path.exists('tight_templates'):
@@ -158,8 +208,18 @@ for region in regions:  # loop through twoprong sideband regions
                 bern_poly = tight_poly_files[file_counter_poly].Get(hist_name+"_tight_poly") 
                 file_counter_poly += 1
 
-            # Combine bern_deg with bern_poly.GetParameter() to recreate the Bernstein polynomial for drawing
+            if bern_deg == 0: just_poly = ROOT.TF1("bern_polynomial", bern_deg0, 0, 25, 1)
+            if bern_deg == 1: just_poly = ROOT.TF1("bern_polynomial", bern_deg1, 0, 25, 2)
+            if bern_deg == 2: just_poly = ROOT.TF1("bern_polynomial", bern_deg2, 0, 25, 3)
+            if bern_deg == 3: just_poly = ROOT.TF1("bern_polynomial", bern_deg3, 0, 25, 4)
+            if bern_deg == 4: just_poly = ROOT.TF1("bern_polynomial", bern_deg4, 0, 25, 5)
+            if bern_deg == 5: just_poly = ROOT.TF1("bern_polynomial", bern_deg5, 0, 25, 6)
+            if bern_deg == 6: just_poly = ROOT.TF1("bern_polynomial", bern_deg6, 0, 25, 7)
+            if bern_deg == 7: just_poly = ROOT.TF1("bern_polynomial", bern_deg7, 0, 25, 8)
             
+            # Set bernstein poly params
+            for j in range(bern_deg+1): just_poly.SetParameter(j, bern_poly.GetParameter(j))
+
             fitted_func = util.HistogramToFunction(loose_fit_as_hist)
             fitted_func_times_constant, _, _ = util.MultiplyWithPolyToTF1(fitted_func, 0, poly=0)
             #fit_result = h_egamma_tight.Fit(fitted_func_times_constant, '0L')
@@ -238,18 +298,19 @@ for region in regions:  # loop through twoprong sideband regions
             legend1.AddEntry(loose_fit_as_hist, "Landau + Exponential Fit", "l")
             legend1.SetTextSize(0.03)
 
-            legend2 = ROOT.TLegend(0.58, 0.77, 0.93, 0.87)
+            legend2 = ROOT.TLegend(0.53, 0.72, 0.88, 0.87)
             if not region == "iso_sym":
                 legend2.AddEntry(h_egamma_tight, "Full Selection", "l")
                 legend2.AddEntry(tight_fit_as_hist, 'Bernstein, Degree ' + str(int(bern_deg)), 'l')
-                legend2.SetTextSize(0.024)
+                legend2.AddEntry('', 'Chi2/Ndof: ' + str(chi2_val), '')
+                legend2.SetTextSize(0.03)
            
             # Create Title 
             title1 = "p_{T} " + str(bins[i])
             if i == len(bins)-1: title1 += "+ GeV" 
             else: title1 += "-" + str(bins[i+1]) + " GeV"
-            if eta_reg == "barrel": eta1 = "Barrel"
-            else: eta1 = "Endcap"
+            if eta_reg == "barrel": eta1 = "Barrel TP"
+            else: eta1 = "Endcap TP"
            
             title2 = "TP Control Region: "
             if region == "iso_sym": title2 += "Isolated Symmetric"
@@ -345,6 +406,26 @@ for region in regions:  # loop through twoprong sideband regions
                 l2_tight.SetTextSize(0.04)
                 l2_tight.SetTextFont(42)
                 l2_tight.Draw("same")
+                overlay = ROOT.TPad("overlay","",0, 0.06, 1, 0.5)
+                overlay.SetFillStyle(4000)
+                overlay.SetFillColor(0)
+                overlay.SetFrameFillStyle(4000)
+                overlay.SetFrameLineWidth(0)
+                overlay.Draw()
+                overlay.cd()
+                empty = ROOT.TH1F(util.getname('empty'), '', 100, 0, 50)
+                empty.SetLineColor(ROOT.kRed)
+                empty.GetXaxis().SetRangeUser(0, findMaxXVal(loose_fit_as_hist)*3/5)
+                empty.GetYaxis().SetRangeUser(min(0, just_poly.GetMinimum()), just_poly.GetMaximum())
+                empty.Draw('AH')
+                just_poly.SetRange(0, 50)
+                just_poly.SetTitle("")
+                just_poly.Draw("AI L same")
+                ROOT.gPad.Update()
+                rightaxis = ROOT.TGaxis(ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUymax(), 510, "L+")
+                rightaxis.SetLineColor(ROOT.kRed);
+                rightaxis.SetLabelColor(ROOT.kRed);
+                rightaxis.Draw()
                 ROOT.gPad.Update()
             
             # BOTTOM-LEFT PANEL
@@ -422,6 +503,7 @@ for region in regions:  # loop through twoprong sideband regions
             scaled_tight_files[file_counter_tight-1].Close()
             tight_temp_files[file_counter_temp-1].Close()
             tight_deg_files[file_counter_deg-1].Close()
+            tight_chi2_files[file_counter_deg-1].Close()
 
 c1.Print(args.name + ".pdf]")
 
