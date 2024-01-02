@@ -226,7 +226,7 @@ for item in plots:
                 ROOT.gPad.Update()
                 c1.Print(args.name + ".pdf")    
     elif item == "pi0_bins":  # binned plots (PRIMARILY USED)
-        if args.ratio: ROOT.TPad.Divide(c1, 1, 2)
+        #if args.ratio: ROOT.TPad.Divide(c1, 1, 2)
         if args.testBin is not None: test_bin = binConverter(args.testBin)
         chi2_pvalues = []
         if args.createLooseFits:  # used to create the loose templates
