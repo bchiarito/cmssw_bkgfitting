@@ -131,20 +131,25 @@ for region in regions:  # loop through twoprong sideband regions
 
             if i == len(bins) - 1: egamma_loose_plots += "_" + str(bins[i]) + "+"
             else: egamma_loose_plots += "_" + str(bins[i]) + "_" + str(bins[i+1])
+            if i == len(bins) - 1: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "+"
+            else: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) 
 
             # Reference name of the histogram created in the backend 
             egamma_loose_plots += "_loose"
 
             # Get the histograms from the input file
+            h_egamma_tight = infile1.Get("plots/twoprong_masspi0_"+hist_name+"_tight")
+            h_egamma_tight.SetLineColor(ROOT.kBlack)
+            h_egamma_tight.SetStats(0)
+            h_egamma_tight.SetTitle("")
+            h_egamma_tight.GetXaxis().SetTitle("")
+            h_egamma_tight.GetYaxis().SetTitle("")
             h_egamma_loose = infile1.Get(egamma_loose_plots)
             h_egamma_loose.SetBinErrorOption(ROOT.TH1.kPoisson)
             h_egamma_loose.SetLineColor(ROOT.kBlack)
             h_egamma_loose.SetTitle("")
             h_egamma_loose.GetXaxis().SetTitle("")
             h_egamma_loose.GetYaxis().SetTitle("")
-
-            if i == len(bins) - 1: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "+"
-            else: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) 
            
             # Input loose templates
             if not os.path.exists('loose_fit_hists'): 
@@ -160,7 +165,8 @@ for region in regions:  # loop through twoprong sideband regions
 
             # Input scaled tight data
             if not os.path.exists('scaled_tight_hists'):
-                print("ERROR: Must create directory for scaled data titled scaled_tight_hists")
+                #print("ERROR: Must create directory for scaled data titled scaled_tight_hists")
+                pass
             else:
                 scaled_tight_files.append(ROOT.TFile("scaled_tight_hists/" + hist_name + "_tight.root"))
                 h_egamma_tight = scaled_tight_files[file_counter_tight].Get(hist_name+"_tight")
@@ -195,8 +201,8 @@ for region in regions:  # loop through twoprong sideband regions
             if not os.path.exists('tight_templates'):
                 print("ERROR: Must create directory for scaled data Bernstein degrees as follows: tight_templates/degrees")
             else:
-                tight_chi2_files.append(ROOT.TFile("tight_templates/chi2s/" + hist_name + "_tight_temp_chi2.root"))
-                tight_chi2_hist = tight_chi2_files[file_counter_chi2].Get(hist_name+"_tight_temp_chi2")
+                tight_chi2_files.append(ROOT.TFile("tight_templates/chi2s/" + hist_name + "_tight_poly_chi2.root"))
+                tight_chi2_hist = tight_chi2_files[file_counter_chi2].Get(hist_name+"_tight_poly_chi2")
                 file_counter_chi2 += 1
                 chi2_val = round(tight_chi2_hist.GetBinContent(1), 4)
 
@@ -497,10 +503,10 @@ for region in regions:  # loop through twoprong sideband regions
                 line4.SetLineColorAlpha(ROOT.kBlack, 0.5)
                 line4.Draw("same")
             ROOT.gPad.Update()
-            if args.testBin is not None: input()
+            #if args.testBin is not None: input()
             c1.Print(args.name + ".pdf")
             loose_fit_files[file_counter_loose-1].Close()
-            scaled_tight_files[file_counter_tight-1].Close()
+            #scaled_tight_files[file_counter_tight-1].Close()
             tight_temp_files[file_counter_temp-1].Close()
             tight_deg_files[file_counter_deg-1].Close()
             tight_chi2_files[file_counter_deg-1].Close()
