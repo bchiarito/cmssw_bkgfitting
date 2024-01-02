@@ -72,10 +72,10 @@ parser.add_argument("--name", default="plots", help="create name for plots pdf")
 parser.add_argument("--ftest", default=None, help="format: '<CHEB_TYPE> <MAXDEGREE>', default is no f-test")
 parser.add_argument("--integral", default=False, action="store_true", help="add I to tight fit")
 parser.add_argument("--printFtest", "--printftest", default=False, action="store_true", help="for a fixed test bin, create a pdf of all possible ftest fits")
-parser.add_argument("--scaleToSignal", "--scale", default=False, action="store_true", help="scale control region tight photon hist (with more statistics) to signal region integral")
+parser.add_argument("--useScaledTight", default=False, action="store_true", help="")
 parser.add_argument("--createLooseFits", default=False, action="store_true", help="create loose fits initially and save to file")
 parser.add_argument("--checkPull", default=False, action="store_true", help="print on legend if there are four consecutive pull bins greater than 1.5 sigma")
-parser.add_argument("--saveScaledTightHists", default=False, action="store_true", help="save scaled-to-signal tight hists in a separate directory")
+#parser.add_argument("--saveScaledTightHists", default=False, action="store_true", help="save scaled-to-signal tight hists in a separate directory")
 parser.add_argument("--specifyFtestDegree", "--fdeg", default=None, help="specify which degree ftest should pick for visualization purposes")
 parser.add_argument("--saveTightTemplates", default=False, action="store_true", help="save tight templates from ftest") 
 parser.add_argument("--savePoly", default=False, action="store_true", help="save bernstein polynomials from ftest") 
@@ -232,9 +232,11 @@ for item in plots:
         if args.createLooseFits:  # used to create the loose templates
             if not os.path.exists('loose_fit_hists'): os.mkdir("loose_fit_hists")
             os.chdir("loose_fit_hists")
+        """
         if args.saveScaledTightHists:  # used to save the tight data, which has been scaled to the signal
             if not os.path.exists('scaled_tight_hists'): os.mkdir("scaled_tight_hists")
             os.chdir("scaled_tight_hists")
+        """
         if args.saveTightTemplates:  # used to save the tight fit templates (poly*template), poly degrees, and chi2/ndf values
             if not os.path.exists('tight_templates'): os.mkdir("tight_templates")
             os.chdir('tight_templates')
@@ -258,13 +260,18 @@ for item in plots:
                 break
             if args.testBin is not None: 
                 if not region == test_bin[0]: continue
+            print("at begin region loop:", region)
             for i in range(len(bins)):  # loop through pt bins for a fixed twoprong sideband
                 if args.testBin is not None: 
                     if not bins[i] == int(test_bin[2]): continue
+                print("  at begin bin loop:", region, bins[i])
                 for eta_reg in eta_regions:  # loop through eta regions for fixed pt-bin and fixed twoprong sideband
                     if args.testBin is not None: 
                         if not eta_reg == test_bin[1]: continue
                     if not eta_reg == "barrel" and not eta_reg == "endcap": continue  # no pt-bin plots for barrel and endcap combined, so skip this case
+                    
+                    print("    at begin eta loop:", region, bins[i], eta_reg)
+
 
                     # Generate correct plots names to access from summed histogram files
                     egamma_tight_plots = "plots/twoprong_masspi0_" + region + "_" + eta_reg
@@ -294,13 +301,15 @@ for item in plots:
                     h_egamma_loose.SetLineColor(ROOT.kBlack)
                     
                     # scale the control-region tight photon distribution to the corresponding tight signal distribution
+                    """                    
                     if args.scaleToSignal and not region == "iso_sym":
                         sig_tight_plot = egamma_tight_plots.replace(region, "iso_sym")
                         h_sig_tight = infile1.Get(sig_tight_plot)
                         removeEntries(h_egamma_tight, h_sig_tight)
-                    
+                    """
+
                     # Save the scaled tight data to be inputted into a separate plotting script
-                    # If this option is supplied, fitting won't be done; rather, these scaled tight hists need to be provided as input in subsequent runs using --scaleToSignal
+                    """
                     if args.saveScaledTightHists:
                         # Save the loose fits in a separate file
                         if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight"
@@ -314,19 +323,19 @@ for item in plots:
                         tight_hist.Write()
                         outfile.Close()
                         continue 
-                
+                    """
+
                     if i == len(bins) - 1: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "+"
                     else: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) 
                     
-                    # Use the scaled tight data generated using --saveScaledTightHists in a previous run
-                    if args.scaleToSignal:
+                    # scaled tight data
+                    if args.useScaledTight:
                         scaled_tight_files.append(ROOT.TFile("scaled_tight_hists/" + hist_name + "_tight.root"))
                         h_scaled_tight = scaled_tight_files[file_counter_tight].Get(hist_name+"_tight")
                         h_egamma_tight.Reset()
                         for b in range(h_scaled_tight.GetNbinsX()): 
                             h_egamma_tight.SetBinContent(b+1,h_scaled_tight.GetBinContent(b+1))
                         file_counter_tight += 1
-                    
 
                     # FITTING
                     if i == 0 and eta_reg == "barrel": print("====================== " + region.upper() + " =====================")
@@ -745,346 +754,351 @@ for item in plots:
                         tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
                         tight_stat = statboxes[best_d]
                 
-                # Save the tight templates to be plotted separately
-                if args.saveTightTemplates:
-                    os.chdir("tight_templates/templates/")
-                    # Save the loose fits in a separate file
-                    if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight_temp"
-                    else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_tight_temp" 
-                    outfile1 = ROOT.TFile(title + ".root", "RECREATE")
-                    outfile1.cd()
-                    tight_fit_hist = ROOT.TH1F(title, title, 1000, 0, 50) 
-                    for b in range(tight_fit_as_hist.GetNbinsX()): tight_fit_hist.SetBinContent(b+1,tight_fit_as_hist.GetBinContent(b+1))
-                    tight_fit_hist.SetName(title)
-                    tight_fit_hist.Write()
-                    outfile1.Close()
-                    os.chdir("../degrees/")
-                    outfile2 = ROOT.TFile(title+"_deg.root", "RECREATE")
-                    outfile2.cd()
-                    tight_fit_deg = ROOT.TH1F(title+"_deg", title+"_deg", 10, 0, 10)
-                    for b in range(tight_fit_deg.GetNbinsX()): tight_fit_deg.SetBinContent(b+1,best_d)
-                    tight_fit_deg.SetName(title+"_deg")
-                    tight_fit_deg.Write()
-                    outfile2.Close()
-                    os.chdir("../../")
-
-                if i == len(bins) - 1: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "+"
-                else: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) 
-                
-                # Used for plotting purposes
-                if args.scaleToSignal:
-                    scaled_tight_files.append(ROOT.TFile("scaled_tight_hists/" + hist_name + "_tight.root"))
-                    h_scaled_tight = scaled_tight_files[file_counter_tight].Get(hist_name+"_tight")
-                    h_egamma_tight.Reset()
-                    for b in range(h_scaled_tight.GetNbinsX()): 
-                        h_egamma_tight.SetBinContent(b+1,h_scaled_tight.GetBinContent(b+1))
-                    file_counter_tight += 1
-                
-                # The plotting done here are for rough visualization purposes
-                # For finalized plots, a separate plotting script should be used
-                for plot in range(NUM_PLOTS):
-                    if args.printFtest and args.testBin:
-                        func_with_poly = fitfuncs[plot]
-                        tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
-                        tight_stat = statboxes[plot]
-
-                    just_poly = util.ExtractPolyFromTightFit(func_with_poly, poly=POLY_TYPE)
-                    tlast_bin = h_egamma_tight.GetNbinsX() + 1
-                    for b in reversed(range(h_egamma_tight.GetNbinsX())):
-                      if h_egamma_tight.GetBinContent(b+1)==0: continue
-                      else:
-                        tlast_bin = b + 1
-                        break
-                    rightmost_tightdata = h_egamma_loose.GetBinLowEdge(tlast_bin+1)
-                    just_poly.SetRange(0,rightmost_tightdata)
-
-                    if args.savePoly:
-                        os.chdir("tight_templates/polys/")
+                    # Save the tight templates to be plotted separately
+                    if args.saveTightTemplates:
+                        os.chdir("tight_templates/templates/")
                         # Save the loose fits in a separate file
-                        if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight_poly"
-                        else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_tight_poly" 
+                        if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight_temp"
+                        else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_tight_temp" 
                         outfile1 = ROOT.TFile(title + ".root", "RECREATE")
                         outfile1.cd()
-                        bern_poly = just_poly.Clone()
-                        bern_poly.SetName(title)
-                        bern_poly.Write()
+                        tight_fit_hist = ROOT.TH1F(title, title, 1000, 0, 50) 
+                        for b in range(tight_fit_as_hist.GetNbinsX()): tight_fit_hist.SetBinContent(b+1,tight_fit_as_hist.GetBinContent(b+1))
+                        tight_fit_hist.SetName(title)
+                        tight_fit_hist.Write()
                         outfile1.Close()
-                        os.chdir("../")
-                
-                    # determine bin-by-bin error
-                    STEP_SIZE = 0.005
-                    integral = False
-                    hist = h_egamma_tight
-                    fit = func_with_poly
-                    #ndof = util.count_nonzero_bins(hist) - fit.GetNpar()
-                    ndof = tlast_bin - fit.GetNpar()
-                    chi2, by_bin = util.RSS(fit, hist, error=0, integral=integral, chi2=True)
-                    chi2_ndof = chi2 / ndof
-                    error = 0.00
-                    #print('initial')
-                    #print('chi2', chi2, 'ndof', ndof, 'chi2_ndof', chi2_ndof)
-                    while chi2_ndof > 1.0:
-                        error += STEP_SIZE
-                        #print('trying', error)
-                        chi2, _ = util.RSS(fit, hist, error=error, integral=integral, chi2=True)
-                        chi2_ndof = chi2 / ndof
-                        #print('  ', 'chi2', chi2, 'chi2/ndof', chi2_ndof)
-                    bin_bin_error = error
-
-                    chi2_mod, mod_bins = util.RSS(fit, hist, error=0, integral=integral, chi2=True, cutoff=5)
-                    num_bins = len(mod_bins)
-                    if not num_bins == 0:
-                        chi2_mod_ndof = chi2_mod / (num_bins-fit.GetNpar())
-                        chi2_pvalues.append(scipy.stats.chi2.sf(chi2_mod, num_bins-fit.GetNpar()))
-                    else:
-                        chi2_mod_ndof = chi2_mod
-                        chi2_pvalues.append(-1)
-                    #print(chi2_mod, len(num_bins), chi2_mod_ndof)
-                    
-                    if args.saveTightTemplates:
-                        os.chdir("tight_templates/chi2s/")
-                        outfile3 = ROOT.TFile(title+"_chi2.root", "RECREATE")
-                        outfile3.cd()
-                        tight_fit_chi2 = ROOT.TH1D(title+"_chi2", title+"_chi2", 1000, 0, 100)
-                        for b in range(tight_fit_chi2.GetNbinsX()): tight_fit_chi2.SetBinContent(b+1, chi2_mod_ndof)
-                        tight_fit_chi2.SetName(title+"_chi2")
-                        tight_fit_chi2.Write()
+                        os.chdir("../degrees/")
+                        outfile2 = ROOT.TFile(title+"_deg.root", "RECREATE")
+                        outfile2.cd()
+                        tight_fit_deg = ROOT.TH1F(title+"_deg", title+"_deg", 10, 0, 10)
+                        for b in range(tight_fit_deg.GetNbinsX()): tight_fit_deg.SetBinContent(b+1,best_d)
+                        tight_fit_deg.SetName(title+"_deg")
+                        tight_fit_deg.Write()
                         outfile2.Close()
                         os.chdir("../../")
 
-                    h_loose_pull_num = h_egamma_loose.Clone()
-                    h_loose_pull_num.Reset()
-                    h_loose_pull = h_egamma_loose.Clone()
-                    h_loose_pull.Reset()
-                    h_loose_pull_num.Add(h_egamma_loose, loose_fit_as_hist, 1, -1)  # Numerator of pull hist is data - fit
-
-                    for j in range(h_loose_pull_num.GetNbinsX()): 
-                        if h_egamma_loose.GetBinContent(j+1) == 0: err = 1.8
-                        else: err = h_egamma_loose.GetBinError(j+1)
-                        h_loose_pull.SetBinContent(j+1, h_loose_pull_num.GetBinContent(j+1)/err)
-                        h_loose_pull.SetBinError(j+1, 1)
+                    if i == len(bins) - 1: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "+"
+                    else: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) 
                     
-                    h_tight_pull_num = h_egamma_tight.Clone()
-                    h_tight_pull_num.Reset()
-                    h_tight_pull = h_egamma_tight.Clone()
-                    h_tight_pull.Reset()
-                    h_tight_pull_num.Add(h_egamma_tight, tight_fit_as_hist, 1, -1)  # Numerator of pull hist is data - fit
+                    # Used for plotting purposes
+                    """
+                    if args.scaleToSignal:
+                        scaled_tight_files.append(ROOT.TFile("scaled_tight_hists/" + hist_name + "_tight.root"))
+                        h_scaled_tight = scaled_tight_files[file_counter_tight].Get(hist_name+"_tight")
+                        h_egamma_tight.Reset()
+                        for b in range(h_scaled_tight.GetNbinsX()): 
+                            h_egamma_tight.SetBinContent(b+1,h_scaled_tight.GetBinContent(b+1))
+                        file_counter_tight += 1
+                    """
                     
-                    h_tight_pull_error = h_tight_pull.Clone() # to visualize binbin error
-                    h_tight_pull_error.Reset()
+                    # The plotting done here are for rough visualization purposes
+                    # For finalized plots, a separate plotting script should be used
+                    print("    right before plot:", region, bins[i], eta_reg)
+                    for plot in range(NUM_PLOTS):
+                        if args.printFtest and args.testBin:
+                            func_with_poly = fitfuncs[plot]
+                            tight_fit_as_hist = util.TemplateToHistogram(func_with_poly, 1000, 0, 50)
+                            tight_stat = statboxes[plot]
 
-                    for j in range(h_tight_pull_num.GetNbinsX()): 
-                        if h_egamma_tight.GetBinContent(j+1) == 0:
-                            err = h_egamma_tight.GetBinErrorUp(j+1)
-                        else: 
-                            if tight_fit_as_hist.GetBinContent(j+1) > h_egamma_tight.GetBinContent(j+1):
+                        just_poly = util.ExtractPolyFromTightFit(func_with_poly, poly=POLY_TYPE)
+                        tlast_bin = h_egamma_tight.GetNbinsX() + 1
+                        for b in reversed(range(h_egamma_tight.GetNbinsX())):
+                          if h_egamma_tight.GetBinContent(b+1)==0: continue
+                          else:
+                            tlast_bin = b + 1
+                            break
+                        rightmost_tightdata = h_egamma_loose.GetBinLowEdge(tlast_bin+1)
+                        just_poly.SetRange(0,rightmost_tightdata)
+
+                        if args.savePoly:
+                            os.chdir("tight_templates/polys/")
+                            # Save the loose fits in a separate file
+                            if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight_poly"
+                            else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_tight_poly" 
+                            outfile1 = ROOT.TFile(title + ".root", "RECREATE")
+                            outfile1.cd()
+                            bern_poly = just_poly.Clone()
+                            bern_poly.SetName(title)
+                            bern_poly.Write()
+                            outfile1.Close()
+                            os.chdir("../")
+                    
+                        # determine bin-by-bin error
+                        STEP_SIZE = 0.005
+                        integral = False
+                        hist = h_egamma_tight
+                        fit = func_with_poly
+                        #ndof = util.count_nonzero_bins(hist) - fit.GetNpar()
+                        ndof = tlast_bin - fit.GetNpar()
+                        chi2, by_bin = util.RSS(fit, hist, error=0, integral=integral, chi2=True)
+                        chi2_ndof = chi2 / ndof
+                        error = 0.00
+                        #print('initial')
+                        #print('chi2', chi2, 'ndof', ndof, 'chi2_ndof', chi2_ndof)
+                        while chi2_ndof > 1.0:
+                            error += STEP_SIZE
+                            #print('trying', error)
+                            chi2, _ = util.RSS(fit, hist, error=error, integral=integral, chi2=True)
+                            chi2_ndof = chi2 / ndof
+                            #print('  ', 'chi2', chi2, 'chi2/ndof', chi2_ndof)
+                        bin_bin_error = error
+
+                        chi2_mod, mod_bins = util.RSS(fit, hist, error=0, integral=integral, chi2=True, cutoff=5)
+                        num_bins = len(mod_bins)
+                        if not num_bins == 0:
+                            chi2_mod_ndof = chi2_mod / (num_bins-fit.GetNpar())
+                            chi2_pvalues.append(scipy.stats.chi2.sf(chi2_mod, num_bins-fit.GetNpar()))
+                        else:
+                            chi2_mod_ndof = chi2_mod
+                            chi2_pvalues.append(-1)
+                        #print(chi2_mod, len(num_bins), chi2_mod_ndof)
+                        
+                        if args.saveTightTemplates:
+                            os.chdir("tight_templates/chi2s/")
+                            outfile3 = ROOT.TFile(title+"_chi2.root", "RECREATE")
+                            outfile3.cd()
+                            tight_fit_chi2 = ROOT.TH1D(title+"_chi2", title+"_chi2", 1000, 0, 100)
+                            for b in range(tight_fit_chi2.GetNbinsX()): tight_fit_chi2.SetBinContent(b+1, chi2_mod_ndof)
+                            tight_fit_chi2.SetName(title+"_chi2")
+                            tight_fit_chi2.Write()
+                            outfile2.Close()
+                            os.chdir("../../")
+
+                        h_loose_pull_num = h_egamma_loose.Clone()
+                        h_loose_pull_num.Reset()
+                        h_loose_pull = h_egamma_loose.Clone()
+                        h_loose_pull.Reset()
+                        h_loose_pull_num.Add(h_egamma_loose, loose_fit_as_hist, 1, -1)  # Numerator of pull hist is data - fit
+
+                        for j in range(h_loose_pull_num.GetNbinsX()): 
+                            if h_egamma_loose.GetBinContent(j+1) == 0: err = 1.8
+                            else: err = h_egamma_loose.GetBinError(j+1)
+                            h_loose_pull.SetBinContent(j+1, h_loose_pull_num.GetBinContent(j+1)/err)
+                            h_loose_pull.SetBinError(j+1, 1)
+                        
+                        h_tight_pull_num = h_egamma_tight.Clone()
+                        h_tight_pull_num.Reset()
+                        h_tight_pull = h_egamma_tight.Clone()
+                        h_tight_pull.Reset()
+                        h_tight_pull_num.Add(h_egamma_tight, tight_fit_as_hist, 1, -1)  # Numerator of pull hist is data - fit
+                        
+                        h_tight_pull_error = h_tight_pull.Clone() # to visualize binbin error
+                        h_tight_pull_error.Reset()
+
+                        for j in range(h_tight_pull_num.GetNbinsX()): 
+                            if h_egamma_tight.GetBinContent(j+1) == 0:
                                 err = h_egamma_tight.GetBinErrorUp(j+1)
-                            else:
-                                err = h_egamma_tight.GetBinErrorLow(j+1)
-                        h_tight_pull.SetBinContent(j+1, h_tight_pull_num.GetBinContent(j+1)/err)
-                        h_tight_pull.SetBinError(j+1, 1)
-                        h_tight_pull_error.SetBinContent(j+1, 0)
-                        h_tight_pull_error.SetBinError(j+1, (tight_fit_as_hist.GetBinContent(j+1)*bin_bin_error)/err)
+                            else: 
+                                if tight_fit_as_hist.GetBinContent(j+1) > h_egamma_tight.GetBinContent(j+1):
+                                    err = h_egamma_tight.GetBinErrorUp(j+1)
+                                else:
+                                    err = h_egamma_tight.GetBinErrorLow(j+1)
+                            h_tight_pull.SetBinContent(j+1, h_tight_pull_num.GetBinContent(j+1)/err)
+                            h_tight_pull.SetBinError(j+1, 1)
+                            h_tight_pull_error.SetBinContent(j+1, 0)
+                            h_tight_pull_error.SetBinError(j+1, (tight_fit_as_hist.GetBinContent(j+1)*bin_bin_error)/err)
 
-                    # pull for tight fit with constant
-                    h_tight_pullc = h_egamma_tight.Clone()
-                    h_tight_pullc.Reset()
-                    h_tight_pullc_num = h_egamma_tight.Clone()
-                    h_tight_pullc_num.Reset()
-                    h_tight_pullc_num.Add(h_egamma_tight, tight_fit_w_constant, 1, -1)  # Numerator of pull hist is data - fit
-                    for j in range(h_tight_pullc_num.GetNbinsX()): 
-                        if h_egamma_tight.GetBinContent(j+1) == 0:
-                            err = h_egamma_tight.GetBinErrorUp(j+1)
-                        else: 
-                            if tight_fit_w_constant.GetBinContent(j+1) > h_egamma_tight.GetBinContent(j+1):
+                        # pull for tight fit with constant
+                        h_tight_pullc = h_egamma_tight.Clone()
+                        h_tight_pullc.Reset()
+                        h_tight_pullc_num = h_egamma_tight.Clone()
+                        h_tight_pullc_num.Reset()
+                        h_tight_pullc_num.Add(h_egamma_tight, tight_fit_w_constant, 1, -1)  # Numerator of pull hist is data - fit
+                        for j in range(h_tight_pullc_num.GetNbinsX()): 
+                            if h_egamma_tight.GetBinContent(j+1) == 0:
                                 err = h_egamma_tight.GetBinErrorUp(j+1)
-                            else:
-                                err = h_egamma_tight.GetBinErrorLow(j+1)
-                        h_tight_pullc.SetBinContent(j+1, h_tight_pullc_num.GetBinContent(j+1)/err)
-                        h_tight_pullc.SetBinError(j+1, 0) # no error bar
-                    
-                    # Create title for plot 
-                    title = region + " Twoprong"
-                    if eta_reg == "barrel": title += ", Barrel"
-                    elif eta_reg == "endcap": title += ", Endcap"
-                    if i == len(bins) - 1: title += ", pt > " + str(bins[i])
-                    else: title += ", " + str(bins[i]) + " < pt < " + str(bins[i+1]) 
-                    if not old_method:
-                        if nLandau == 1: title += ", 1 land"
-                        elif nLandau == 2: title += ", 2 land"
-                        if nExp == 1: title += ", 1 exp"
-                        elif nExp == 2: title += ", 2 exp"
-                        elif nExp == 3: title += ", 3 exp"
-                        elif nExp == 4: title += ", 4 exp"
-                    if old_method:
-                        title += ", full fit (" + str(nLandau) + " land " + str(nExp) + " exp)"
+                            else: 
+                                if tight_fit_w_constant.GetBinContent(j+1) > h_egamma_tight.GetBinContent(j+1):
+                                    err = h_egamma_tight.GetBinErrorUp(j+1)
+                                else:
+                                    err = h_egamma_tight.GetBinErrorLow(j+1)
+                            h_tight_pullc.SetBinContent(j+1, h_tight_pullc_num.GetBinContent(j+1)/err)
+                            h_tight_pullc.SetBinError(j+1, 0) # no error bar
+                        
+                        # Create title for plot 
+                        title = region + " Twoprong"
+                        if eta_reg == "barrel": title += ", Barrel"
+                        elif eta_reg == "endcap": title += ", Endcap"
+                        if i == len(bins) - 1: title += ", pt > " + str(bins[i])
+                        else: title += ", " + str(bins[i]) + " < pt < " + str(bins[i+1]) 
+                        if not old_method:
+                            if nLandau == 1: title += ", 1 land"
+                            elif nLandau == 2: title += ", 2 land"
+                            if nExp == 1: title += ", 1 exp"
+                            elif nExp == 2: title += ", 2 exp"
+                            elif nExp == 3: title += ", 3 exp"
+                            elif nExp == 4: title += ", 4 exp"
+                        if old_method:
+                            title += ", full fit (" + str(nLandau) + " land " + str(nExp) + " exp)"
 
-                    # Legend creation
-                    #if old_method: 
-                    legend1 = ROOT.TLegend(0.35, 0.78, 0.65, 0.9)
-                    #else: legend1 = ROOT.TLegend(0.62, 0.27, 0.9, 0.37)
-                    legend1.AddEntry(h_egamma_loose, "Loose Photon, " + str(round(h_egamma_loose.GetEntries())), "l")
-                    if region == "iso_sym": legend1.AddEntry(h_egamma_tight, "Tight Photon, " + str(round(h_egamma_tight.GetEntries())), "l")
-                    #if not args.ratio: legend1.AddEntry(0, "Chi2/NDF: " + str(chi2 / ndf), "")
-                    legend2 = ROOT.TLegend(0.29, 0.70, 0.62, 0.89)
-                    legend2.AddEntry(h_egamma_tight, "Tight Photon, " + str(h_egamma_tight.GetEntries()), "l")
-                    if POLY_TYPE == 0: legend2.AddEntry('', 'Polynomial', '')
-                    if POLY_TYPE == 1: legend2.AddEntry('', 'Chebyshev 1st kind', '')
-                    if POLY_TYPE == 2: legend2.AddEntry('', 'Chebyshev 2nd kind', '')
-                    if POLY_TYPE == 3: legend2.AddEntry('', 'Bernstein', '')
-                    func_n_par = func_with_poly.GetNpar()
-                    if POLY_TYPE == 3 and func_n_par == 1: fit_degree = 0
-                    elif POLY_TYPE == 3 and func_n_par > 1: fit_degree = func_n_par - 1
-                    elif POLY_TYPE < 3: fit_degree = func_n_par - 1
-                    if FTEST: legend2.AddEntry(tight_fit_as_hist, "Fit w f-test (Degree "+str(fit_degree)+")", "l")
-                    else: legend2.AddEntry(tight_fit_as_hist, "Fit (Degree "+str(fit_degree)+")", "l")
-                    legend2.AddEntry(tight_fit_w_constant, "Constant fit p0 = {:.4}".format(fitted_func_times_constant.GetParameter(0)), "l")
-                    legend2.AddEntry('', 'Chi2/Ndof: {:.3f}'.format(chi2_ndof), '')
-                    legend2.AddEntry('', 'Chi2_mod/Ndof: {:.3f}'.format(chi2_mod_ndof), '')
-                    legend2.AddEntry('', 'Bin Error: {:.1%}'.format(bin_bin_error), '')
-                    if args.scaleToSignal and not region == "iso_sym": 
-                        legend2.AddEntry('', 'Signal Integral: ' + str(h_sig_tight.Integral()), '')
-                        legend2.AddEntry('', 'Scaled Bkg Integral: ' + str(int(h_egamma_tight.Integral())), '')
-                    if args.checkPull:
-                        legend2.AddEntry('', '3 Consecutive Bins > 2 sigma: ' + str(checkPullHist(h_tight_pull, 3, 2)), '')
-                        legend2.AddEntry('', '4 Consecutive Bins > 1.5 sigma: ' + str(checkPullHist(h_tight_pull, 4, 1.5)), '')
-                        legend2.AddEntry('', '5 Consecutive Bins > 1 sigma: ' + str(checkPullHist(h_tight_pull, 5, 1)), '')
+                        # Legend creation
+                        #if old_method: 
+                        legend1 = ROOT.TLegend(0.35, 0.78, 0.65, 0.9)
+                        #else: legend1 = ROOT.TLegend(0.62, 0.27, 0.9, 0.37)
+                        legend1.AddEntry(h_egamma_loose, "Loose Photon, " + str(round(h_egamma_loose.GetEntries())), "l")
+                        if region == "iso_sym": legend1.AddEntry(h_egamma_tight, "Tight Photon, " + str(round(h_egamma_tight.GetEntries())), "l")
+                        #if not args.ratio: legend1.AddEntry(0, "Chi2/NDF: " + str(chi2 / ndf), "")
+                        legend2 = ROOT.TLegend(0.29, 0.70, 0.62, 0.89)
+                        legend2.AddEntry(h_egamma_tight, "Tight Photon, " + str(h_egamma_tight.GetEntries()), "l")
+                        if POLY_TYPE == 0: legend2.AddEntry('', 'Polynomial', '')
+                        if POLY_TYPE == 1: legend2.AddEntry('', 'Chebyshev 1st kind', '')
+                        if POLY_TYPE == 2: legend2.AddEntry('', 'Chebyshev 2nd kind', '')
+                        if POLY_TYPE == 3: legend2.AddEntry('', 'Bernstein', '')
+                        func_n_par = func_with_poly.GetNpar()
+                        if POLY_TYPE == 3 and func_n_par == 1: fit_degree = 0
+                        elif POLY_TYPE == 3 and func_n_par > 1: fit_degree = func_n_par - 1
+                        elif POLY_TYPE < 3: fit_degree = func_n_par - 1
+                        if FTEST: legend2.AddEntry(tight_fit_as_hist, "Fit w f-test (Degree "+str(fit_degree)+")", "l")
+                        else: legend2.AddEntry(tight_fit_as_hist, "Fit (Degree "+str(fit_degree)+")", "l")
+                        legend2.AddEntry(tight_fit_w_constant, "Constant fit p0 = {:.4}".format(fitted_func_times_constant.GetParameter(0)), "l")
+                        legend2.AddEntry('', 'Chi2/Ndof: {:.3f}'.format(chi2_ndof), '')
+                        legend2.AddEntry('', 'Chi2_mod/Ndof: {:.3f}'.format(chi2_mod_ndof), '')
+                        legend2.AddEntry('', 'Bin Error: {:.1%}'.format(bin_bin_error), '')
+                        """
+                        if args.scaleToSignal and not region == "iso_sym": 
+                            legend2.AddEntry('', 'Signal Integral: ' + str(h_sig_tight.Integral()), '')
+                            legend2.AddEntry('', 'Scaled Bkg Integral: ' + str(int(h_egamma_tight.Integral())), '')
+                        """
+                        if args.checkPull:
+                            legend2.AddEntry('', '3 Consecutive Bins > 2 sigma: ' + str(checkPullHist(h_tight_pull, 3, 2)), '')
+                            legend2.AddEntry('', '4 Consecutive Bins > 1.5 sigma: ' + str(checkPullHist(h_tight_pull, 4, 1.5)), '')
+                            legend2.AddEntry('', '5 Consecutive Bins > 1 sigma: ' + str(checkPullHist(h_tight_pull, 5, 1)), '')
 
 
-                    # Draw plots
-                    if args.fit: c1.cd(1)
-                    else:
-                      c1.cd()
-                      pad1 = ROOT.TPad('pad1', 'pad1', 0, 0.3, 0.5, 1)
-                      pad1.Draw()
-                      pad1.cd()
+                        # Draw plots
+                        if args.fit: c1.cd(1)
+                        else:
+                          c1.cd()
+                          pad1 = ROOT.TPad('pad1', 'pad1', 0, 0.3, 0.5, 1)
+                          pad1.Draw()
+                          pad1.cd()
 
-                    h_egamma_loose.SetTitle(title)
-                    h_egamma_loose.SetMaximum()
-                    h_egamma_loose.SetMinimum(0.1)
-                    h_egamma_loose.Draw("e")
-                    loose_fit_as_hist.SetLineColor(ROOT.kRed+1)
-                    loose_fit_as_hist.Draw("same")
-                    if not(left == 0 and right == 50):
-                        try:
-                            stats1.Draw()
-                            stats2.Draw()
-                        except NameError:
-                            pass
-                    ROOT.gPad.SetLogy()
-                    if bins[i] < 60: h_egamma_loose.GetXaxis().SetRangeUser(0, 5)
-                    elif bins[i] < 120: h_egamma_loose.GetXaxis().SetRangeUser(0, 10)
-                    elif bins[i] < 200: h_egamma_loose.GetXaxis().SetRangeUser(0, 15)
-                    elif bins[i] < 380: h_egamma_loose.GetXaxis().SetRangeUser(0, 20)
-                    else: h_egamma_loose.GetXaxis().SetRangeUser(0, 26)
-                    legend1.Draw("same")
-                    ROOT.gPad.Update()
+                        h_egamma_loose.SetTitle(title)
+                        h_egamma_loose.SetMaximum()
+                        h_egamma_loose.SetMinimum(0.1)
+                        h_egamma_loose.Draw("e")
+                        loose_fit_as_hist.SetLineColor(ROOT.kRed+1)
+                        loose_fit_as_hist.Draw("same")
+                        if not(left == 0 and right == 50):
+                            try:
+                                stats1.Draw()
+                                stats2.Draw()
+                            except NameError:
+                                pass
+                        ROOT.gPad.SetLogy()
+                        if bins[i] < 60: h_egamma_loose.GetXaxis().SetRangeUser(0, 5)
+                        elif bins[i] < 120: h_egamma_loose.GetXaxis().SetRangeUser(0, 10)
+                        elif bins[i] < 200: h_egamma_loose.GetXaxis().SetRangeUser(0, 15)
+                        elif bins[i] < 380: h_egamma_loose.GetXaxis().SetRangeUser(0, 20)
+                        else: h_egamma_loose.GetXaxis().SetRangeUser(0, 26)
+                        legend1.Draw("same")
+                        ROOT.gPad.Update()
 
-                    if not args.fit:
-                        if not region == "iso_sym":
+                        if not args.fit:
+                            if not region == "iso_sym":
+                                c1.cd()
+                                pad2 = ROOT.TPad('pad2', 'pad2', 0.5, 0.3, 1, 1)
+                                pad2.Draw()
+                                pad2.cd()
+                                ROOT.gPad.SetLogy()
+                                if bins[i] < 60: h_egamma_tight.GetXaxis().SetRangeUser(0, 5)
+                                elif bins[i] < 120: h_egamma_tight.GetXaxis().SetRangeUser(0, 10)
+                                elif bins[i] < 200: h_egamma_tight.GetXaxis().SetRangeUser(0, 15)
+                                elif bins[i] < 380: h_egamma_tight.GetXaxis().SetRangeUser(0, 20)
+                                else: h_egamma_tight.GetXaxis().SetRangeUser(0, 26)
+                                h_egamma_tight.SetMinimum(0.1)
+                                h_egamma_tight.Draw("e")
+                                if FTEST: tight_stat.Draw()
+                                tight_fit_w_constant.SetLineColor(ROOT.kBlue)
+                                tight_fit_as_hist.SetLineColor(ROOT.kRed)
+                                tight_fit_as_hist.SetLineWidth(1)
+                                #tight_fit_as_hist_errorbars = tight_fit_as_hist.Clone()
+                                #tight_fit_as_hist_errorbars.SetFillColor(ROOT.kRed+2)
+                                #tight_fit_as_hist_errorbars.Draw("same e2")
+                                tight_fit_as_hist.Draw("same hist")
+                                tight_fit_w_constant.Draw('same')
+                                h_egamma_tight.Draw("e same")
+                                h_egamma_tight.GetYaxis().SetRangeUser(0.1, h_egamma_tight.GetMaximum()+50)
+                                ROOT.gPad.Update()
+
+                                legend2.Draw("same")
+                                overlay = ROOT.TPad("overlay","",0, 0.06, 1, 0.5)
+                                overlay.SetFillStyle(4000)
+                                overlay.SetFillColor(0)
+                                overlay.SetFrameFillStyle(4000)
+                                overlay.SetFrameLineWidth(0)
+                                overlay.Draw()
+                                overlay.cd()
+                                empty = ROOT.TH1F(util.getname('empty'), '', 100, 0, 50)
+                                empty.SetLineColor(ROOT.kRed)
+                                if bins[i] < 60: empty.GetXaxis().SetRangeUser(0, 5)
+                                elif bins[i] < 120: empty.GetXaxis().SetRangeUser(0, 10)
+                                elif bins[i] < 200: empty.GetXaxis().SetRangeUser(0, 15)
+                                elif bins[i] < 380: empty.GetXaxis().SetRangeUser(0, 20)
+                                else: empty.GetXaxis().SetRangeUser(0, 26)
+                                empty.GetYaxis().SetRangeUser(min(0, just_poly.GetMinimum()), just_poly.GetMaximum())
+                                empty.Draw('AH')
+                                just_poly.SetRange(0, 50)
+                                just_poly.SetTitle("")
+                                just_poly.Draw("AI L same")
+                                ROOT.gPad.Update()
+                                rightaxis = ROOT.TGaxis(ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUymax(), 510, "L+")
+                                rightaxis.SetLineColor(ROOT.kRed);
+                                rightaxis.SetLabelColor(ROOT.kRed);
+                                rightaxis.Draw()
+                                ROOT.gPad.Update()
+                                #topaxis = ROOT.TGaxis(ROOT.gPad.GetUxmin(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUxmin(), ROOT.gPad.GetUxmax(), 510, "+L")
+                                #topaxis.SetLineColor(ROOT.kRed);
+                                #topaxis.SetLabelColor(ROOT.kRed);
+                                #topaxis.Draw()
+
                             c1.cd()
-                            pad2 = ROOT.TPad('pad2', 'pad2', 0.5, 0.3, 1, 1)
-                            pad2.Draw()
-                            pad2.cd()
-                            ROOT.gPad.SetLogy()
-                            if bins[i] < 60: h_egamma_tight.GetXaxis().SetRangeUser(0, 5)
-                            elif bins[i] < 120: h_egamma_tight.GetXaxis().SetRangeUser(0, 10)
-                            elif bins[i] < 200: h_egamma_tight.GetXaxis().SetRangeUser(0, 15)
-                            elif bins[i] < 380: h_egamma_tight.GetXaxis().SetRangeUser(0, 20)
-                            else: h_egamma_tight.GetXaxis().SetRangeUser(0, 26)
-                            h_egamma_tight.SetMinimum(0.1)
-                            h_egamma_tight.Draw("e")
-                            if FTEST: tight_stat.Draw()
-                            tight_fit_w_constant.SetLineColor(ROOT.kBlue)
-                            tight_fit_as_hist.SetLineColor(ROOT.kRed)
-                            tight_fit_as_hist.SetLineWidth(1)
-                            #tight_fit_as_hist_errorbars = tight_fit_as_hist.Clone()
-                            #tight_fit_as_hist_errorbars.SetFillColor(ROOT.kRed+2)
-                            #tight_fit_as_hist_errorbars.Draw("same e2")
-                            tight_fit_as_hist.Draw("same hist")
-                            tight_fit_w_constant.Draw('same')
-                            h_egamma_tight.Draw("e same")
-                            h_egamma_tight.GetYaxis().SetRangeUser(0.1, h_egamma_tight.GetMaximum()+50)
-                            ROOT.gPad.Update()
+                            pad3 = ROOT.TPad('pad3', 'pad3', 0, 0, 0.5, 0.3)
+                            pad3.Draw()
+                            pad3.cd()
+                            h_loose_pull.SetTitle("(Loose - Fit) / Error")
+                            h_loose_pull.SetLineColor(ROOT.kBlack)
+                            h_loose_pull.Draw('pe')
+                            h_loose_pull.SetMarkerStyle(8)
+                            h_loose_pull.SetMarkerSize(0.25)
+                            h_loose_pull.GetYaxis().SetRangeUser(-10, 10)
+                            h_loose_pull.SetStats(0)
+                            if bins[i] < 60: h_loose_pull.GetXaxis().SetRangeUser(0, 5)
+                            elif bins[i] < 120: h_loose_pull.GetXaxis().SetRangeUser(0, 10)
+                            elif bins[i] < 200: h_loose_pull.GetXaxis().SetRangeUser(0, 15)
+                            elif bins[i] < 380: h_loose_pull.GetXaxis().SetRangeUser(0, 20)
+                            else: h_loose_pull.GetXaxis().SetRangeUser(0, 26)
 
-                            legend2.Draw("same")
-                            overlay = ROOT.TPad("overlay","",0, 0.06, 1, 0.5)
-                            overlay.SetFillStyle(4000)
-                            overlay.SetFillColor(0)
-                            overlay.SetFrameFillStyle(4000)
-                            overlay.SetFrameLineWidth(0)
-                            overlay.Draw()
-                            overlay.cd()
-                            empty = ROOT.TH1F(util.getname('empty'), '', 100, 0, 50)
-                            empty.SetLineColor(ROOT.kRed)
-                            if bins[i] < 60: empty.GetXaxis().SetRangeUser(0, 5)
-                            elif bins[i] < 120: empty.GetXaxis().SetRangeUser(0, 10)
-                            elif bins[i] < 200: empty.GetXaxis().SetRangeUser(0, 15)
-                            elif bins[i] < 380: empty.GetXaxis().SetRangeUser(0, 20)
-                            else: empty.GetXaxis().SetRangeUser(0, 26)
-                            empty.GetYaxis().SetRangeUser(min(0, just_poly.GetMinimum()), just_poly.GetMaximum())
-                            empty.Draw('AH')
-                            just_poly.SetRange(0, 50)
-                            just_poly.SetTitle("")
-                            just_poly.Draw("AI L same")
-                            ROOT.gPad.Update()
-                            rightaxis = ROOT.TGaxis(ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUymin(), ROOT.gPad.GetUymax(), 510, "L+")
-                            rightaxis.SetLineColor(ROOT.kRed);
-                            rightaxis.SetLabelColor(ROOT.kRed);
-                            rightaxis.Draw()
-                            ROOT.gPad.Update()
-                            #topaxis = ROOT.TGaxis(ROOT.gPad.GetUxmin(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax(), ROOT.gPad.GetUxmin(), ROOT.gPad.GetUxmax(), 510, "+L")
-                            #topaxis.SetLineColor(ROOT.kRed);
-                            #topaxis.SetLabelColor(ROOT.kRed);
-                            #topaxis.Draw()
+                            if not region == "iso_sym":
+                                c1.cd()
+                                pad4 = ROOT.TPad('pad4', 'pad4', 0.5, 0, 1, 0.3)
+                                pad4.Draw()
+                                pad4.cd()
+                                h_tight_pull.Draw('pe')
+                                h_tight_pull_error.SetLineColor(ROOT.kGray+2)
+                                h_tight_pull_error.SetFillColor(ROOT.kGray+2)
+                                h_tight_pull_error.Draw('same e2')
+                                h_tight_pull.SetTitle("(Tight - Fit) / Error")
+                                h_tight_pull.SetLineColor(ROOT.kBlack)
+                                h_tight_pull.Draw('pe same')
+                                h_tight_pull.SetMarkerStyle(8)
+                                h_tight_pull.SetMarkerSize(0.25)
+                                h_tight_pull.GetYaxis().SetRangeUser(-10, 10)
+                                h_tight_pull.SetStats(0)
+                                if bins[i] < 60: h_tight_pull.GetXaxis().SetRangeUser(0, 5)
+                                elif bins[i] < 120: h_tight_pull.GetXaxis().SetRangeUser(0, 10)
+                                elif bins[i] < 200: h_tight_pull.GetXaxis().SetRangeUser(0, 15)
+                                elif bins[i] < 380: h_tight_pull.GetXaxis().SetRangeUser(0, 20)
+                                else: h_tight_pull.GetXaxis().SetRangeUser(0, 26)
+                                h_tight_pullc.SetMarkerColor(ROOT.kBlue)
+                                h_tight_pullc.SetMarkerStyle(8)
+                                h_tight_pullc.SetMarkerSize(0.25)
+                                h_tight_pullc.Draw('pe same')
+                                ROOT.gPad.Update()
 
-                        c1.cd()
-                        pad3 = ROOT.TPad('pad3', 'pad3', 0, 0, 0.5, 0.3)
-                        pad3.Draw()
-                        pad3.cd()
-                        h_loose_pull.SetTitle("(Loose - Fit) / Error")
-                        h_loose_pull.SetLineColor(ROOT.kBlack)
-                        h_loose_pull.Draw('pe')
-                        h_loose_pull.SetMarkerStyle(8)
-                        h_loose_pull.SetMarkerSize(0.25)
-                        h_loose_pull.GetYaxis().SetRangeUser(-10, 10)
-                        h_loose_pull.SetStats(0)
-                        if bins[i] < 60: h_loose_pull.GetXaxis().SetRangeUser(0, 5)
-                        elif bins[i] < 120: h_loose_pull.GetXaxis().SetRangeUser(0, 10)
-                        elif bins[i] < 200: h_loose_pull.GetXaxis().SetRangeUser(0, 15)
-                        elif bins[i] < 380: h_loose_pull.GetXaxis().SetRangeUser(0, 20)
-                        else: h_loose_pull.GetXaxis().SetRangeUser(0, 26)
-
-                        if not region == "iso_sym":
-                            c1.cd()
-                            pad4 = ROOT.TPad('pad4', 'pad4', 0.5, 0, 1, 0.3)
-                            pad4.Draw()
-                            pad4.cd()
-                            h_tight_pull.Draw('pe')
-                            h_tight_pull_error.SetLineColor(ROOT.kGray+2)
-                            h_tight_pull_error.SetFillColor(ROOT.kGray+2)
-                            h_tight_pull_error.Draw('same e2')
-                            h_tight_pull.SetTitle("(Tight - Fit) / Error")
-                            h_tight_pull.SetLineColor(ROOT.kBlack)
-                            h_tight_pull.Draw('pe same')
-                            h_tight_pull.SetMarkerStyle(8)
-                            h_tight_pull.SetMarkerSize(0.25)
-                            h_tight_pull.GetYaxis().SetRangeUser(-10, 10)
-                            h_tight_pull.SetStats(0)
-                            if bins[i] < 60: h_tight_pull.GetXaxis().SetRangeUser(0, 5)
-                            elif bins[i] < 120: h_tight_pull.GetXaxis().SetRangeUser(0, 10)
-                            elif bins[i] < 200: h_tight_pull.GetXaxis().SetRangeUser(0, 15)
-                            elif bins[i] < 380: h_tight_pull.GetXaxis().SetRangeUser(0, 20)
-                            else: h_tight_pull.GetXaxis().SetRangeUser(0, 26)
-                            h_tight_pullc.SetMarkerColor(ROOT.kBlue)
-                            h_tight_pullc.SetMarkerStyle(8)
-                            h_tight_pullc.SetMarkerSize(0.25)
-                            h_tight_pullc.Draw('pe same')
-                            ROOT.gPad.Update()
-
-                    ROOT.gPad.Update()
-                    if args.testBin is not None and not args.printFtest: input()
-                    c1.Print(args.name + ".pdf")
+                        ROOT.gPad.Update()
+                        if args.testBin is not None and not args.printFtest: input()
+                        c1.Print(args.name + ".pdf")
 
     pvals = ROOT.TH1D('pvals', 'pvals', 100, 0, 1)
     for val in chi2_pvalues:
