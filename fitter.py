@@ -821,7 +821,7 @@ for item in plots:
                             bern_poly.SetName(title)
                             bern_poly.Write()
                             outfile1.Close()
-                            os.chdir("../")
+                            os.chdir("../../")
                     
                         # determine bin-by-bin error
                         STEP_SIZE = 0.005
@@ -1097,7 +1097,7 @@ for item in plots:
                                 ROOT.gPad.Update()
 
                         ROOT.gPad.Update()
-                        if args.testBin is not None and not args.printFtest: input()
+                        #if args.testBin is not None and not args.printFtest: input()
                         c1.Print(args.name + ".pdf")
 
     pvals = ROOT.TH1D('pvals', 'pvals', 100, 0, 1)
