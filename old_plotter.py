@@ -848,7 +848,7 @@ for item in plots:
 
                         chi2_mod, mod_bins = util.RSS(fit, hist, error=0, integral=integral, chi2=True, cutoff=5)
                         num_bins = len(mod_bins)
-                        if not num_bins == 0:
+                        if not num_bins-fit.GetNpar() == 0:
                             chi2_mod_ndof = chi2_mod / (num_bins-fit.GetNpar())
                             chi2_pvalues.append(scipy.stats.chi2.sf(chi2_mod, num_bins-fit.GetNpar()))
                         else:
