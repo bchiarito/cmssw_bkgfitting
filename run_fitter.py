@@ -83,7 +83,9 @@ parser.add_argument("--guesses", "-g", default=False, action="store_true", help=
 
 # parse args
 args = parser.parse_args()
-infile1 = ROOT.TFile(sys.argv[1])
+
+os.chdir(args.input)
+infile1 = ROOT.TFile('summed_egamma.root')
 
 # other config
 ROOT.gStyle.SetOptStat(0)

@@ -73,7 +73,9 @@ parser.add_argument("--name", default="plots", help="create name for plots pdf")
 
 # parse args
 args = parser.parse_args()
-infile1 = ROOT.TFile(sys.argv[1])
+
+os.chdir(args.input)
+infile1 = ROOT.TFile("summed_egamma.root")
 
 # other config
 ROOT.gStyle.SetOptStat(0)

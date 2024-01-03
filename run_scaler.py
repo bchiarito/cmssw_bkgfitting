@@ -32,14 +32,14 @@ def removeEntries(bkg_hist, sig_hist):
 
 # command line options
 parser = argparse.ArgumentParser(description="")
-parser.add_argument("input", metavar="INPUT", help="input root file")
+parser.add_argument("input", metavar="INPUT", help="input directory file with summed_egamma.root")
 parser.add_argument("--testBin", default=None, help="specify bin to test")
-# seed?
-# cutoff?
+# seed option?
+# cutoff option?
 args = parser.parse_args()
 
 # Constants
-directory = "scaled_tight_hists"
+directory_name = "scaled_tight_hists"
 bins = [20,40,60,80,100,140,180,220,300,380]
 eta_regions = ["barrel", "endcap"]
 regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
@@ -47,34 +47,17 @@ rand = ROOT.TRandom3()
 rand.SetSeed(12445)
 
 # init
-infile1 = ROOT.TFile(args.input)
+os.chdir(args.input)
+infile1 = ROOT.TFile('summed_egamma.root')
 if args.testBin is None: test_regions = ["noniso_sym"] 
 elif "noniso_asym" in args.testBin: test_regions = ["noniso_asym"]
 elif "noniso_sym" in args.testBin: test_regions = ["noniso_sym"]
 elif "iso_asym" in args.testBin: test_regions = ["iso_asym"]
 elif "iso_sym" in args.testBin: test_regions = ["iso_sym"]
 if args.testBin is not None: test_bin = binConverter(args.testBin)
-if not os.path.exists(directory): os.mkdir(directory)
-os.chdir(directory)
+if not os.path.exists(directory_name): os.mkdir(directory_name)
+os.chdir(directory_name)
     
-"""
-for region in regions:  # loop through twoprong sideband regions
-    if args.testBin is not None: 
-        if not region == test_bin[0]: continue
-    print("at begin region loop:", region)
-    for i in range(len(bins)):  # loop through pt bins for a fixed twoprong sideband
-        if args.testBin is not None: 
-            if not bins[i] == int(test_bin[2]): continue
-        print("  at begin bin loop:", region, bins[i])
-        for eta_reg in eta_regions:  # loop through eta regions for fixed pt-bin and fixed twoprong sideband
-            if args.testBin is not None: 
-                if not eta_reg == test_bin[1]: continue
-            if not eta_reg == "barrel" and not eta_reg == "endcap": continue  # no pt-bin plots for barrel and endcap combined, so skip this case
-            
-            print("    at begin eta loop:", region, bins[i], eta_reg)
-"""
-scaled_tight_files = []
-file_counter_tight = 0
 for region, i, eta_reg in itertools.product(regions, range(len(bins)), eta_regions):
     if args.testBin:
         if region != test_bin[0]: continue

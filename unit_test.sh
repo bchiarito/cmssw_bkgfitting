@@ -1,18 +1,17 @@
 #! /bin/bash
 if [[ $# -ne 1 ]]; then
-    echo "Must supply input rootfile" >&2
+    echo "Must supply input directory" >&2
     exit 2
 fi
-rm -rf scaled_tight_hists/
-rm -rf loose_fit_hists/
-rm -rf tight_templates/
-rm plots.pdf 2> /dev/null
-python tightscaler.py $1 --testBin "noniso_sym barrel 100"
-python fitter.py $1 --testBin "noniso_sym barrel 100" --createLooseFits
-python fitter.py $1 --testBin "noniso_sym barrel 100" --saveTightTemplates --savePoly --ftest "3 2" --useScaledTight
-python plotter.py $1 --testBin "noniso_sym barrel 100" --name "test"
-xdg-open test.pdf
-rm plots.pdf
-rm -rf scaled_tight_hists/
-rm -rf loose_fit_hists/
-rm -rf tight_templates/
+rm -rf $1/scaled_tight_hists/
+rm -rf $1/loose_fit_hists/
+rm -rf $1/tight_templates/
+python run_scaler.py $1 --testBin "noniso_sym barrel 100"
+python run_fitter.py $1 --testBin "noniso_sym barrel 100" --createLooseFits
+python run_fitter.py $1 --testBin "noniso_sym barrel 100" --saveTightTemplates --savePoly --ftest "3 2" --useScaledTight
+python run_plotter.py $1 --testBin "noniso_sym barrel 100" --name "test"
+rm $1/plots.pdf
+rm -rf $1/scaled_tight_hists/
+rm -rf $1/loose_fit_hists/
+rm -rf $1/tight_templates/
+xdg-open $1/test.pdf
