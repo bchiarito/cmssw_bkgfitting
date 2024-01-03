@@ -231,7 +231,10 @@ for item in plots:
         if not os.path.exists('loose_fit_hists'): os.mkdir("loose_fit_hists")
         if not os.path.exists('tight_templates'): os.mkdir("tight_templates")
         os.chdir('tight_templates')
-        if not os.path.exists('templates'): os.mkdir("templates")
+        if args.useScaledTight:
+            if not os.path.exists('templates'): os.mkdir("templates")
+        else:
+            if not os.path.exists('templates_noscaling'): os.mkdir("templates_noscaling")
         if not os.path.exists('degrees'): os.mkdir("degrees")
         if not os.path.exists('chi2s'): os.mkdir("chi2s")
         os.chdir('../')
@@ -749,7 +752,8 @@ for item in plots:
                         tight_stat = statboxes[best_d]
                 
                     # Save the tight templates to be plotted separately
-                    os.chdir("tight_templates/templates/")
+                    if args.useScaledTight: os.chdir("tight_templates/templates/")
+                    else: os.chdir("tight_templates/templates_noscaling/")
                     # Save the loose fits in a separate file
                     if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight_temp"
                     else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_tight_temp" 

@@ -70,6 +70,8 @@ parser.add_argument("input", metavar="INPUT", help="input root file")
 parser.add_argument("--test", default=False, action="store_true", help="create test plots")
 parser.add_argument("--testBin", default=None, help="specify bin to test")
 parser.add_argument("--name", default="plots", help="create name for plots pdf")
+parser.add_argument("--useScaledTight", default=False, action="store_true", help="")
+parser.add_argument("--show", default=False, action="store_true", help="")
 
 # parse args
 args = parser.parse_args()
@@ -139,13 +141,6 @@ for region in regions:  # loop through twoprong sideband regions
             # Reference name of the histogram created in the backend 
             egamma_loose_plots += "_loose"
 
-            # Get the histograms from the input file
-            h_egamma_tight = infile1.Get("plots/twoprong_masspi0_"+hist_name+"_tight")
-            h_egamma_tight.SetLineColor(ROOT.kBlack)
-            h_egamma_tight.SetStats(0)
-            h_egamma_tight.SetTitle("")
-            h_egamma_tight.GetXaxis().SetTitle("")
-            h_egamma_tight.GetYaxis().SetTitle("")
             h_egamma_loose = infile1.Get(egamma_loose_plots)
             h_egamma_loose.SetBinErrorOption(ROOT.TH1.kPoisson)
             h_egamma_loose.SetLineColor(ROOT.kBlack)
@@ -156,6 +151,7 @@ for region in regions:  # loop through twoprong sideband regions
             # Input loose templates
             if not os.path.exists('loose_fit_hists'): 
                 print("ERROR: Must create directory for loose templates titled loose_fit_hists")
+                exit()
             else:
                 loose_fit_files.append(ROOT.TFile("loose_fit_hists/" + hist_name + "_loose.root"))
                 loose_fit_as_hist = loose_fit_files[file_counter_loose].Get(hist_name+"_loose")
@@ -165,34 +161,54 @@ for region in regions:  # loop through twoprong sideband regions
                 loose_fit_as_hist.GetYaxis().SetTitle("")
                 file_counter_loose += 1
 
-            # Input scaled tight data
-            if not os.path.exists('scaled_tight_hists'):
-                #print("ERROR: Must create directory for scaled data titled scaled_tight_hists")
-                pass
-            else:
-                scaled_tight_files.append(ROOT.TFile("scaled_tight_hists/" + hist_name + "_tight.root"))
-                h_egamma_tight = scaled_tight_files[file_counter_tight].Get(hist_name+"_tight")
+            if not args.useScaledTight:
+                # Get the histograms from the input file
+                h_egamma_tight = infile1.Get("plots/twoprong_masspi0_"+hist_name+"_tight")
                 h_egamma_tight.SetLineColor(ROOT.kBlack)
                 h_egamma_tight.SetStats(0)
                 h_egamma_tight.SetTitle("")
                 h_egamma_tight.GetXaxis().SetTitle("")
                 h_egamma_tight.GetYaxis().SetTitle("")
-                file_counter_tight += 1
+            else:
+                # Input scaled tight data
+                if not os.path.exists('scaled_tight_hists'):
+                    print("ERROR: Must create directory for scaled data titled scaled_tight_hists")
+                    exit()
+                else:
+                    scaled_tight_files.append(ROOT.TFile("scaled_tight_hists/" + hist_name + "_tight.root"))
+                    h_egamma_tight = scaled_tight_files[file_counter_tight].Get(hist_name+"_tight")
+                    h_egamma_tight.SetLineColor(ROOT.kBlack)
+                    h_egamma_tight.SetStats(0)
+                    h_egamma_tight.SetTitle("")
+                    h_egamma_tight.GetXaxis().SetTitle("")
+                    h_egamma_tight.GetYaxis().SetTitle("")
+                    file_counter_tight += 1
             
             # Set Poisson errors for tight histogram
             h_egamma_tight.SetBinErrorOption(ROOT.TH1.kPoisson)
 
             # Input tight template
-            if not os.path.exists('tight_templates/templates'):
-                print("ERROR: Must create directory for scaled data as follows: tight_templates/templates")
+            if args.useScaledTight:
+                if not os.path.exists('tight_templates/templates'):
+                    print("ERROR: Must create directory for scaled data as follows: tight_templates/templates")
+                    exit()
+                else:
+                    tight_temp_files.append(ROOT.TFile("tight_templates/templates/" + hist_name + "_tight_temp.root"))
+                    tight_fit_as_hist = tight_temp_files[file_counter_temp].Get(hist_name+"_tight_temp")
+                    file_counter_temp += 1
             else:
-                tight_temp_files.append(ROOT.TFile("tight_templates/templates/" + hist_name + "_tight_temp.root"))
-                tight_fit_as_hist = tight_temp_files[file_counter_temp].Get(hist_name+"_tight_temp")
-                file_counter_temp += 1
+                if not os.path.exists('tight_templates/templates_noscaling'):
+                    print("ERROR: Must create directory for scaled data as follows: tight_templates/templates_noscaling")
+                    exit()
+                else:
+                    tight_temp_files.append(ROOT.TFile("tight_templates/templates_noscaling/" + hist_name + "_tight_temp.root"))
+                    tight_fit_as_hist = tight_temp_files[file_counter_temp].Get(hist_name+"_tight_temp")
+                    file_counter_temp += 1
 
             # Input tight degrees
-            if not os.path.exists('tight_templates'):
+            if not os.path.exists('tight_templates/degrees'):
                 print("ERROR: Must create directory for scaled data Bernstein degrees as follows: tight_templates/degrees")
+                exit()
             else:
                 tight_deg_files.append(ROOT.TFile("tight_templates/degrees/" + hist_name + "_tight_temp_deg.root"))
                 tight_deg_hist = tight_deg_files[file_counter_deg].Get(hist_name+"_tight_temp_deg")
@@ -200,8 +216,9 @@ for region in regions:  # loop through twoprong sideband regions
                 bern_deg = int(tight_deg_hist.GetBinContent(1))
 
             # Input chi2 values
-            if not os.path.exists('tight_templates'):
-                print("ERROR: Must create directory for scaled data Bernstein degrees as follows: tight_templates/degrees")
+            if not os.path.exists('tight_templates/chi2s'):
+                print("ERROR: Must create directory for scaled data Bernstein degrees as follows: tight_templates/chi2s")
+                exit()
             else:
                 tight_chi2_files.append(ROOT.TFile("tight_templates/chi2s/" + hist_name + "_tight_poly_chi2.root"))
                 tight_chi2_hist = tight_chi2_files[file_counter_chi2].Get(hist_name+"_tight_poly_chi2")
@@ -209,8 +226,9 @@ for region in regions:  # loop through twoprong sideband regions
                 chi2_val = round(tight_chi2_hist.GetBinContent(1), 4)
 
             # Input bern poly TF1 (to extract params)
-            if not os.path.exists('tight_templates'):
-                print("ERROR: Must create directory for scaled data Bernstein degrees as follows: tight_templates/degrees")
+            if not os.path.exists('tight_templates/polys'):
+                print("ERROR: Must create directory for scaled data Bernstein degrees as follows: tight_templates/polys")
+                exit()
             else:
                 tight_poly_files.append(ROOT.TFile("tight_templates/polys/" + hist_name + "_tight_poly.root"))
                 bern_poly = tight_poly_files[file_counter_poly].Get(hist_name+"_tight_poly") 
@@ -505,7 +523,7 @@ for region in regions:  # loop through twoprong sideband regions
                 line4.SetLineColorAlpha(ROOT.kBlack, 0.5)
                 line4.Draw("same")
             ROOT.gPad.Update()
-            #if args.testBin is not None: input()
+            if args.show: input()
             c1.Print(args.name + ".pdf")
             loose_fit_files[file_counter_loose-1].Close()
             #scaled_tight_files[file_counter_tight-1].Close()
