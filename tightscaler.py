@@ -16,24 +16,26 @@ def binConverter(test_bin):
 
 # "scale" a control-region tight photon distribution to its corresponding signal distribution
 def removeEntries(bkg_hist, sig_hist):
-    if not bkg_hist.Integral() == 0: removal_prob = sig_hist.Integral() / bkg_hist.Integral()
-    else: return True
+    if bkg_hist.Integral() == 0: return False
+   
+    p = float(sig_hist.Integral()) / bkg_hist.Integral() # probability of removing entry
+    if p >= 1: return False
     
-    if removal_prob < 1:
-        for i in range(1, bkg_hist.GetNbinsX()+1):
-            N = round(bkg_hist.GetBinContent(i))
-            p = removal_prob  # probability of removing entry
-            if N < 100: bkg_hist.SetBinContent(i, round(rand.Binomial(N, p)))
-            else: 
-                content = rand.Gaus(N*p, (N*p*(1-p))**0.5)
-                if content < 0: bkg_hist.SetBinContent(i, 0) 
-                else: bkg_hist.SetBinContent(i, round(content))
-    return True
+    for i in range(1, bkg_hist.GetNbinsX()+1):
+        N = round(bkg_hist.GetBinContent(i))
+        if N < 100:
+            bkg_hist.SetBinContent(i, round(rand.Binomial(N, p)))
+        else: 
+            content = rand.Gaus(N*p, (N*p*(1-p))**0.5)
+            if content < 0: bkg_hist.SetBinContent(i, 0) 
+            else: bkg_hist.SetBinContent(i, round(content))
 
 # command line options
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("input", metavar="INPUT", help="input root file")
 parser.add_argument("--testBin", default=None, help="specify bin to test")
+# seed?
+# cutoff?
 args = parser.parse_args()
 
 # Constants
