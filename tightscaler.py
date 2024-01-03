@@ -79,41 +79,18 @@ for region, i, eta_reg in itertools.product(regions, range(len(bins)), eta_regio
         if eta_reg != test_bin[1]: continue
         if bins[i] != int(test_bin[2]): continue
 
-    # Generate correct plots names to access from summed histogram files
     egamma_tight_plots = "plots/twoprong_masspi0_" + region + "_" + eta_reg
-    egamma_loose_plots = "plots/twoprong_masspi0_" + region + "_" + eta_reg
-    
-    # this must follow the naming convention of the input histograms
-    if i == len(bins) - 1:
-        egamma_tight_plots += "_" + str(bins[i]) + "+"
-        egamma_loose_plots += "_" + str(bins[i]) + "+"
-    else:
-        egamma_tight_plots += "_" + str(bins[i]) + "_" + str(bins[i+1])
-        egamma_loose_plots += "_" + str(bins[i]) + "_" + str(bins[i+1]) 
-    
-    # Reference name of the histogram created in the backend 
+    if i == len(bins)-1: egamma_tight_plots += "_" + str(bins[i]) + "+"
+    else: egamma_tight_plots += "_" + str(bins[i]) + "_" + str(bins[i+1])
     egamma_tight_plots += "_tight"
-    egamma_loose_plots += "_loose"
-    
-    # Get the histograms from the input file
+
     h_egamma_tight = infile1.Get(egamma_tight_plots)
-    h_egamma_loose = infile1.Get(egamma_loose_plots)
 
-    # Set Poisson errors for tight histogram 
-    h_egamma_tight.SetBinErrorOption(ROOT.TH1.kPoisson)
+    # Scale
+    if not region == "iso_sym": removeEntries(h_egamma_tight, infile1.Get(egamma_tight_plots.replace(region, "iso_sym")))
 
-    # Configure display options
-    h_egamma_tight.SetLineColor(ROOT.kBlack)
-    h_egamma_loose.SetLineColor(ROOT.kBlack)
-
-    # scale the control-region tight photon distribution to the corresponding tight signal distribution
-    sig_tight_plot = egamma_tight_plots.replace(region, "iso_sym")
-    h_sig_tight = infile1.Get(sig_tight_plot)
-    removeEntries(h_egamma_tight, h_sig_tight)
-
-    # Save the scaled tight data to be inputted into a separate plotting script
-    # Save the loose fits in a separate file
-    if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight"
+    # Save
+    if i == len(bins)-1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight"
     else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_tight" 
     outfile = ROOT.TFile(title + ".root", "RECREATE")
     outfile.cd()
