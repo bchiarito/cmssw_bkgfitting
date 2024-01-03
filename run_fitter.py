@@ -72,14 +72,11 @@ parser.add_argument("--name", default="plots", help="create name for plots pdf")
 parser.add_argument("--ftest", default=None, help="format: '<CHEB_TYPE> <MAXDEGREE>', default is no f-test")
 parser.add_argument("--integral", default=False, action="store_true", help="add I to tight fit")
 parser.add_argument("--printFtest", "--printftest", default=False, action="store_true", help="for a fixed test bin, create a pdf of all possible ftest fits")
-parser.add_argument("--useScaledTight", default=False, action="store_true", help="")
-parser.add_argument("--createLooseFits", default=False, action="store_true", help="create loose fits initially and save to file")
 parser.add_argument("--checkPull", default=False, action="store_true", help="print on legend if there are four consecutive pull bins greater than 1.5 sigma")
-#parser.add_argument("--saveScaledTightHists", default=False, action="store_true", help="save scaled-to-signal tight hists in a separate directory")
 parser.add_argument("--specifyFtestDegree", "--fdeg", default=None, help="specify which degree ftest should pick for visualization purposes")
-parser.add_argument("--saveTightTemplates", default=False, action="store_true", help="save tight templates from ftest") 
-parser.add_argument("--savePoly", default=False, action="store_true", help="save bernstein polynomials from ftest") 
 parser.add_argument("--guesses", "-g", default=False, action="store_true", help="supply guess text file (NOT IMPLEMENTED YET)")
+parser.add_argument("--useScaledTight", default=False, action="store_true", help="")
+parser.add_argument("--createLooseFits", default=False, action="store_true", help="will recreate loose fits even if present")
 
 # parse args
 args = parser.parse_args()
@@ -231,26 +228,17 @@ for item in plots:
         #if args.ratio: ROOT.TPad.Divide(c1, 1, 2)
         if args.testBin is not None: test_bin = binConverter(args.testBin)
         chi2_pvalues = []
-        if args.createLooseFits:  # used to create the loose templates
-            if not os.path.exists('loose_fit_hists'): os.mkdir("loose_fit_hists")
-            os.chdir("loose_fit_hists")
-        """
-        if args.saveScaledTightHists:  # used to save the tight data, which has been scaled to the signal
-            if not os.path.exists('scaled_tight_hists'): os.mkdir("scaled_tight_hists")
-            os.chdir("scaled_tight_hists")
-        """
-        if args.saveTightTemplates:  # used to save the tight fit templates (poly*template), poly degrees, and chi2/ndf values
-            if not os.path.exists('tight_templates'): os.mkdir("tight_templates")
-            os.chdir('tight_templates')
-            if not os.path.exists('templates'): os.mkdir("templates")
-            if not os.path.exists('degrees'): os.mkdir("degrees")
-            if not os.path.exists('chi2s'): os.mkdir("chi2s")
-            os.chdir('../')
-        if args.savePoly:  # used to save the polynomial that mulitplies the loose template
-            if not os.path.exists('tight_templates'): os.mkdir("tight_templates")
-            os.chdir('tight_templates')
-            if not os.path.exists('polys'): os.mkdir('polys')
-            os.chdir('../')
+        if not os.path.exists('loose_fit_hists'): os.mkdir("loose_fit_hists")
+        if not os.path.exists('tight_templates'): os.mkdir("tight_templates")
+        os.chdir('tight_templates')
+        if not os.path.exists('templates'): os.mkdir("templates")
+        if not os.path.exists('degrees'): os.mkdir("degrees")
+        if not os.path.exists('chi2s'): os.mkdir("chi2s")
+        os.chdir('../')
+        if not os.path.exists('tight_templates'): os.mkdir("tight_templates")
+        os.chdir('tight_templates')
+        if not os.path.exists('polys'): os.mkdir('polys')
+        os.chdir('../')
             
         loose_fit_files = []
         scaled_tight_files = []
@@ -647,9 +635,11 @@ for item in plots:
                                 old_method = True
                                 guesses = [1430, 2.107, 0.5122, -0.04034, -1.359, -0.5, 3, 3, 2]
                     
-                    # This must be done before fitting to the tight
-                    # When fitting to the tight is done, the saved loose fits here are inputted from a separate directory
-                    if args.createLooseFits:
+                    # Loose spectrum fitting
+                    os.chdir("loose_fit_hists")
+                    if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_loose"
+                    else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_loose" 
+                    if not os.path.exists(title + ".root") or args.createLooseFits: # create new loose fits
                         if old_method:
                             N = str(nLandau) + str(nExp)
                             func_full, fitresult_full = util.fit_hist(h_egamma_loose, 'full', 0, 50, int(N), initial_guesses=guesses)
@@ -685,8 +675,8 @@ for item in plots:
                                     loose_fit_as_hist.SetBinContent(b+1, falling_fit_as_hist.GetBinContent(b+1))
                         
                         # Save the loose fits in a separate file
-                        if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_loose"
-                        else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_loose" 
+                        #if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_loose"
+                        #else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_loose" 
                         outfile = ROOT.TFile(title + ".root", "RECREATE")
                         outfile.cd()
                         loose_hist = ROOT.TH1F(title, title, 1000, 0, 50) 
@@ -695,7 +685,9 @@ for item in plots:
                         loose_hist.SetName(title)
                         loose_hist.Write()
                         outfile.Close()
-                        continue
+                        os.chdir("../")
+                    else: # read from already present fits
+                        os.chdir("../")
                         
                     # Input loose fit templates saved previously for fitting to the tight data
                     loose_fit_files.append(ROOT.TFile("loose_fit_hists/" + hist_name + "_loose.root"))
@@ -757,27 +749,26 @@ for item in plots:
                         tight_stat = statboxes[best_d]
                 
                     # Save the tight templates to be plotted separately
-                    if args.saveTightTemplates:
-                        os.chdir("tight_templates/templates/")
-                        # Save the loose fits in a separate file
-                        if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight_temp"
-                        else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_tight_temp" 
-                        outfile1 = ROOT.TFile(title + ".root", "RECREATE")
-                        outfile1.cd()
-                        tight_fit_hist = ROOT.TH1F(title, title, 1000, 0, 50) 
-                        for b in range(tight_fit_as_hist.GetNbinsX()): tight_fit_hist.SetBinContent(b+1,tight_fit_as_hist.GetBinContent(b+1))
-                        tight_fit_hist.SetName(title)
-                        tight_fit_hist.Write()
-                        outfile1.Close()
-                        os.chdir("../degrees/")
-                        outfile2 = ROOT.TFile(title+"_deg.root", "RECREATE")
-                        outfile2.cd()
-                        tight_fit_deg = ROOT.TH1F(title+"_deg", title+"_deg", 10, 0, 10)
-                        for b in range(tight_fit_deg.GetNbinsX()): tight_fit_deg.SetBinContent(b+1,best_d)
-                        tight_fit_deg.SetName(title+"_deg")
-                        tight_fit_deg.Write()
-                        outfile2.Close()
-                        os.chdir("../../")
+                    os.chdir("tight_templates/templates/")
+                    # Save the loose fits in a separate file
+                    if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight_temp"
+                    else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_tight_temp" 
+                    outfile1 = ROOT.TFile(title + ".root", "RECREATE")
+                    outfile1.cd()
+                    tight_fit_hist = ROOT.TH1F(title, title, 1000, 0, 50) 
+                    for b in range(tight_fit_as_hist.GetNbinsX()): tight_fit_hist.SetBinContent(b+1,tight_fit_as_hist.GetBinContent(b+1))
+                    tight_fit_hist.SetName(title)
+                    tight_fit_hist.Write()
+                    outfile1.Close()
+                    os.chdir("../degrees/")
+                    outfile2 = ROOT.TFile(title+"_deg.root", "RECREATE")
+                    outfile2.cd()
+                    tight_fit_deg = ROOT.TH1F(title+"_deg", title+"_deg", 10, 0, 10)
+                    for b in range(tight_fit_deg.GetNbinsX()): tight_fit_deg.SetBinContent(b+1,best_d)
+                    tight_fit_deg.SetName(title+"_deg")
+                    tight_fit_deg.Write()
+                    outfile2.Close()
+                    os.chdir("../../")
 
                     if i == len(bins) - 1: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "+"
                     else: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) 
@@ -812,18 +803,17 @@ for item in plots:
                         rightmost_tightdata = h_egamma_loose.GetBinLowEdge(tlast_bin+1)
                         just_poly.SetRange(0,rightmost_tightdata)
 
-                        if args.savePoly:
-                            os.chdir("tight_templates/polys/")
-                            # Save the loose fits in a separate file
-                            if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight_poly"
-                            else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_tight_poly" 
-                            outfile1 = ROOT.TFile(title + ".root", "RECREATE")
-                            outfile1.cd()
-                            bern_poly = just_poly.Clone()
-                            bern_poly.SetName(title)
-                            bern_poly.Write()
-                            outfile1.Close()
-                            os.chdir("../../")
+                        os.chdir("tight_templates/polys/")
+                        # Save the loose fits in a separate file
+                        if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight_poly"
+                        else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_tight_poly" 
+                        outfile1 = ROOT.TFile(title + ".root", "RECREATE")
+                        outfile1.cd()
+                        bern_poly = just_poly.Clone()
+                        bern_poly.SetName(title)
+                        bern_poly.Write()
+                        outfile1.Close()
+                        os.chdir("../../")
                     
                         # determine bin-by-bin error
                         STEP_SIZE = 0.005
@@ -855,16 +845,16 @@ for item in plots:
                             chi2_pvalues.append(-1)
                         #print(chi2_mod, len(num_bins), chi2_mod_ndof)
                         
-                        if args.saveTightTemplates:
-                            os.chdir("tight_templates/chi2s/")
-                            outfile3 = ROOT.TFile(title+"_chi2.root", "RECREATE")
-                            outfile3.cd()
-                            tight_fit_chi2 = ROOT.TH1D(title+"_chi2", title+"_chi2", 1000, 0, 100)
-                            for b in range(tight_fit_chi2.GetNbinsX()): tight_fit_chi2.SetBinContent(b+1, chi2_mod_ndof)
-                            tight_fit_chi2.SetName(title+"_chi2")
-                            tight_fit_chi2.Write()
-                            outfile2.Close()
-                            os.chdir("../../")
+                        #if args.saveTightTemplates:
+                        os.chdir("tight_templates/chi2s/")
+                        outfile3 = ROOT.TFile(title+"_chi2.root", "RECREATE")
+                        outfile3.cd()
+                        tight_fit_chi2 = ROOT.TH1D(title+"_chi2", title+"_chi2", 1000, 0, 100)
+                        for b in range(tight_fit_chi2.GetNbinsX()): tight_fit_chi2.SetBinContent(b+1, chi2_mod_ndof)
+                        tight_fit_chi2.SetName(title+"_chi2")
+                        tight_fit_chi2.Write()
+                        outfile2.Close()
+                        os.chdir("../../")
 
                         h_loose_pull_num = h_egamma_loose.Clone()
                         h_loose_pull_num.Reset()
