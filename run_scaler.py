@@ -34,13 +34,16 @@ def removeEntries(bkg_hist, sig_hist):
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("input", metavar="INPUT", help="input directory file with summed_egamma.root")
 parser.add_argument("--testBin", default=None, help="specify bin to test")
+parser.add_argument("--phislice", default=False, action="store_true", help="")
 # seed option?
 # cutoff option?
 args = parser.parse_args()
 
 # Constants
 directory_name = "scaled_tight_hists"
+phislice_directory_name = "scaled_phislice_tight_hists"
 bins = [20,40,60,80,100,140,180,220,300,380]
+phi_bins = [0, 500, 1000, 1500, 2000]
 eta_regions = ["barrel", "endcap"]
 regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
 rand = ROOT.TRandom3()
@@ -84,4 +87,41 @@ for region, i, eta_reg in itertools.product(regions, range(len(bins)), eta_regio
         tight_hist.SetBinContent(b+1,h_egamma_tight.GetBinContent(b+1))
     tight_hist.SetName(title)
     tight_hist.Write()
+    outfile.Close()
+
+    egamma_tight_plots = "plots/twoprong_masspi0_phi" + region + "_" + eta_reg
+    if i == len(bins)-1: egamma_tight_plots += "_" + str(bins[i]) + "+"
+    else: egamma_tight_plots += "_" + str(bins[i]) + "_" + str(bins[i+1])
+    egamma_tight_plots += "_tight"
+
+if not args.phislice: exit()
+
+os.chdir('../')
+if not os.path.exists(phislice_directory_name): os.mkdir(phislice_directory_name)
+os.chdir(phislice_directory_name)
+for region, i, eta_reg, k in itertools.product(regions, range(len(bins)), eta_regions, range(len(phi_bins))):
+    histogram_prefix_mass = "twoprong_masspi0_"
+    phi_low = phi_bins[k]
+    phi_high = phi_bins[k+1] if k != len(phi_bins)-1 else "Inf"
+    control_region = region + "_" + eta_reg
+    pt_low = bins[i]
+    pt_high = bins[i+1] if i != len(bins)-1 else "Inf"
+    tight_plot_name = 'plots/{}phi{}-{}_{}_pt{}-{}_tight'.format(histogram_prefix_mass, phi_low, phi_high, control_region, pt_low, pt_high)
+
+    h_egamma_tight = infile1.Get(tight_plot_name)
+    h_egamma_signal_region = infile1.Get(tight_plot_name.replace(region, "iso_sym"))
+
+    # Scale
+    if not region == "iso_sym": removeEntries(h_egamma_tight, h_egamma_signal_region)
+
+    # Save
+    save_name = '{}phi{}-{}_{}_pt{}-{}_tight'.format(histogram_prefix_mass, phi_low, phi_high, control_region, pt_low, pt_high)
+    outfile = ROOT.TFile(save_name + ".root", "RECREATE")
+    outfile.cd()
+    save_hist = h_egamma_tight.Clone()
+    save_hist.SetName(save_name)
+    save_hist.Reset()
+    for b in range(h_egamma_tight.GetNbinsX()):
+        save_hist.SetBinContent(b+1,h_egamma_tight.GetBinContent(b+1))
+    save_hist.Write()
     outfile.Close()
