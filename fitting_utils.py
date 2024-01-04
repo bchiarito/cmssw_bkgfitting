@@ -1,15 +1,30 @@
 import ROOT
 import sys
 import math
+from scipy.stats import f 
 
-try:
-    from scipy.stats import f 
-except ImportError:
-    pass
-
+rand = ROOT.TRandom3()
 BERN_UPPER_RANGE = 25
 NAME_COUNT = 0 # global counter
 pt_bins = [20,40,60,80,100,140,180,220,300,380]
+
+# "scale" a control-region tight photon distribution to its corresponding signal distribution
+def removeEntries(bkg_hist, sig_hist, seed=None, cutoff=100):
+    if seed: rand.SetSeed(seed)
+
+    if bkg_hist.Integral() == 0: return False
+   
+    p = float(sig_hist.Integral()) / bkg_hist.Integral() # probability of removing entry
+    if p >= 1: return False
+    
+    for i in range(1, bkg_hist.GetNbinsX()+1):
+        N = round(bkg_hist.GetBinContent(i))
+        if N < cutoff:
+            bkg_hist.SetBinContent(i, round(rand.Binomial(N, p)))
+        else: 
+            content = rand.Gaus(N*p, (N*p*(1-p))**0.5)
+            if content < 0: bkg_hist.SetBinContent(i, 0) 
+            else: bkg_hist.SetBinContent(i, round(content))
 
 def cheb_fn(x, degree, kind):
   if kind == 1:
