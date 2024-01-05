@@ -6,107 +6,44 @@ import os
 import argparse
 import array
 import fitting_utils as util
-import scipy
-import scipy.stats as stats
-
-
-def findMaxXVal(hist):
-    max_x_val = 0
-    for i in range(hist.GetMaximumBin(), hist.GetNbinsX()):
-        if hist.GetBinContent(i+1) < 1e-1:
-            max_x_val = 0.1*(i+1)
-            break
-    return max_x_val
-
-
-def binConverter(test_bin):
-    bin_list = test_bin.split(" ")
-    return bin_list
-
-
-def bern_fn(x, n_degree, i_degree):
-    x_adj = x / 25
-    if i_degree < 0 or i_degree > n_degree: return 0
-    return (math.factorial(n_degree))/(math.factorial(i_degree)*math.factorial(n_degree - i_degree)) * x_adj**i_degree * (1 - x_adj)**(n_degree - i_degree)
-
-def bern_deg0(x, p):
-    X = x[0]
-    return p[0]
-        
-def bern_deg1(x, p):
-    X = x[0]
-    return p[0]*bern_fn(X, 1, 0) + p[1]*bern_fn(X, 1, 1)
-
-def bern_deg2(x, p):
-    X = x[0]
-    return p[0]*bern_fn(X, 2, 0) + p[1]*bern_fn(X, 2, 1) + p[2]*bern_fn(X, 2, 2)
-
-def bern_deg3(x, p):
-    X = x[0]
-    return p[0]*bern_fn(X, 3, 0) + p[1]*bern_fn(X, 3, 1) + p[2]*bern_fn(X, 3, 2) + p[3]*bern_fn(X, 3, 3)
-
-def bern_deg4(x, p):
-    X = x[0]
-    return p[0]*bern_fn(X, 4, 0) + p[1]*bern_fn(X, 4, 1) + p[2]*bern_fn(X, 4, 2) + p[3]*bern_fn(X, 4, 3) + p[4]*bern_fn(X, 4, 4)
-
-def bern_deg5(x, p):
-    X = x[0]
-    return p[0]*bern_fn(X, 5, 0) + p[1]*bern_fn(X, 5, 1) + p[2]*bern_fn(X, 5, 2) + p[3]*bern_fn(X, 5, 3) + p[4]*bern_fn(X, 5, 4) + p[5]*bern_fn(X, 5, 5)
-
-def bern_deg6(x, p):
-    X = x[0]
-    return p[0]*bern_fn(X, 6, 0) + p[1]*bern_fn(X, 6, 1) + p[2]*bern_fn(X, 6, 2) + p[3]*bern_fn(X, 6, 3) + p[4]*bern_fn(X, 6, 4) + p[5]*bern_fn(X, 6, 5) + p[6]*bern_fn(X, 6, 6)
-
-def bern_deg7(x, p):
-    X = x[0]
-    return p[0]*bern_fn(X, 7, 0) + p[1]*bern_fn(X, 7, 1) + p[2]*bern_fn(X, 7, 2) + p[3]*bern_fn(X, 7, 3) + p[4]*bern_fn(X, 7, 4) + p[5]*bern_fn(X, 7, 5) + p[6]*bern_fn(X, 7, 6) + p[7]*bern_fn(X, 7, 7)
-
 
 # command line options
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("input", metavar="INPUT", help="input root file")
-
-# plot specification
-parser.add_argument("--test", default=False, action="store_true", help="create test plots")
 parser.add_argument("--testBin", default=None, help="specify bin to test")
+parser.add_argument("--testRegion", default=None, choices = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"], help="specify region to test")
 parser.add_argument("--name", default="plots", help="create name for plots pdf")
 parser.add_argument("--useScaledTight", default=False, action="store_true", help="")
 parser.add_argument("--show", default=False, action="store_true", help="")
-
-# parse args
 args = parser.parse_args()
 
-os.chdir(args.input)
-infile1 = ROOT.TFile("summed_egamma.root")
+# constants
+egamma_rootfile = "summed_egamma.root"
+bins = [20,40,60,80,100,140,180,220,300,380]
 
-# other config
+# plotting style
+leg_x1, leg_x2, leg_y1, leg_y2 = 0.7, 0.60, 0.89, 0.89
 ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetOptFit(1111)
 ROOT.gStyle.SetLegendFillColor(ROOT.TColor.GetColorTransparent(ROOT.kWhite, 0.01));
 ROOT.gStyle.SetLegendBorderSize(0)
 ROOT.gStyle.SetPadTickX(1)
 ROOT.gStyle.SetPadTickY(1)
-leg_x1, leg_x2, leg_y1, leg_y2 = 0.7, 0.60, 0.89, 0.89
 
+# select regions
+regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
+if args.testRegion: regions = [args.testRegion]
+eta_regions = ["barrel", "endcap"]
+photon_regions = ["tight", "loose"]
+if args.testBin is not None: test_bin = (args.testBin).split(" ")
+
+# init
+os.chdir(args.input)
+infile1 = ROOT.TFile(egamma_rootfile)
 c1 = ROOT.TCanvas("c1", "c1", 800, 600)
-#if not args.sanity: ROOT.TPad.Divide(c1, 1, 2)
 c1.Print(args.name + ".pdf[")
 
-eta_regions = ["barrel", "endcap"]
-regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
-
-if args.testBin is None: test_regions = ["iso_sym"] 
-elif "noniso_asym" in args.testBin: test_regions = ["noniso_asym"]
-elif "noniso_sym" in args.testBin: test_regions = ["noniso_sym"]
-elif "iso_asym" in args.testBin: test_regions = ["iso_asym"]
-elif "iso_sym" in args.testBin: test_regions = ["iso_sym"]
-
-if args.test: regions = test_regions
-
-bins = [20,40,60,80,100,140,180,220,300,380]
-
-if args.testBin is not None: test_bin = binConverter(args.testBin)
-
+# run
 loose_fit_files = []
 scaled_tight_files = []
 tight_temp_files = []
@@ -119,7 +56,6 @@ file_counter_temp = 0
 file_counter_deg = 0
 file_counter_chi2 = 0
 file_counter_poly = 0
-
 for region in regions:  # loop through twoprong sideband regions
     if args.testBin is not None: 
         if not region == test_bin[0]: continue
@@ -234,14 +170,14 @@ for region in regions:  # loop through twoprong sideband regions
                 bern_poly = tight_poly_files[file_counter_poly].Get(hist_name+"_tight_poly") 
                 file_counter_poly += 1
 
-            if bern_deg == 0: just_poly = ROOT.TF1("bern_polynomial", bern_deg0, 0, 25, 1)
-            if bern_deg == 1: just_poly = ROOT.TF1("bern_polynomial", bern_deg1, 0, 25, 2)
-            if bern_deg == 2: just_poly = ROOT.TF1("bern_polynomial", bern_deg2, 0, 25, 3)
-            if bern_deg == 3: just_poly = ROOT.TF1("bern_polynomial", bern_deg3, 0, 25, 4)
-            if bern_deg == 4: just_poly = ROOT.TF1("bern_polynomial", bern_deg4, 0, 25, 5)
-            if bern_deg == 5: just_poly = ROOT.TF1("bern_polynomial", bern_deg5, 0, 25, 6)
-            if bern_deg == 6: just_poly = ROOT.TF1("bern_polynomial", bern_deg6, 0, 25, 7)
-            if bern_deg == 7: just_poly = ROOT.TF1("bern_polynomial", bern_deg7, 0, 25, 8)
+            if bern_deg == 0: just_poly = ROOT.TF1("bern_polynomial", util.bern_deg0, 0, 25, 1)
+            if bern_deg == 1: just_poly = ROOT.TF1("bern_polynomial", util.bern_deg1, 0, 25, 2)
+            if bern_deg == 2: just_poly = ROOT.TF1("bern_polynomial", util.bern_deg2, 0, 25, 3)
+            if bern_deg == 3: just_poly = ROOT.TF1("bern_polynomial", util.bern_deg3, 0, 25, 4)
+            if bern_deg == 4: just_poly = ROOT.TF1("bern_polynomial", util.bern_deg4, 0, 25, 5)
+            if bern_deg == 5: just_poly = ROOT.TF1("bern_polynomial", util.bern_deg5, 0, 25, 6)
+            if bern_deg == 6: just_poly = ROOT.TF1("bern_polynomial", util.bern_deg6, 0, 25, 7)
+            if bern_deg == 7: just_poly = ROOT.TF1("bern_polynomial", util.bern_deg7, 0, 25, 8)
             
             # Set bernstein poly params
             for j in range(bern_deg+1): just_poly.SetParameter(j, bern_poly.GetParameter(j))
@@ -365,7 +301,7 @@ for region in regions:  # loop through twoprong sideband regions
             loose_fit_as_hist.Draw("same")
             ROOT.gPad.SetLogy()
             # Dynamically set the x-axis range 
-            h_egamma_loose.GetXaxis().SetRangeUser(0, findMaxXVal(loose_fit_as_hist)*3/5)
+            h_egamma_loose.GetXaxis().SetRangeUser(0, util.findMaxXVal(loose_fit_as_hist)*3/5)
             h_egamma_loose.GetYaxis().SetRangeUser(0.1, h_egamma_loose.GetMaximum()*3.5)
             legend1.Draw("same")
             # Draw CMS logo
@@ -409,7 +345,7 @@ for region in regions:  # loop through twoprong sideband regions
                 h_egamma_tight.GetYaxis().SetTitleSize(0.05)
                 h_egamma_tight.SetTitleOffset(1, "Y")
                 h_egamma_tight.GetYaxis().SetTitle("Entries / 50 MeV")
-                h_egamma_tight.GetXaxis().SetRangeUser(0, findMaxXVal(loose_fit_as_hist)*3/5)
+                h_egamma_tight.GetXaxis().SetRangeUser(0, util.findMaxXVal(loose_fit_as_hist)*3/5)
                 h_egamma_tight.SetMinimum(0.1)
                 h_egamma_tight.Draw("e")
                 tight_fit_w_constant.SetLineColor(ROOT.kBlue)
@@ -441,7 +377,7 @@ for region in regions:  # loop through twoprong sideband regions
                 overlay.cd()
                 empty = ROOT.TH1F(util.getname('empty'), '', 100, 0, 50)
                 empty.SetLineColor(ROOT.kRed)
-                empty.GetXaxis().SetRangeUser(0, findMaxXVal(loose_fit_as_hist)*3/5)
+                empty.GetXaxis().SetRangeUser(0, util.findMaxXVal(loose_fit_as_hist)*3/5)
                 empty.GetYaxis().SetRangeUser(min(0, just_poly.GetMinimum()), just_poly.GetMaximum())
                 empty.Draw('AH')
                 just_poly.SetRange(0, 50)
@@ -474,7 +410,7 @@ for region in regions:  # loop through twoprong sideband regions
             h_loose_pull.SetMarkerStyle(21)
             h_loose_pull.SetMarkerSize(0.25)
             h_loose_pull.SetStats(0)
-            h_loose_pull.GetXaxis().SetRangeUser(0, findMaxXVal(loose_fit_as_hist)*3/5)
+            h_loose_pull.GetXaxis().SetRangeUser(0, util.findMaxXVal(loose_fit_as_hist)*3/5)
             loose_pull_abs_max = max(abs(h_loose_pull.GetMinimum()), h_loose_pull.GetMaximum()) 
             tight_pull_abs_max = max(abs(h_tight_pull.GetMinimum()), h_tight_pull.GetMaximum())
             abs_pull_max = max(loose_pull_abs_max, tight_pull_abs_max)
@@ -509,7 +445,7 @@ for region in regions:  # loop through twoprong sideband regions
                 h_tight_pull.SetMarkerStyle(21)
                 h_tight_pull.SetMarkerSize(0.25)
                 h_tight_pull.SetStats(0)
-                h_tight_pull.GetXaxis().SetRangeUser(0, findMaxXVal(loose_fit_as_hist)*3/5)
+                h_tight_pull.GetXaxis().SetRangeUser(0, util.findMaxXVal(loose_fit_as_hist)*3/5)
                 h_tight_pull.GetYaxis().SetRangeUser(-abs_pull_max-2, abs_pull_max+2)
                 """
                 h_tight_pullc.SetMarkerColor(ROOT.kBlue)
@@ -523,16 +459,11 @@ for region in regions:  # loop through twoprong sideband regions
                 line4.SetLineColorAlpha(ROOT.kBlack, 0.5)
                 line4.Draw("same")
             ROOT.gPad.Update()
-            if args.show: input()
             c1.Print(args.name + ".pdf")
             loose_fit_files[file_counter_loose-1].Close()
-            #scaled_tight_files[file_counter_tight-1].Close()
             tight_temp_files[file_counter_temp-1].Close()
             tight_deg_files[file_counter_deg-1].Close()
             tight_chi2_files[file_counter_deg-1].Close()
 
+if args.show: input("Finished. Press Enter.")
 c1.Print(args.name + ".pdf]")
-
-
-
-

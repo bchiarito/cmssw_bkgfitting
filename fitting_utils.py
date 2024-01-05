@@ -26,6 +26,14 @@ def removeEntries(bkg_hist, sig_hist, seed=None, cutoff=100):
             if content < 0: bkg_hist.SetBinContent(i, 0) 
             else: bkg_hist.SetBinContent(i, round(content))
 
+def findMaxXVal(hist):
+    max_x_val = 0
+    for i in range(hist.GetMaximumBin(), hist.GetNbinsX()):
+        if hist.GetBinContent(i+1) < 1e-1:
+            max_x_val = 0.1*(i+1)
+            break
+    return max_x_val
+
 # check consecutive pull bins to ensure there are no significant bumps
 def checkPullHist(pull_hist, nBins, sigma):
     bad_pull = False
@@ -81,6 +89,38 @@ def bern_fn(x, n_degree, i_degree):
     if i_degree < 0 or i_degree > n_degree: return 0
     #return scipy.special.comb(n_degree, i_degree) * x_adj**i_degree * (1 - x_adj)**(n_degree - i_degree)
     return (math.factorial(n_degree))/(math.factorial(i_degree)*math.factorial(n_degree - i_degree)) * x_adj**i_degree * (1 - x_adj)**(n_degree - i_degree)
+
+def bern_deg0(x, p):
+    X = x[0]
+    return p[0]
+        
+def bern_deg1(x, p):
+    X = x[0]
+    return p[0]*bern_fn(X, 1, 0) + p[1]*bern_fn(X, 1, 1)
+
+def bern_deg2(x, p):
+    X = x[0]
+    return p[0]*bern_fn(X, 2, 0) + p[1]*bern_fn(X, 2, 1) + p[2]*bern_fn(X, 2, 2)
+
+def bern_deg3(x, p):
+    X = x[0]
+    return p[0]*bern_fn(X, 3, 0) + p[1]*bern_fn(X, 3, 1) + p[2]*bern_fn(X, 3, 2) + p[3]*bern_fn(X, 3, 3)
+
+def bern_deg4(x, p):
+    X = x[0]
+    return p[0]*bern_fn(X, 4, 0) + p[1]*bern_fn(X, 4, 1) + p[2]*bern_fn(X, 4, 2) + p[3]*bern_fn(X, 4, 3) + p[4]*bern_fn(X, 4, 4)
+
+def bern_deg5(x, p):
+    X = x[0]
+    return p[0]*bern_fn(X, 5, 0) + p[1]*bern_fn(X, 5, 1) + p[2]*bern_fn(X, 5, 2) + p[3]*bern_fn(X, 5, 3) + p[4]*bern_fn(X, 5, 4) + p[5]*bern_fn(X, 5, 5)
+
+def bern_deg6(x, p):
+    X = x[0]
+    return p[0]*bern_fn(X, 6, 0) + p[1]*bern_fn(X, 6, 1) + p[2]*bern_fn(X, 6, 2) + p[3]*bern_fn(X, 6, 3) + p[4]*bern_fn(X, 6, 4) + p[5]*bern_fn(X, 6, 5) + p[6]*bern_fn(X, 6, 6)
+
+def bern_deg7(x, p):
+    X = x[0]
+    return p[0]*bern_fn(X, 7, 0) + p[1]*bern_fn(X, 7, 1) + p[2]*bern_fn(X, 7, 2) + p[3]*bern_fn(X, 7, 3) + p[4]*bern_fn(X, 7, 4) + p[5]*bern_fn(X, 7, 5) + p[6]*bern_fn(X, 7, 6) + p[7]*bern_fn(X, 7, 7)
 
 def getname(prefix='obj'):
   '''

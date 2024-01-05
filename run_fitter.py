@@ -42,11 +42,12 @@ ROOT.gStyle.SetOptFit(1111)
 ROOT.gStyle.SetLegendFillColor(ROOT.TColor.GetColorTransparent(ROOT.kWhite, 0.01));
 ROOT.gStyle.SetLegendBorderSize(0)
 
+# select regions
 # pi0: masspi0 plots for all eta regions, barrel, and endcap
 # pi0_bins: pt-binned masspi0 plots in barrel and endcap; 
 # overlay; pt-binned plots with overlayed ratios for each twoprong region
 if args.sanity: plots = ["sieie", "pfRelIso03_chg", "hadTow"]  
-else: plots = main_plots = ["pi0_bins"]
+else: plots = ["pi0_bins"]
 regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
 if args.testRegion: regions = [args.testRegion]
 eta_regions = ["barrel", "endcap"]
