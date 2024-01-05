@@ -7,118 +7,60 @@ import argparse
 import array
 import fitting_utils as util
 import scipy
-import scipy.stats as stats
-
-
-# Create TRandom object
-rand = ROOT.TRandom3()
-rand.SetSeed(12445)
-
-
-def binConverter(test_bin):
-    bin_list = test_bin.split(" ")
-    return bin_list
-
-
-# "scale" a control-region tight photon distribution to its corresponding signal distribution
-def removeEntries(bkg_hist, sig_hist):
-    if not bkg_hist.Integral() == 0: removal_prob = sig_hist.Integral() / bkg_hist.Integral()
-    else: return True
-    
-    if removal_prob < 1:
-        for i in range(1, bkg_hist.GetNbinsX()+1):
-            N = round(bkg_hist.GetBinContent(i))
-            p = removal_prob  # probability of removing entry
-            if N < 100: bkg_hist.SetBinContent(i, round(rand.Binomial(N, p)))
-            else: 
-                content = rand.Gaus(N*p, (N*p*(1-p))**0.5)
-                if content < 0: bkg_hist.SetBinContent(i, 0) 
-                else: bkg_hist.SetBinContent(i, round(content))
-    return True
-
-
-# check consecutive pull bins to ensure there are no significant bumps
-def checkPullHist(pull_hist, nBins, sigma):
-    bad_pull = False
-    for i in range(1, pull_hist.GetNbinsX()+1):
-        if i == pull_hist.GetNbinsX() - 6: break
-        if pull_hist.GetBinContent(i) > sigma:
-            bad_pull = True
-            for j in range(i+1, i+nBins):
-                if pull_hist.GetBinContent(j) > sigma: continue
-                else: 
-                    bad_pull = False
-                    break
-        if pull_hist.GetBinContent(i) < -sigma:
-            bad_pull = True
-            for j in range(i+1, i+nBins):
-                if pull_hist.GetBinContent(j) < -sigma: continue
-                else:
-                    bad_pull = False
-                    break
-    return bad_pull
-
+#import scipy.stats as stats
 
 # command line options
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("input", metavar="INPUT", help="input root file")
-
-# plot specification
-parser.add_argument("--sanity", "-s", default=False, action="store_true", help="create sanity plots")
-parser.add_argument("--test", default=False, action="store_true", help="create test plots")
+parser.add_argument("--testRegion", default=None, choices = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"], help="specify region to test")
 parser.add_argument("--testBin", default=None, help="specify bin to test")
-parser.add_argument("--fit", default=False, action="store_true", help="create fit plots only")
 parser.add_argument("--name", default="plots", help="create name for plots pdf")
-parser.add_argument("--ftest", default=None, help="format: '<CHEB_TYPE> <MAXDEGREE>', default is no f-test")
-parser.add_argument("--integral", default=False, action="store_true", help="add I to tight fit")
-parser.add_argument("--printFtest", "--printftest", default=False, action="store_true", help="for a fixed test bin, create a pdf of all possible ftest fits")
-parser.add_argument("--checkPull", default=False, action="store_true", help="print on legend if there are four consecutive pull bins greater than 1.5 sigma")
-parser.add_argument("--specifyFtestDegree", "--fdeg", default=None, help="specify which degree ftest should pick for visualization purposes")
-parser.add_argument("--guesses", "-g", default=False, action="store_true", help="supply guess text file (NOT IMPLEMENTED YET)")
-parser.add_argument("--useScaledTight", default=False, action="store_true", help="")
-parser.add_argument("--createLooseFits", default=False, action="store_true", help="will recreate loose fits even if present")
+parser.add_argument("--show", default=False, action="store_true", help="don't close after finished running (to view canvas)")
+run_args = parser.add_argument_group("run options")
+run_args.add_argument("--createLooseFits", default=False, action="store_true", help="will recreate loose fits even if present")
+run_args.add_argument("--useScaledTight", default=False, action="store_true", help="used scaled tight data in preference to unscaled")
+run_args.add_argument("--ftest", default="3 4", help="change ftest, format: '<CHEB_TYPE> <MAXDEGREE>', default is cheby degree 4")
+run_args.add_argument("--integral", default=False, action="store_true", help="add I to tight fit")
+plot_args = parser.add_argument_group("plotting options")
+plot_args.add_argument("--checkPull", default=False, action="store_true", help="print on legend if there are four consecutive pull bins greater than 1.5 sigma")
+plot_args.add_argument("--specifyFtestDegree", "--fdeg", default=None, help="specify which degree ftest should pick for visualization purposes")
+plot_args.add_argument("--printFtest", "--printftest", default=False, action="store_true", help="for a fixed test bin, create a pdf of all possible ftest fits")
+plot_args.add_argument("--onlyLoose", default=False, action="store_true", help="create loose fit plots only")
+plot_args.add_argument("--sanity", "-s", default=False, action="store_true", help="create sanity plots")
 
 # parse args
 args = parser.parse_args()
 
-os.chdir(args.input)
-infile1 = ROOT.TFile('summed_egamma.root')
+# constants
+egamma_rootfile = 'summed_egamma.root'
+bins = [20,40,60,80,100,140,180,220,300,380]
 
-# other config
+# plot style
+leg_x1, leg_x2, leg_y1, leg_y2 = 0.7, 0.60, 0.89, 0.89
 ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetOptFit(1111)
 ROOT.gStyle.SetLegendFillColor(ROOT.TColor.GetColorTransparent(ROOT.kWhite, 0.01));
 ROOT.gStyle.SetLegendBorderSize(0)
-leg_x1, leg_x2, leg_y1, leg_y2 = 0.7, 0.60, 0.89, 0.89
 
+# pi0: masspi0 plots for all eta regions, barrel, and endcap
+# pi0_bins: pt-binned masspi0 plots in barrel and endcap; 
+# overlay; pt-binned plots with overlayed ratios for each twoprong region
+if args.sanity: plots = ["sieie", "pfRelIso03_chg", "hadTow"]  
+else: plots = main_plots = ["pi0_bins"]
+regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
+if args.testRegion: regions = [args.testRegion]
+eta_regions = ["barrel", "endcap"]
+photon_regions = ["tight", "loose"]
+
+# init
+os.chdir(args.input)
+infile1 = ROOT.TFile(egamma_rootfile)
 c1 = ROOT.TCanvas("c1", "c1", 800, 600)
 c1.Print(args.name + ".pdf[")
 
-# pi0: masspi0 plots for all eta regions, barrel, and endcap; pi0_bins: pt-binned masspi0 plots in barrel and endcap; overlay; pt-binned plots with overlayed ratios for each twoprong region
-sanity_plots = ["sieie", "pfRelIso03_chg", "hadTow"]  
-main_plots = ["pi0_bins"]
-test_plots = ["pi0_bins"]
-if args.sanity: plots = sanity_plots
-elif args.test: plots = test_plots
-else: plots = main_plots
-
-eta_regions = ["all", "barrel", "endcap"]
-regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
-
-# used if only one control/signal region is to be tested
-if args.testBin is None: test_regions = ["noniso_sym"] 
-elif "noniso_asym" in args.testBin: test_regions = ["noniso_asym"]
-elif "noniso_sym" in args.testBin: test_regions = ["noniso_sym"]
-elif "iso_asym" in args.testBin: test_regions = ["iso_asym"]
-elif "iso_sym" in args.testBin: test_regions = ["iso_sym"]
-
-if args.test: regions = test_regions
-photon_regions = ["tight", "loose"]
-
-# Define pT bins to be used 
-bins = [20,40,60,80,100,140,180,220,300,380]
-
+# run
 for item in plots:
+
     if item == "pfRelIso03_chg" or item == "sieie" or item == "hoe" or item == "hadTow":  # sanity plots
         for region in photon_regions:
             iso_sym = "photon_" + region + "_" + item + "_iso_sym"
@@ -224,9 +166,9 @@ for item in plots:
                 ROOT.gPad.SetGridy(1)
                 ROOT.gPad.Update()
                 c1.Print(args.name + ".pdf")    
+
     elif item == "pi0_bins":  # binned plots (PRIMARILY USED)
-        #if args.ratio: ROOT.TPad.Divide(c1, 1, 2)
-        if args.testBin is not None: test_bin = binConverter(args.testBin)
+        if args.testBin is not None: test_bin = (args.testBin).split(" ")
         chi2_pvalues = []
         if not os.path.exists('loose_fit_hists'): os.mkdir("loose_fit_hists")
         if not os.path.exists('tight_templates'): os.mkdir("tight_templates")
@@ -253,19 +195,14 @@ for item in plots:
                 break
             if args.testBin is not None: 
                 if not region == test_bin[0]: continue
-            print("at begin region loop:", region)
             for i in range(len(bins)):  # loop through pt bins for a fixed twoprong sideband
                 if args.testBin is not None: 
                     if not bins[i] == int(test_bin[2]): continue
-                print("  at begin bin loop:", region, bins[i])
                 for eta_reg in eta_regions:  # loop through eta regions for fixed pt-bin and fixed twoprong sideband
                     if args.testBin is not None: 
                         if not eta_reg == test_bin[1]: continue
                     if not eta_reg == "barrel" and not eta_reg == "endcap": continue  # no pt-bin plots for barrel and endcap combined, so skip this case
                     
-                    print("    at begin eta loop:", region, bins[i], eta_reg)
-
-
                     # Generate correct plots names to access from summed histogram files
                     egamma_tight_plots = "plots/twoprong_masspi0_" + region + "_" + eta_reg
                     egamma_loose_plots = "plots/twoprong_masspi0_" + region + "_" + eta_reg
@@ -406,7 +343,6 @@ for item in plots:
                     loose_fit_files.append(ROOT.TFile("loose_fit_hists/" + hist_name + "_loose.root"))
                     loose_fit_as_hist = loose_fit_files[file_counter_loose].Get(hist_name+"_loose")
                     file_counter_loose += 1
-                    
 
                     fitted_func = util.HistogramToFunction(loose_fit_as_hist)
                     fitted_func_times_constant, _, _ = util.MultiplyWithPolyToTF1(fitted_func, 0, poly=0)  # this part can appear a bit buggy in the plots for some reason
@@ -414,7 +350,7 @@ for item in plots:
                     tight_fit_w_constant = util.TemplateToHistogram(fitted_func_times_constant, 1000, 0, 50)  
 
                     # Decide whether an F-test should be used to pick the best polynomial degree
-                    FTEST = True if args.ftest else False
+                    FTEST = True
                     NUM_PLOTS = 1  # this variable is used so that the --printFtest option works
                     if not FTEST:
                         POLY_TYPE = 3
@@ -464,6 +400,7 @@ for item in plots:
                     # Save the tight templates to be plotted separately
                     if args.useScaledTight: os.chdir("tight_templates/templates/")
                     else: os.chdir("tight_templates/templates_noscaling/")
+
                     # Save the loose fits in a separate file
                     if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight_temp"
                     else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_tight_temp" 
@@ -489,7 +426,6 @@ for item in plots:
                     
                     # The plotting done here are for rough visualization purposes
                     # For finalized plots, a separate plotting script should be used
-                    print("    right before plot:", region, bins[i], eta_reg)
                     for plot in range(NUM_PLOTS):
                         if args.printFtest and args.testBin:
                             func_with_poly = fitfuncs[plot]
@@ -548,7 +484,6 @@ for item in plots:
                             chi2_pvalues.append(-1)
                         #print(chi2_mod, len(num_bins), chi2_mod_ndof)
                         
-                        #if args.saveTightTemplates:
                         os.chdir("tight_templates/chi2s/")
                         outfile3 = ROOT.TFile(title+"_chi2.root", "RECREATE")
                         outfile3.cd()
@@ -627,12 +562,9 @@ for item in plots:
                             title += ", full fit (" + str(nLandau) + " land " + str(nExp) + " exp)"
 
                         # Legend creation
-                        #if old_method: 
                         legend1 = ROOT.TLegend(0.35, 0.78, 0.65, 0.9)
-                        #else: legend1 = ROOT.TLegend(0.62, 0.27, 0.9, 0.37)
                         legend1.AddEntry(h_egamma_loose, "Loose Photon, " + str(round(h_egamma_loose.GetEntries())), "l")
                         if region == "iso_sym": legend1.AddEntry(h_egamma_tight, "Tight Photon, " + str(round(h_egamma_tight.GetEntries())), "l")
-                        #if not args.ratio: legend1.AddEntry(0, "Chi2/NDF: " + str(chi2 / ndf), "")
                         legend2 = ROOT.TLegend(0.29, 0.70, 0.62, 0.89)
                         legend2.AddEntry(h_egamma_tight, "Tight Photon, " + str(h_egamma_tight.GetEntries()), "l")
                         if POLY_TYPE == 0: legend2.AddEntry('', 'Polynomial', '')
@@ -649,19 +581,13 @@ for item in plots:
                         legend2.AddEntry('', 'Chi2/Ndof: {:.3f}'.format(chi2_ndof), '')
                         legend2.AddEntry('', 'Chi2_mod/Ndof: {:.3f}'.format(chi2_mod_ndof), '')
                         legend2.AddEntry('', 'Bin Error: {:.1%}'.format(bin_bin_error), '')
-                        """
-                        if args.scaleToSignal and not region == "iso_sym": 
-                            legend2.AddEntry('', 'Signal Integral: ' + str(h_sig_tight.Integral()), '')
-                            legend2.AddEntry('', 'Scaled Bkg Integral: ' + str(int(h_egamma_tight.Integral())), '')
-                        """
                         if args.checkPull:
-                            legend2.AddEntry('', '3 Consecutive Bins > 2 sigma: ' + str(checkPullHist(h_tight_pull, 3, 2)), '')
-                            legend2.AddEntry('', '4 Consecutive Bins > 1.5 sigma: ' + str(checkPullHist(h_tight_pull, 4, 1.5)), '')
-                            legend2.AddEntry('', '5 Consecutive Bins > 1 sigma: ' + str(checkPullHist(h_tight_pull, 5, 1)), '')
-
+                            legend2.AddEntry('', '3 Consecutive Bins > 2 sigma: ' + str(utilcheckPullHist(h_tight_pull, 3, 2)), '')
+                            legend2.AddEntry('', '4 Consecutive Bins > 1.5 sigma: ' + str(util.checkPullHist(h_tight_pull, 4, 1.5)), '')
+                            legend2.AddEntry('', '5 Consecutive Bins > 1 sigma: ' + str(util.checkPullHist(h_tight_pull, 5, 1)), '')
 
                         # Draw plots
-                        if args.fit: c1.cd(1)
+                        if args.onlyLoose: c1.cd(1)
                         else:
                           c1.cd()
                           pad1 = ROOT.TPad('pad1', 'pad1', 0, 0.3, 0.5, 1)
@@ -689,7 +615,7 @@ for item in plots:
                         legend1.Draw("same")
                         ROOT.gPad.Update()
 
-                        if not args.fit:
+                        if not args.onlyLoose:
                             if not region == "iso_sym":
                                 c1.cd()
                                 pad2 = ROOT.TPad('pad2', 'pad2', 0.5, 0.3, 1, 1)
@@ -792,15 +718,8 @@ for item in plots:
                                 ROOT.gPad.Update()
 
                         ROOT.gPad.Update()
-                        #if args.testBin is not None and not args.printFtest: input()
                         c1.Print(args.name + ".pdf")
 
-    pvals = ROOT.TH1D('pvals', 'pvals', 100, 0, 1)
-    for val in chi2_pvalues:
-        #print(val)
-        pvals.Fill(val)
-    #pvals.Draw()
-
+    if args.show: input("Finished. Press Enter.")
     c1.Print(args.name + ".pdf]")
     infile1.Close()
-

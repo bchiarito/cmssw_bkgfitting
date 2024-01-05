@@ -26,6 +26,27 @@ def removeEntries(bkg_hist, sig_hist, seed=None, cutoff=100):
             if content < 0: bkg_hist.SetBinContent(i, 0) 
             else: bkg_hist.SetBinContent(i, round(content))
 
+# check consecutive pull bins to ensure there are no significant bumps
+def checkPullHist(pull_hist, nBins, sigma):
+    bad_pull = False
+    for i in range(1, pull_hist.GetNbinsX()+1):
+        if i == pull_hist.GetNbinsX() - 6: break
+        if pull_hist.GetBinContent(i) > sigma:
+            bad_pull = True
+            for j in range(i+1, i+nBins):
+                if pull_hist.GetBinContent(j) > sigma: continue
+                else: 
+                    bad_pull = False
+                    break
+        if pull_hist.GetBinContent(i) < -sigma:
+            bad_pull = True
+            for j in range(i+1, i+nBins):
+                if pull_hist.GetBinContent(j) < -sigma: continue
+                else:
+                    bad_pull = False
+                    break
+    return bad_pull
+
 def cheb_fn(x, degree, kind):
   if kind == 1:
     if degree == 0:
