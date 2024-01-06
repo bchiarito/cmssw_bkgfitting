@@ -6,6 +6,7 @@ import os
 import argparse
 import array
 import fitting_utils as util
+import constants as VALS
 import scipy
 #import scipy.stats as stats
 
@@ -33,7 +34,6 @@ args = parser.parse_args()
 
 # constants
 egamma_rootfile = 'summed_egamma.root'
-bins = [20,40,60,80,100,140,180,220,300,380]
 
 # plot style
 leg_x1, leg_x2, leg_y1, leg_y2 = 0.7, 0.60, 0.89, 0.89
@@ -44,10 +44,10 @@ ROOT.gStyle.SetLegendBorderSize(0)
 
 # select regions
 # pi0: masspi0 plots for all eta regions, barrel, and endcap
-# pi0_bins: pt-binned masspi0 plots in barrel and endcap; 
+# pi0_VALS.PT_EDGES: pt-binned masspi0 plots in barrel and endcap; 
 # overlay; pt-binned plots with overlayed ratios for each twoprong region
 if args.sanity: plots = ["sieie", "pfRelIso03_chg", "hadTow"]  
-else: plots = ["pi0_bins"]
+else: plots = ["pi0_VALS.PT_EDGES"]
 regions = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"]
 if args.testRegion: regions = [args.testRegion]
 eta_regions = ["barrel", "endcap"]
@@ -168,7 +168,7 @@ for item in plots:
                 ROOT.gPad.Update()
                 c1.Print(args.name + ".pdf")    
 
-    elif item == "pi0_bins":  # binned plots (PRIMARILY USED)
+    elif item == "pi0_VALS.PT_EDGES":  # binned plots (PRIMARILY USED)
         if args.testBin is not None: test_bin = (args.testBin).split(" ")
         chi2_pvalues = []
         if not os.path.exists('loose_fit_hists'): os.mkdir("loose_fit_hists")
@@ -196,9 +196,9 @@ for item in plots:
                 break
             if args.testBin is not None: 
                 if not region == test_bin[0]: continue
-            for i in range(len(bins)):  # loop through pt bins for a fixed twoprong sideband
+            for i in range(len(VALS.PT_EDGES)):  # loop through pt VALS.PT_EDGES for a fixed twoprong sideband
                 if args.testBin is not None: 
-                    if not bins[i] == int(test_bin[2]): continue
+                    if not VALS.PT_EDGES[i] == int(test_bin[2]): continue
                 for eta_reg in eta_regions:  # loop through eta regions for fixed pt-bin and fixed twoprong sideband
                     if args.testBin is not None: 
                         if not eta_reg == test_bin[1]: continue
@@ -209,12 +209,12 @@ for item in plots:
                     egamma_loose_plots = "plots/twoprong_masspi0_" + region + "_" + eta_reg
                     
                     # this must follow the naming convention of the input histograms
-                    if i == len(bins) - 1:
-                        egamma_tight_plots += "_" + str(bins[i]) + "+"
-                        egamma_loose_plots += "_" + str(bins[i]) + "+"
+                    if i == len(VALS.PT_EDGES) - 1:
+                        egamma_tight_plots += "_" + str(VALS.PT_EDGES[i]) + "+"
+                        egamma_loose_plots += "_" + str(VALS.PT_EDGES[i]) + "+"
                     else:
-                        egamma_tight_plots += "_" + str(bins[i]) + "_" + str(bins[i+1])
-                        egamma_loose_plots += "_" + str(bins[i]) + "_" + str(bins[i+1]) 
+                        egamma_tight_plots += "_" + str(VALS.PT_EDGES[i]) + "_" + str(VALS.PT_EDGES[i+1])
+                        egamma_loose_plots += "_" + str(VALS.PT_EDGES[i]) + "_" + str(VALS.PT_EDGES[i+1]) 
                     
                     # Reference name of the histogram created in the backend 
                     egamma_tight_plots += "_tight"
@@ -231,8 +231,8 @@ for item in plots:
                     h_egamma_tight.SetLineColor(ROOT.kBlack)
                     h_egamma_loose.SetLineColor(ROOT.kBlack)
                     
-                    if i == len(bins) - 1: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "+"
-                    else: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) 
+                    if i == len(VALS.PT_EDGES) - 1: hist_name = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "+"
+                    else: hist_name = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "_" + str(VALS.PT_EDGES[i+1]) 
                     
                     # scaled tight data
                     if args.useScaledTight:
@@ -245,8 +245,8 @@ for item in plots:
 
                     # FITTING
                     if i == 0 and eta_reg == "barrel": print("====================== " + region.upper() + " =====================")
-                    if i == len(bins) - 1: print("############### " + region.upper() + " " + eta_reg.upper() + " " + str(bins[i]) + "+ ###############")
-                    else: print("############### " + region.upper() + " " + eta_reg.upper() + " " + str(bins[i]) + "-" + str(bins[i+1]) + " ###############")
+                    if i == len(VALS.PT_EDGES) - 1: print("############### " + region.upper() + " " + eta_reg.upper() + " " + str(VALS.PT_EDGES[i]) + "+ ###############")
+                    else: print("############### " + region.upper() + " " + eta_reg.upper() + " " + str(VALS.PT_EDGES[i]) + "-" + str(VALS.PT_EDGES[i+1]) + " ###############")
                     
                     ### new idea, fit only rising and falling ###
                     # determine left and right bounds
@@ -278,7 +278,7 @@ for item in plots:
                     right = h_egamma_loose.GetBinLowEdge(right_bin)  # last bin exceeding ENTRIES_CUTOFF
                     last = h_egamma_loose.GetBinLowEdge(last_bin+1)  # last bin with data
                     
-                    fit_init = util.lookup_fit_guesses(region, eta_reg, bins[i])
+                    fit_init = util.lookup_fit_guesses(region, eta_reg, VALS.PT_EDGES[i])
                     old_method = fit_init['old_method']
                     guesses = fit_init['guesses']
                     nLandau = fit_init['nLandau']
@@ -288,8 +288,8 @@ for item in plots:
 
                     # Loose spectrum fitting
                     os.chdir("loose_fit_hists")
-                    if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_loose"
-                    else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_loose" 
+                    if i == len(VALS.PT_EDGES) - 1: title = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "+_loose"
+                    else: title = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "_" + str(VALS.PT_EDGES[i+1]) + "_loose" 
                     if not os.path.exists(title + ".root") or args.createLooseFits: # create new loose fits
                         if old_method:
                             N = str(nLandau) + str(nExp)
@@ -326,8 +326,8 @@ for item in plots:
                                     loose_fit_as_hist.SetBinContent(b+1, falling_fit_as_hist.GetBinContent(b+1))
                         
                         # Save the loose fits in a separate file
-                        #if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_loose"
-                        #else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_loose" 
+                        #if i == len(VALS.PT_EDGES) - 1: title = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "+_loose"
+                        #else: title = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "_" + str(VALS.PT_EDGES[i+1]) + "_loose" 
                         outfile = ROOT.TFile(title + ".root", "RECREATE")
                         outfile.cd()
                         loose_hist = ROOT.TH1F(title, title, 1000, 0, 50) 
@@ -403,8 +403,8 @@ for item in plots:
                     else: os.chdir("tight_templates/templates_noscaling/")
 
                     # Save the loose fits in a separate file
-                    if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight_temp"
-                    else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_tight_temp" 
+                    if i == len(VALS.PT_EDGES) - 1: title = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "+_tight_temp"
+                    else: title = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "_" + str(VALS.PT_EDGES[i+1]) + "_tight_temp" 
                     outfile1 = ROOT.TFile(title + ".root", "RECREATE")
                     outfile1.cd()
                     tight_fit_hist = ROOT.TH1F(title, title, 1000, 0, 50) 
@@ -422,8 +422,8 @@ for item in plots:
                     outfile2.Close()
                     os.chdir("../../")
 
-                    if i == len(bins) - 1: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "+"
-                    else: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) 
+                    if i == len(VALS.PT_EDGES) - 1: hist_name = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "+"
+                    else: hist_name = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "_" + str(VALS.PT_EDGES[i+1]) 
                     
                     # The plotting done here are for rough visualization purposes
                     # For finalized plots, a separate plotting script should be used
@@ -445,8 +445,8 @@ for item in plots:
 
                         os.chdir("tight_templates/polys/")
                         # Save the loose fits in a separate file
-                        if i == len(bins) - 1: title = region + "_" + eta_reg + "_" + str(bins[i]) + "+_tight_poly"
-                        else: title = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) + "_tight_poly" 
+                        if i == len(VALS.PT_EDGES) - 1: title = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "+_tight_poly"
+                        else: title = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "_" + str(VALS.PT_EDGES[i+1]) + "_tight_poly" 
                         outfile1 = ROOT.TFile(title + ".root", "RECREATE")
                         outfile1.cd()
                         bern_poly = just_poly.Clone()
@@ -460,7 +460,7 @@ for item in plots:
                         integral = False
                         hist = h_egamma_tight
                         fit = func_with_poly
-                        #ndof = util.count_nonzero_bins(hist) - fit.GetNpar()
+                        #ndof = util.count_nonzero_VALS.PT_EDGES(hist) - fit.GetNpar()
                         ndof = tlast_bin - fit.GetNpar()
                         chi2, by_bin = util.RSS(fit, hist, error=0, integral=integral, chi2=True)
                         chi2_ndof = chi2 / ndof
@@ -550,8 +550,8 @@ for item in plots:
                         title = region + " Twoprong"
                         if eta_reg == "barrel": title += ", Barrel"
                         elif eta_reg == "endcap": title += ", Endcap"
-                        if i == len(bins) - 1: title += ", pt > " + str(bins[i])
-                        else: title += ", " + str(bins[i]) + " < pt < " + str(bins[i+1]) 
+                        if i == len(VALS.PT_EDGES) - 1: title += ", pt > " + str(VALS.PT_EDGES[i])
+                        else: title += ", " + str(VALS.PT_EDGES[i]) + " < pt < " + str(VALS.PT_EDGES[i+1]) 
                         if not old_method:
                             if nLandau == 1: title += ", 1 land"
                             elif nLandau == 2: title += ", 2 land"
@@ -608,10 +608,10 @@ for item in plots:
                             except NameError:
                                 pass
                         ROOT.gPad.SetLogy()
-                        if bins[i] < 60: h_egamma_loose.GetXaxis().SetRangeUser(0, 5)
-                        elif bins[i] < 120: h_egamma_loose.GetXaxis().SetRangeUser(0, 10)
-                        elif bins[i] < 200: h_egamma_loose.GetXaxis().SetRangeUser(0, 15)
-                        elif bins[i] < 380: h_egamma_loose.GetXaxis().SetRangeUser(0, 20)
+                        if VALS.PT_EDGES[i] < 60: h_egamma_loose.GetXaxis().SetRangeUser(0, 5)
+                        elif VALS.PT_EDGES[i] < 120: h_egamma_loose.GetXaxis().SetRangeUser(0, 10)
+                        elif VALS.PT_EDGES[i] < 200: h_egamma_loose.GetXaxis().SetRangeUser(0, 15)
+                        elif VALS.PT_EDGES[i] < 380: h_egamma_loose.GetXaxis().SetRangeUser(0, 20)
                         else: h_egamma_loose.GetXaxis().SetRangeUser(0, 26)
                         legend1.Draw("same")
                         ROOT.gPad.Update()
@@ -623,10 +623,10 @@ for item in plots:
                                 pad2.Draw()
                                 pad2.cd()
                                 ROOT.gPad.SetLogy()
-                                if bins[i] < 60: h_egamma_tight.GetXaxis().SetRangeUser(0, 5)
-                                elif bins[i] < 120: h_egamma_tight.GetXaxis().SetRangeUser(0, 10)
-                                elif bins[i] < 200: h_egamma_tight.GetXaxis().SetRangeUser(0, 15)
-                                elif bins[i] < 380: h_egamma_tight.GetXaxis().SetRangeUser(0, 20)
+                                if VALS.PT_EDGES[i] < 60: h_egamma_tight.GetXaxis().SetRangeUser(0, 5)
+                                elif VALS.PT_EDGES[i] < 120: h_egamma_tight.GetXaxis().SetRangeUser(0, 10)
+                                elif VALS.PT_EDGES[i] < 200: h_egamma_tight.GetXaxis().SetRangeUser(0, 15)
+                                elif VALS.PT_EDGES[i] < 380: h_egamma_tight.GetXaxis().SetRangeUser(0, 20)
                                 else: h_egamma_tight.GetXaxis().SetRangeUser(0, 26)
                                 h_egamma_tight.SetMinimum(0.1)
                                 h_egamma_tight.Draw("e")
@@ -653,10 +653,10 @@ for item in plots:
                                 overlay.cd()
                                 empty = ROOT.TH1F(util.getname('empty'), '', 100, 0, 50)
                                 empty.SetLineColor(ROOT.kRed)
-                                if bins[i] < 60: empty.GetXaxis().SetRangeUser(0, 5)
-                                elif bins[i] < 120: empty.GetXaxis().SetRangeUser(0, 10)
-                                elif bins[i] < 200: empty.GetXaxis().SetRangeUser(0, 15)
-                                elif bins[i] < 380: empty.GetXaxis().SetRangeUser(0, 20)
+                                if VALS.PT_EDGES[i] < 60: empty.GetXaxis().SetRangeUser(0, 5)
+                                elif VALS.PT_EDGES[i] < 120: empty.GetXaxis().SetRangeUser(0, 10)
+                                elif VALS.PT_EDGES[i] < 200: empty.GetXaxis().SetRangeUser(0, 15)
+                                elif VALS.PT_EDGES[i] < 380: empty.GetXaxis().SetRangeUser(0, 20)
                                 else: empty.GetXaxis().SetRangeUser(0, 26)
                                 empty.GetYaxis().SetRangeUser(min(0, just_poly.GetMinimum()), just_poly.GetMaximum())
                                 empty.Draw('AH')
@@ -685,10 +685,10 @@ for item in plots:
                             h_loose_pull.SetMarkerSize(0.25)
                             h_loose_pull.GetYaxis().SetRangeUser(-10, 10)
                             h_loose_pull.SetStats(0)
-                            if bins[i] < 60: h_loose_pull.GetXaxis().SetRangeUser(0, 5)
-                            elif bins[i] < 120: h_loose_pull.GetXaxis().SetRangeUser(0, 10)
-                            elif bins[i] < 200: h_loose_pull.GetXaxis().SetRangeUser(0, 15)
-                            elif bins[i] < 380: h_loose_pull.GetXaxis().SetRangeUser(0, 20)
+                            if VALS.PT_EDGES[i] < 60: h_loose_pull.GetXaxis().SetRangeUser(0, 5)
+                            elif VALS.PT_EDGES[i] < 120: h_loose_pull.GetXaxis().SetRangeUser(0, 10)
+                            elif VALS.PT_EDGES[i] < 200: h_loose_pull.GetXaxis().SetRangeUser(0, 15)
+                            elif VALS.PT_EDGES[i] < 380: h_loose_pull.GetXaxis().SetRangeUser(0, 20)
                             else: h_loose_pull.GetXaxis().SetRangeUser(0, 26)
 
                             if not region == "iso_sym":
@@ -707,10 +707,10 @@ for item in plots:
                                 h_tight_pull.SetMarkerSize(0.25)
                                 h_tight_pull.GetYaxis().SetRangeUser(-10, 10)
                                 h_tight_pull.SetStats(0)
-                                if bins[i] < 60: h_tight_pull.GetXaxis().SetRangeUser(0, 5)
-                                elif bins[i] < 120: h_tight_pull.GetXaxis().SetRangeUser(0, 10)
-                                elif bins[i] < 200: h_tight_pull.GetXaxis().SetRangeUser(0, 15)
-                                elif bins[i] < 380: h_tight_pull.GetXaxis().SetRangeUser(0, 20)
+                                if VALS.PT_EDGES[i] < 60: h_tight_pull.GetXaxis().SetRangeUser(0, 5)
+                                elif VALS.PT_EDGES[i] < 120: h_tight_pull.GetXaxis().SetRangeUser(0, 10)
+                                elif VALS.PT_EDGES[i] < 200: h_tight_pull.GetXaxis().SetRangeUser(0, 15)
+                                elif VALS.PT_EDGES[i] < 380: h_tight_pull.GetXaxis().SetRangeUser(0, 20)
                                 else: h_tight_pull.GetXaxis().SetRangeUser(0, 26)
                                 h_tight_pullc.SetMarkerColor(ROOT.kBlue)
                                 h_tight_pullc.SetMarkerStyle(8)

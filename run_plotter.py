@@ -6,6 +6,7 @@ import os
 import argparse
 import array
 import fitting_utils as util
+import constants as VALS
 
 # command line options
 parser = argparse.ArgumentParser(description="")
@@ -19,7 +20,6 @@ args = parser.parse_args()
 
 # constants
 egamma_rootfile = "summed_egamma.root"
-bins = [20,40,60,80,100,140,180,220,300,380]
 
 # plotting style
 leg_x1, leg_x2, leg_y1, leg_y2 = 0.7, 0.60, 0.89, 0.89
@@ -59,9 +59,9 @@ file_counter_poly = 0
 for region in regions:  # loop through twoprong sideband regions
     if args.testBin is not None: 
         if not region == test_bin[0]: continue
-    for i in range(len(bins)):  # loop through pt bins for a fixed twoprong sideband
+    for i in range(len(VALS.PT_EDGES)):  # loop through pt bins for a fixed twoprong sideband
         if args.testBin is not None: 
-            if not bins[i] == int(test_bin[2]): continue
+            if not VALS.PT_EDGES[i] == int(test_bin[2]): continue
         for eta_reg in eta_regions:  # loop through eta regions for fixed pt-bin and fixed twoprong sideband
             if args.testBin is not None: 
                 if not eta_reg == test_bin[1]: continue
@@ -69,10 +69,10 @@ for region in regions:  # loop through twoprong sideband regions
             # Generate correct plots names to access from summed histogram files
             egamma_loose_plots = "plots/twoprong_masspi0_" + region + "_" + eta_reg
 
-            if i == len(bins) - 1: egamma_loose_plots += "_" + str(bins[i]) + "+"
-            else: egamma_loose_plots += "_" + str(bins[i]) + "_" + str(bins[i+1])
-            if i == len(bins) - 1: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "+"
-            else: hist_name = region + "_" + eta_reg + "_" + str(bins[i]) + "_" + str(bins[i+1]) 
+            if i == len(VALS.PT_EDGES) - 1: egamma_loose_plots += "_" + str(VALS.PT_EDGES[i]) + "+"
+            else: egamma_loose_plots += "_" + str(VALS.PT_EDGES[i]) + "_" + str(VALS.PT_EDGES[i+1])
+            if i == len(VALS.PT_EDGES) - 1: hist_name = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "+"
+            else: hist_name = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "_" + str(VALS.PT_EDGES[i+1]) 
 
             # Reference name of the histogram created in the backend 
             egamma_loose_plots += "_loose"
@@ -268,9 +268,9 @@ for region in regions:  # loop through twoprong sideband regions
                 legend2.SetTextSize(0.03)
            
             # Create Title 
-            title1 = "p_{T} " + str(bins[i])
-            if i == len(bins)-1: title1 += "+ GeV" 
-            else: title1 += "-" + str(bins[i+1]) + " GeV"
+            title1 = "p_{T} " + str(VALS.PT_EDGES[i])
+            if i == len(VALS.PT_EDGES)-1: title1 += "+ GeV" 
+            else: title1 += "-" + str(VALS.PT_EDGES[i+1]) + " GeV"
             if eta_reg == "barrel": eta1 = "Barrel TP"
             else: eta1 = "Endcap TP"
            

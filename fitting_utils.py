@@ -2,15 +2,14 @@ import ROOT
 import sys
 import math
 from scipy.stats import f 
+import constants as VALS
 
-rand = ROOT.TRandom3()
-BERN_UPPER_RANGE = 25
-NAME_COUNT = 0 # global counter
-pt_bins = [20,40,60,80,100,140,180,220,300,380]
+# global counters
+NAME_COUNT = 0
 
 # "scale" a control-region tight photon distribution to its corresponding signal distribution
-def removeEntries(bkg_hist, sig_hist, seed=None, cutoff=100):
-    if seed: rand.SetSeed(seed)
+def removeEntries(bkg_hist, sig_hist, rand=None, cutoff=100):
+    if not rand: rand = ROOT.TRandom3()
 
     if bkg_hist.Integral() == 0: return False
    
@@ -85,7 +84,7 @@ def cheb_fn(x, degree, kind):
   else: raise ValueError('"kind" argument must be 1 or 2.')
 
 def bern_fn(x, n_degree, i_degree):
-    x_adj = x / BERN_UPPER_RANGE
+    x_adj = x / VALS.BERN_UPPER_RANGE
     if i_degree < 0 or i_degree > n_degree: return 0
     #return scipy.special.comb(n_degree, i_degree) * x_adj**i_degree * (1 - x_adj)**(n_degree - i_degree)
     return (math.factorial(n_degree))/(math.factorial(i_degree)*math.factorial(n_degree - i_degree)) * x_adj**i_degree * (1 - x_adj)**(n_degree - i_degree)
@@ -389,9 +388,7 @@ def MultiplyWithPolyToTF1(func, degree, range_low=0, range_high=50, poly=0, para
         raise ValueError('Got degree {} for poly type {}. Not Implemented!'.format(degree, poly))
 
     def func_after_mult(x, p):
-        #return func(x) * polynomial(x, p)
         val = func(x) * polynomial(x, p)
-        #if val < 10**-30: val = 10**-30
         return val
 
     globals()[getname('func')] = polynomial
@@ -913,7 +910,6 @@ def ftest(hist, func2, fit2, func1, fit1, sig=0.1, integral=False):
     target = lookup_ftest_target(dof1, dof2, sig)
     decision = F > target
     return decision, F, target, rss1, rss2, dof1, dof2
-
 
 def lookup_fit_guesses(control_region, eta_reg, pt_bin):
     # Default new method used; if there are less than ENTRIES_CUTOFF entries, the "old" method is used instead of the bulk fitting
