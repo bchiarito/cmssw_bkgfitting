@@ -15,7 +15,7 @@ import itertools
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("input", metavar="INPUT", help="input directory file with summed_egamma.root")
 parser.add_argument("--testBin", default=None, help="specify bin to test")
-parser.add_argument("--phislice", default=False, action="store_true", help="")
+parser.add_argument("--nophislice", default=False, action="store_true", help="")
 args = parser.parse_args()
 
 # Constants
@@ -66,23 +66,23 @@ for region, i, eta_reg in itertools.product(regions, range(len(VALS.PT_EDGES)), 
     else: egamma_tight_plots += "_" + str(VALS.PT_EDGES[i]) + "_" + str(VALS.PT_EDGES[i+1])
     egamma_tight_plots += "_tight"
 
-if not args.phislice: exit()
+if args.nophislice: exit()
 os.chdir('../')
 if not os.path.exists(phislice_directory_name): os.mkdir(phislice_directory_name)
 os.chdir(phislice_directory_name)
 
 # pt-and-phi-binned histos
-for region, i, eta_reg, k in itertools.product(regions, range(len(bins)), eta_regions, range(len(VALS.PHI_EDGES))):
+for region, i, eta_reg, k in itertools.product(regions, range(len(VALS.PT_EDGES)), eta_regions, range(len(VALS.PHI_EDGES))):
     if args.testBin:
         if region != test_bin[0]: continue
         if eta_reg != test_bin[1]: continue
-        if bins[i] != int(test_bin[2]): continue
+        if VALS.PT_EDGES[i] != int(test_bin[2]): continue
     histogram_prefix_mass = "twoprong_masspi0_"
     phi_low = VALS.PHI_EDGES[k]
     phi_high = VALS.PHI_EDGES[k+1] if k != len(VALS.PHI_EDGES)-1 else "Inf"
     control_region = region + "_" + eta_reg
-    pt_low = bins[i]
-    pt_high = bins[i+1] if i != len(bins)-1 else "Inf"
+    pt_low = VALS.PT_EDGES[i]
+    pt_high = VALS.PT_EDGES[i+1] if i != len(VALS.PT_EDGES)-1 else "Inf"
     tight_plot_name = 'plots/{}phi{}-{}_{}_pt{}-{}_tight'.format(histogram_prefix_mass, phi_low, phi_high, control_region, pt_low, pt_high)
     h_egamma_tight = infile1.Get(tight_plot_name)
     h_egamma_signal_region = infile1.Get(tight_plot_name.replace(region, "iso_sym"))
