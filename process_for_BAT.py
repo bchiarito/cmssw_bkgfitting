@@ -29,7 +29,7 @@ scaled_phislice_tight_dir = "scaled_phislice_tight_hists"
 tight_data_scaled_basename = "tight_data_"
 tight_data_unscaled_basename = "tight_data_unscaled_"
 tight_data_old_scaled_basename = "tight_data_old_"
-tight_data_old_unscaled_basename = "tight_data_old_unscaled_"
+tight_data_old_unscaled_basename = "tight_data_unscaled_old_"
 
 if args.clean:
     subprocess.run("rm -r {}/{}".format(args.input_dir, new_dir_name), shell=True)
