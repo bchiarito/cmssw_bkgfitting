@@ -8,22 +8,22 @@ import constants as VALS
 NAME_COUNT = 0
 
 # "scale" a control-region tight photon distribution to its corresponding signal distribution
-def removeEntries(bkg_hist, sig_hist, rand=None, cutoff=100):
+def removeEntries(hist, target_integral, rand=None, cutoff=1e6):
     if not rand: rand = ROOT.TRandom3()
 
-    if bkg_hist.Integral() == 0: return False
+    if hist.Integral() == 0: return False
    
-    p = float(sig_hist.Integral()) / bkg_hist.Integral() # probability of removing entry
+    p = float(target_integral) / hist.Integral() # probability of removing entry
     if p >= 1: return False
     
-    for i in range(1, bkg_hist.GetNbinsX()+1):
-        N = round(bkg_hist.GetBinContent(i))
+    for i in range(1, hist.GetNbinsX()+1):
+        N = round(hist.GetBinContent(i))
         if N < cutoff:
-            bkg_hist.SetBinContent(i, round(rand.Binomial(N, p)))
+            hist.SetBinContent(i, round(rand.Binomial(N, p)))
         else: 
             content = rand.Gaus(N*p, (N*p*(1-p))**0.5)
-            if content < 0: bkg_hist.SetBinContent(i, 0) 
-            else: bkg_hist.SetBinContent(i, round(content))
+            if content < 0: hist.SetBinContent(i, 0) 
+            else: hist.SetBinContent(i, round(content))
 
 def findMaxXVal(hist):
     max_x_val = 0

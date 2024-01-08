@@ -16,6 +16,7 @@ parser = argparse.ArgumentParser(description="")
 parser.add_argument("input", metavar="INPUT", help="input directory file with summed_egamma.root")
 parser.add_argument("--testBin", default=None, help="specify bin to test")
 parser.add_argument("--nophislice", default=False, action="store_true", help="")
+parser.add_argument("--scaleTo", "-s", default="same", choices=["same", "overall"], help="")
 args = parser.parse_args()
 
 # Constants
@@ -36,6 +37,7 @@ os.chdir(directory_name)
 
 # pt-binned only histos
 for region, i, eta_reg in itertools.product(regions, range(len(VALS.PT_EDGES)), eta_regions):
+    if region == "iso_sym": continue
     if args.testBin:
         if region != test_bin[0]: continue
         if eta_reg != test_bin[1]: continue
@@ -47,7 +49,8 @@ for region, i, eta_reg in itertools.product(regions, range(len(VALS.PT_EDGES)), 
     h_egamma_tight = infile1.Get(egamma_tight_plots)
 
     # Scale
-    if not region == "iso_sym": util.removeEntries(h_egamma_tight, infile1.Get(egamma_tight_plots.replace(region, "iso_sym")), rand=rand)
+    target = infile1.Get(egamma_tight_plots.replace(region, "iso_sym")).Integral()
+    util.removeEntries(h_egamma_tight, target, rand=rand)
 
     # Save
     if i == len(VALS.PT_EDGES)-1: title = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "+_tight"
@@ -71,8 +74,26 @@ os.chdir('../')
 if not os.path.exists(phislice_directory_name): os.mkdir(phislice_directory_name)
 os.chdir(phislice_directory_name)
 
+if args.scaleTo == "overall":
+    full_integrals = {}
+    for region, eta_reg in itertools.product(regions, eta_regions):
+        total_integral = 0
+        for i, k in itertools.product(range(len(VALS.PT_EDGES)), range(len(VALS.PHI_EDGES))):
+            histogram_prefix_mass = "twoprong_masspi0_"
+            phi_low = VALS.PHI_EDGES[k]
+            phi_high = VALS.PHI_EDGES[k+1] if k != len(VALS.PHI_EDGES)-1 else "Inf"
+            control_region = region + "_" + eta_reg
+            pt_low = VALS.PT_EDGES[i]
+            pt_high = VALS.PT_EDGES[i+1] if i != len(VALS.PT_EDGES)-1 else "Inf"
+            tight_plot_name = 'plots/{}phi{}-{}_{}_pt{}-{}_tight'.format(histogram_prefix_mass, phi_low, phi_high, control_region, pt_low, pt_high)
+            h_egamma_tight = infile1.Get(tight_plot_name)
+            total_integral += h_egamma_tight.Integral()
+        full_integrals[region + "_" + eta_reg] = total_integral
+    print(full_integrals)
+
 # pt-and-phi-binned histos
 for region, i, eta_reg, k in itertools.product(regions, range(len(VALS.PT_EDGES)), eta_regions, range(len(VALS.PHI_EDGES))):
+    if region == "iso_sym": continue
     if args.testBin:
         if region != test_bin[0]: continue
         if eta_reg != test_bin[1]: continue
@@ -88,7 +109,11 @@ for region, i, eta_reg, k in itertools.product(regions, range(len(VALS.PT_EDGES)
     h_egamma_signal_region = infile1.Get(tight_plot_name.replace(region, "iso_sym"))
 
     # Scale
-    if not region == "iso_sym": util.removeEntries(h_egamma_tight, h_egamma_signal_region)
+    if args.scaleTo == "overall":
+        signal_region = "iso_sym_" + eta_reg
+        target = h_egamma_tight.Integral() * (full_integrals[signal_region] / full_integrals[control_region])
+    if args.scaleTo == "same": target = h_egamma_signal_region.Integral()
+    util.removeEntries(h_egamma_tight, target)
 
     # Save
     save_name = '{}phi{}-{}_{}_pt{}-{}_tight'.format(histogram_prefix_mass, phi_low, phi_high, control_region, pt_low, pt_high)
