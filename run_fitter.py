@@ -19,7 +19,7 @@ parser.add_argument("--name", default="plots", help="create name for plots pdf")
 parser.add_argument("--show", default=False, action="store_true", help="don't close after finished running (to view canvas)")
 run_args = parser.add_argument_group("run options")
 run_args.add_argument("--createLooseFits", default=False, action="store_true", help="will recreate loose fits even if present")
-run_args.add_argument("--useScaledTight", default=False, action="store_true", help="used scaled tight data in preference to unscaled")
+run_args.add_argument("--useUnscaledTight", default=False, action="store_true", help="use unscaled tight data in preference to scaled")
 run_args.add_argument("--ftest", default="3 4", help="change ftest, format: '<CHEB_TYPE> <MAXDEGREE>', default is cheby degree 4")
 run_args.add_argument("--integral", default=False, action="store_true", help="add I to tight fit")
 plot_args = parser.add_argument_group("plotting options")
@@ -174,10 +174,10 @@ for item in plots:
         if not os.path.exists('loose_fit_hists'): os.mkdir("loose_fit_hists")
         if not os.path.exists('tight_templates'): os.mkdir("tight_templates")
         os.chdir('tight_templates')
-        if args.useScaledTight:
-            if not os.path.exists('templates'): os.mkdir("templates")
-        else:
+        if args.useUnscaledTight:
             if not os.path.exists('templates_noscaling'): os.mkdir("templates_noscaling")
+        else:
+            if not os.path.exists('templates'): os.mkdir("templates")
         if not os.path.exists('degrees'): os.mkdir("degrees")
         if not os.path.exists('chi2s'): os.mkdir("chi2s")
         os.chdir('../')
@@ -235,7 +235,7 @@ for item in plots:
                     else: hist_name = region + "_" + eta_reg + "_" + str(VALS.PT_EDGES[i]) + "_" + str(VALS.PT_EDGES[i+1]) 
                     
                     # scaled tight data
-                    if args.useScaledTight:
+                    if not args.useUnscaledTight and region != "iso_sym":
                         scaled_tight_files.append(ROOT.TFile("scaled_tight_hists/" + hist_name + "_tight.root"))
                         h_scaled_tight = scaled_tight_files[file_counter_tight].Get(hist_name+"_tight")
                         h_egamma_tight.Reset()
@@ -399,7 +399,7 @@ for item in plots:
                         tight_stat = statboxes[best_d]
                 
                     # Save the tight templates to be plotted separately
-                    if args.useScaledTight: os.chdir("tight_templates/templates/")
+                    if not args.useUnscaledTight: os.chdir("tight_templates/templates/")
                     else: os.chdir("tight_templates/templates_noscaling/")
 
                     # Save the loose fits in a separate file

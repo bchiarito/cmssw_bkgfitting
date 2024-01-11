@@ -14,7 +14,7 @@ parser.add_argument("input", metavar="INPUT", help="input root file")
 parser.add_argument("--testBin", default=None, help="specify bin to test")
 parser.add_argument("--testRegion", default=None, choices = ["iso_sym", "iso_asym", "noniso_sym", "noniso_asym"], help="specify region to test")
 parser.add_argument("--name", default="plots", help="create name for plots pdf")
-parser.add_argument("--useScaledTight", default=False, action="store_true", help="")
+parser.add_argument("--useUnscaledTight", default=False, action="store_true", help="used unscaled tight in preference to scaled")
 parser.add_argument("--show", default=False, action="store_true", help="")
 args = parser.parse_args()
 
@@ -97,7 +97,7 @@ for region in regions:  # loop through twoprong sideband regions
                 loose_fit_as_hist.GetYaxis().SetTitle("")
                 file_counter_loose += 1
 
-            if not args.useScaledTight:
+            if args.useUnscaledTight or region == "iso_sym":
                 # Get the histograms from the input file
                 h_egamma_tight = infile1.Get("plots/twoprong_masspi0_"+hist_name+"_tight")
                 h_egamma_tight.SetLineColor(ROOT.kBlack)
@@ -124,20 +124,20 @@ for region in regions:  # loop through twoprong sideband regions
             h_egamma_tight.SetBinErrorOption(ROOT.TH1.kPoisson)
 
             # Input tight template
-            if args.useScaledTight:
-                if not os.path.exists('tight_templates/templates'):
-                    print("ERROR: Must create directory for scaled data as follows: tight_templates/templates")
-                    exit()
-                else:
-                    tight_temp_files.append(ROOT.TFile("tight_templates/templates/" + hist_name + "_tight_temp.root"))
-                    tight_fit_as_hist = tight_temp_files[file_counter_temp].Get(hist_name+"_tight_temp")
-                    file_counter_temp += 1
-            else:
+            if args.useUnscaledTight:
                 if not os.path.exists('tight_templates/templates_noscaling'):
                     print("ERROR: Must create directory for scaled data as follows: tight_templates/templates_noscaling")
                     exit()
                 else:
                     tight_temp_files.append(ROOT.TFile("tight_templates/templates_noscaling/" + hist_name + "_tight_temp.root"))
+                    tight_fit_as_hist = tight_temp_files[file_counter_temp].Get(hist_name+"_tight_temp")
+                    file_counter_temp += 1
+            else:
+                if not os.path.exists('tight_templates/templates'):
+                    print("ERROR: Must create directory for scaled data as follows: tight_templates/templates")
+                    exit()
+                else:
+                    tight_temp_files.append(ROOT.TFile("tight_templates/templates/" + hist_name + "_tight_temp.root"))
                     tight_fit_as_hist = tight_temp_files[file_counter_temp].Get(hist_name+"_tight_temp")
                     file_counter_temp += 1
 
