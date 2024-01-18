@@ -941,10 +941,8 @@ def lookup_fit_guesses(control_region, eta_reg, pt_bin):
                 nExp -= 1
                 guesses = [1648, 1.205, 0.2847, -1.647, -3.407, 1.275, 0.321]
             if pt_bin == 100:
-                nLandau += 1 
-                nExp -= 2 
-                #guesses = [2000, 0.5, 0.1, -0.5, -1.3, 1.1, 0.6]
-                guesses = [2000, 0.5, 0.05, 1000, 1, 0.6, -1.7, 1.1, 0.6]
+                nExp -= 2
+                guesses = [1000, 1.1, 0.2, -1.143, 1.387]
             if pt_bin == 140:
                 nExp -= 1
                 guesses = [1887, 1.314, 0.3242, -1.142, -2.368, 1.674, 0.2515]
@@ -1067,7 +1065,7 @@ def lookup_fit_guesses(control_region, eta_reg, pt_bin):
                 exp_guess = [4.467e+05, -2.789, 2.974, -5.139]
             if pt_bin == 80:
                 landau_guess = [1.826e+04, 0.6239, 0.07162]
-                exp_guess = [1.506e+04, -0.9609, 2.4, -2.24, 2.2, -0.4279]
+                exp_guess = [1.506e+04, -0.9609, 2.4, -2.24, 1.6, -2.6]
             if pt_bin == 100:
                 landau_guess = [1.705e+04, 0.6496, 0.0804] 
                 exp_guess = [1.755e+04, -0.92, 3.125, -1.706, 2, -1]
@@ -1079,13 +1077,14 @@ def lookup_fit_guesses(control_region, eta_reg, pt_bin):
                 exp_guess = [4.739e+04, -1.172, 3.5, -3.605, 5.5, -3.677]
             if pt_bin == 220:
                 landau_guess = [8717, 0.8303, 0.1381]
-                exp_guess = [9.701e+04, -1.193, 6.173, -0.6467, 6.452, -2.239]
+                exp_guess = [9.701e+04, -1.193, 5, -1, 5, -2.239]
             if pt_bin == 300:
                 landau_guess = [1145, 1.149, 0.2453]
                 exp_guess = [3.14e+04, -1.023, 6.75, -0.5922, 1.25, -1]
             if pt_bin == 380:
+                nExp -= 1
                 old_method = True
-                guesses = [4848, 1.63, 0.4089, -3.553e-13, -0.6753, -0.8161, 0.5, 1.404, 0.5423]
+                guesses = [4848, 1.63, 0.4089, -1.5, -1, 2, 5.5]
 
         elif eta_reg == "endcap":
             if pt_bin == 20:
@@ -1114,7 +1113,9 @@ def lookup_fit_guesses(control_region, eta_reg, pt_bin):
                 exp_guess = [4.457e+04, -1.4, 2.6, -1.9, 1.4, -1]
             if pt_bin == 300:
                 old_method = True
-                guesses = [1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, 0.5, 0.8, 0.5]  
+                nExp -= 2
+                #guesses = [1.706e+04, 1.529, 0.3766, -0.01528, -0.7213, -1.017, 0.5, 0.8, 0.5]  
+                guesses = [1.706e+04, 1.529, 0.3766, -1.017, 2]  
             if pt_bin == 380:
                 old_method = True
                 guesses = [890.4, 1.723, 0.4403, -1.441, -0.9773, -0.2518, 2.5, 2.5, 5]
@@ -1123,8 +1124,9 @@ def lookup_fit_guesses(control_region, eta_reg, pt_bin):
     if control_region == "noniso_asym":
         if eta_reg == "barrel":
             if pt_bin == 20:
+                nExp -= 1
                 landau_guess = [9.069e+04, 0.9345, 0.1463]
-                exp_guess = [4.834e+04, -3.378, 1.206, -8.486, 0.7373, -4.555]
+                exp_guess = [4.834e+04, -3.378, 1.206, -8.486]
             if pt_bin == 40:
                 nExp -= 1
                 landau_guess = [2.459e+04, 0.8719, 0.1261]
